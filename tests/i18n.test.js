@@ -100,6 +100,9 @@ describe('Accept-Language negotiation', () => {
     ['', 'en'],
     ['zh', 'zh'],
     ['IT-it', 'it'],
+    ['es', 'es'],
+    ['es-ES', 'es'],
+    ['es-MX', 'es'],
     ['ms_MY', 'ms'],
     ['zh-Hant-TW,zh;q=0.8', 'zh'],
     ['ms;q=0.4, ta-IN;q=0.9', 'ta'],
@@ -150,7 +153,7 @@ describe('translation catalogs', () => {
   });
 
   test('loads every required locale dynamically', () => {
-    expect(SUPPORTED_LANGUAGES).toEqual(['en', 'zh', 'ms', 'ta', 'it']);
+    expect(SUPPORTED_LANGUAGES).toEqual(['en', 'zh', 'ms', 'ta', 'it', 'es']);
     expect(DEFAULT_LANGUAGE).toBe('en');
 
     const expectedHealthMessages = {
@@ -159,6 +162,7 @@ describe('translation catalogs', () => {
       ms: 'Gateway MyZubster sedang berjalan!',
       ta: 'MyZubster Gateway இயங்குகிறது!',
       it: 'MyZubster Gateway è operativo!',
+      es: 'MyZubster Gateway está en funcionamiento!',
     };
 
     for (const language of SUPPORTED_LANGUAGES) {
@@ -169,6 +173,37 @@ describe('translation catalogs', () => {
         'errors.internal'
       );
     }
+  });
+
+  test('provides every user-facing Spanish message and a Spanish README', () => {
+    expect(translate('es', 'auth.loginEndpoint')).toBe(
+      'Endpoint de inicio de sesión'
+    );
+    expect(translate('es', 'auth.registerEndpoint')).toBe(
+      'Endpoint de registro'
+    );
+    expect(translate('es', 'auth.required')).toBe('Se requiere autenticación');
+    expect(translate('es', 'admin.required')).toBe(
+      'Se requieren privilegios de administrador'
+    );
+    expect(translate('es', 'validation.targetUrlRequired')).toBe(
+      'Se requiere targetUrl'
+    );
+    expect(translate('es', 'webhooks.sentWithRetry')).toBe(
+      'Webhook enviado con reintento automático'
+    );
+    expect(translate('es', 'errors.internal')).toBe(
+      'Error interno del servidor'
+    );
+
+    const spanishReadme = fs.readFileSync(
+      path.join(__dirname, '..', 'README.es.md'),
+      'utf8'
+    );
+
+    expect(spanishReadme).toContain('## 📡 Endpoints de la API');
+    expect(spanishReadme).toContain('## 🔐 Seguridad');
+    expect(spanishReadme).toContain('## 🤝 Cómo contribuir');
   });
 
   test('falls back to English and returns unknown keys deterministically', () => {
@@ -182,19 +217,19 @@ describe('translation catalogs', () => {
 describe('i18n middleware', () => {
   const app = buildTestApp();
 
-  test('localizes health without changing its JSON shape or status', async () => {
+  test('localizes Spanish health without changing its JSON shape or status', async () => {
     const response = await request(app)
       .get('/health')
-      .set('Accept-Language', 'it-IT,it;q=0.8')
+      .set('Accept-Language', 'es-MX,es;q=0.8')
       .expect(200);
 
     expect(response.body).toEqual({
       status: 'OK',
-      message: 'MyZubster Gateway è operativo!',
+      message: 'MyZubster Gateway está en funcionamiento!',
       timestamp: '2026-07-30T00:00:00.000Z',
       version: '1.0.0',
     });
-    expect(response.headers['content-language']).toBe('it');
+    expect(response.headers['content-language']).toBe('es');
     expect(response.headers.vary.split(',').map((value) => value.trim())).toContain(
       'Accept-Language'
     );

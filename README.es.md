@@ -1,221 +1,304 @@
-# 🚀 MyZubsterGateway
+> **Parte del [ecosistema MyZubster](https://github.com/MyZubster-Ecosystem)**
 
-**MyZubsterGateway** es el backend open-source de **MyZubster** – una plataforma centrada en la privacidad, autoalojada para el intercambio de habilidades y servicios con **pagos en Monero (XMR)**, **servicio onion Tor** y una arquitectura completamente descentralizada.
+# 🌐 MyZubster Gateway
 
-Construido con Node.js, Express, MongoDB, Nginx y Cloudflare.
+**API backend para MyZubster: Gateway de pagos Monero y registro de animales**
 
----
-
-## 🔗 Sitio y Comunidad
-
-| Plataforma | Enlace |
-| :--- | :--- |
-| **🌐 Sitio Clearnet** | [https://myzubster.com](https://myzubster.com) |
-| **🧅 Onion Tor** | `http://olqcnbdlt35k2stmmwvzhvuetu2fc4us2jnn5wg6y6wlcddihfmdomid.onion` |
-| **📦 GitHub** | [https://github.com/DanielIoni-creator/MyZubsterGateway](https://github.com/DanielIoni-creator/MyZubsterGateway) |
-| **📝 Dev.to** | [https://dev.to/danielioni](https://dev.to/danielioni) |
-| **💼 LinkedIn** | [https://linkedin.com/in/danielioni](https://linkedin.com/in/danielioni) |
-| **🐦 Twitter / X** | [https://twitter.com/DanielIoni](https://twitter.com/DanielIoni) |
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+[![Monero](https://img.shields.io/badge/Powered%20by-Monero-orange)](https://www.getmonero.org/)
+[![Node.js](https://img.shields.io/badge/Node.js-20.x-green)](https://nodejs.org/)
+[![MongoDB](https://img.shields.io/badge/MongoDB-6.x-brightgreen)](https://mongodb.com/)
 
 ---
 
-## 📖 Lectura Adicional
+## 📌 ¿Qué es MyZubster Gateway?
 
-| Artículo | Enlace |
-| :--- | :--- |
-| **Visión** – *MyZubster: la plataforma open-source que podría cambiar la era financiera* | [Leer](https://dev.to/danielioni/myzubster-the-open-source-platform-that-could-change-the-financial-era-5hlp) |
-| **Guía de despliegue** – *De cero a producción: desplegar una app Node.js con Nginx, Cloudflare, systemd y Tor* | [Leer](https://dev.to/danielioni/from-zero-to-production-deploying-a-nodejs-app-with-nginx-cloudflare-systemd-and-tor-596l) |
-| **Experiencia** – *La larga noche del despliegue: cómo domamos DNS, Nginx, Tor y un firewall rebelde* | [Leer](https://dev.to/danielioni/the-long-night-of-deployment-how-we-tamed-dns-nginx-tor-and-a-rebel-firewall-...) |
-| **Integración Monero** – *Integrar pagos Monero en una app Node.js: guía completa* | [Leer](https://dev.to/danielioni/integrating-monero-payments-into-a-nodejs-app-a-complete-guide-...) |
-| **Migración Seraphis** – *La migración Seraphis de Monero y FCMP++: inmersión técnica* | [Leer](https://dev.to/danielioni/moneros-seraphis-migration-fcmp-a-technical-deep-dive-4ih) |
-| **Estado del proyecto** – *MyZubster: el estado actual del proyecto* | [Leer](https://dev.to/danielioni/myzubster-the-current-state-of-the-project-...) |
+MyZubster Gateway es un **procesador de pagos ligero que prioriza la privacidad**, creado para la red Monero (XMR). Permite transacciones descentralizadas con comisiones bajas e incluye compatibilidad con webhooks, gestión de pedidos y paneles para comerciantes.
 
----
+**Ideal para:**
 
-## ✨ Características
-
-- **🔐 Pagos Monero (XMR)** – Privados, no rastreables y resistentes a la censura.
-- **🧅 Servicio onion Tor** – Acceso anónimo a la plataforma.
-- **💻 Autoalojado** – Control total de tus datos e infraestructura.
-- **⚡ Node.js + Express** – Backend rápido, escalable y moderno.
-- **📦 MongoDB** – Base de datos flexible y fiable.
-- **🛡️ Nginx + Let's Encrypt** – Proxy inverso seguro con SSL.
-- **🌐 Cloudflare DNS** – Gestión DNS rápida y segura.
-- **🔁 systemd** – Inicio automático y recuperación ante caídas.
+- 🛒 Plataformas de comercio electrónico
+- 🎫 Sistemas de venta de entradas y eventos
+- 🖥️ Suscripciones SaaS
+- 🌿 Proyectos ambientales y de conservación
+- 🐾 Registros de animales y plantas
 
 ---
 
-## 🧰 Stack Tecnológico
+## ⚠️ IMPORTANTE: Política de pagos
 
-| Capa | Tecnología |
-| :--- | :--- |
-| **Backend** | Node.js + Express |
-| **Base de datos** | MongoDB |
-| **Proxy Inverso** | Nginx + Let's Encrypt |
-| **DNS** | Cloudflare |
-| **Gestión de Procesos** | systemd |
-| **Privacidad** | Servicio onion Tor |
-| **Pagos** | Monero (XMR) – testnet / mainnet |
-| **Frontend** | React + Vite + Tailwind |
-| **Control de Versiones** | Git + GitHub (SSH) |
+**Este Gateway acepta ÚNICAMENTE MONERO (XMR).**
+
+| Aceptado                      | Rechazado                           |
+| ----------------------------- | ----------------------------------- |
+| ✅ Monero (XMR)               | ❌ USDC, USDT, ETH, BTC             |
+| ✅ Privacidad y anonimato     | ❌ PayPal, transferencias bancarias |
+| ✅ Microtransacciones (€0.10) | ❌ Monedas fiduciarias              |
+
+### ¿Por qué Monero?
+
+| Característica      | Monero (XMR)                                                    |
+| ------------------- | --------------------------------------------------------------- |
+| 🔒 Privacidad       | No se requiere KYC                                              |
+| 💰 Comisiones bajas | Permite microtransacciones (€0.10)                              |
+| 🌍 Global           | Cualquier persona puede participar desde cualquier lugar        |
+| 🌿 Sostenible       | El 5 % de las comisiones se destina a proyectos de conservación |
 
 ---
 
-## 📦 Instalación y Configuración
+## 📊 Estructura de comisiones
 
-### Prerrequisitos
+**El registro es GRATUITO.**
 
-- VPS Ubuntu 20.04 / 22.04
-- Node.js 20+
-- MongoDB
-- Nginx
-- Herramientas CLI Monero (para el wallet RPC)
-- Tor (opcional, para el servicio onion)
+MyZubster es un proyecto de código abierto impulsado por la comunidad. Todos los registros (animales, plantas) son gratuitos.
 
-### Clona el repositorio
+### Cómo se financia la plataforma
+
+La plataforma se sostiene mediante:
+
+- 💰 **Donaciones** – Contribuciones voluntarias de la comunidad
+- 🚀 **Servicios premium** – Funciones de pago opcionales (certificados, analítica)
+- 🤝 **Patrocinadores y subvenciones** – Patrocinios corporativos y subvenciones para proyectos de código abierto
+
+### Distribución de fondos
+
+| Destino         | Porcentaje |
+| --------------- | ---------- |
+| Recompensas     | 90 %       |
+| Infraestructura | 5 %        |
+| Conservación    | 5 %        |
+
+### Dona para apoyar a MyZubster
+
+Si crees en este proyecto, puedes apoyarnos con una donación en Monero (XMR):
+
+**Wallet:** `45M4DW1ug8bdQowWpxucTpgsfjLbVxbYaAra79VewmBobuuhgqTjyD4R3DzpqLM2veiphcB16n24qN1QbLg3y2PYGK3Qkoe`
+
+---
+
+## 🚀 Inicio rápido
+
+### Requisitos previos
+
+- **Node.js** 18+
+- **MongoDB** 6+
+- **Nodo Monero** (local o remoto)
+
+### Instalación
 
 ```bash
-git clone https://github.com/DanielIoni-creator/MyZubsterGateway.git
+# 1. Clona el repositorio
+git clone git@github.com:MyZubster-Ecosystem/MyZubsterGateway.git
 cd MyZubsterGateway
-Instala las dependencias
-bash
 
+# 2. Instala las dependencias
 npm install
 
-Configura el entorno
-bash
-
+# 3. Configura el entorno
 cp .env.example .env
-nano .env
+# Edita .env con tu configuración
 
-Configura la URI de MongoDB, el secreto JWT, la URL RPC de Monero y otras variables.
-Inicia el servidor
-bash
+# 4. Inicia el servidor
+npm start
+```
 
-node server.js
+Crea un archivo .env con:
 
-Producción (systemd)
-bash
+```bash
+# Servidor
+PORT=3000
+NODE_ENV=development
 
-sudo cp myzubster-gateway.service /etc/systemd/system/
-sudo systemctl daemon-reload
-sudo systemctl enable myzubster-gateway
-sudo systemctl start myzubster-gateway
+# Base de datos
+MONGODB_URI=mongodb://localhost:27017/myzubster
 
-🔐 Integración Monero
-Configuración del Wallet RPC
+# JWT
+JWT_SECRET=your-secret-key
+JWT_EXPIRES_IN=7d
 
-    Descarga las herramientas CLI Monero:
-    bash
+# Monero
+MONERO_RPC_URL=http://localhost:18081
+MONERO_WALLET_RPC_URL=http://localhost:18082
+```
 
-    wget https://downloads.getmonero.org/cli/linux64 -O monero-linux64.tar.bz2
-    tar -xjf monero-linux64.tar.bz2
-    mv monero-x86_64-linux-gnu-v* monero
-    cd monero
+## 📡 Endpoints de la API
 
-    Crea un wallet (testnet):
-    bash
+### Endpoints públicos
 
-    ./monero-wallet-cli --generate-new-wallet /root/monero-wallet/myzubster-wallet \
-      --password MyStrongPassword123 \
-      --testnet \
-      --daemon-address testnet.community:28081
+| Método | Endpoint             | Descripción                 |
+| ------ | -------------------- | --------------------------- |
+| GET    | `/api/health`        | Comprobación de estado      |
+| POST   | `/api/auth/register` | Registro de usuario         |
+| POST   | `/api/auth/login`    | Inicio de sesión de usuario |
+| POST   | `/api/auth/refresh`  | Renovar token JWT           |
 
-    Inicia el wallet RPC:
-    bash
+### Endpoints protegidos (requieren JWT)
 
-    nohup ./monero-wallet-rpc \
-      --wallet-file /root/monero-wallet/myzubster-wallet \
-      --password MyStrongPassword123 \
-      --rpc-bind-port 18083 \
-      --daemon-address testnet.community:28081 \
-      --testnet \
-      --disable-rpc-login \
-      --log-level 0 \
-      > /root/monero-wallet-rpc.log 2>&1 &
+| Método | Endpoint             | Descripción                      |
+| ------ | -------------------- | -------------------------------- |
+| GET    | `/api/users/profile` | Obtener el perfil del usuario    |
+| PUT    | `/api/users/profile` | Actualizar el perfil del usuario |
 
-    Actualiza .env:
-    text
+### Pedidos
 
-    MONERO_RPC_URL=http://127.0.0.1:18083/json_rpc
-    MONERO_WALLET_ADDRESS=YOUR_PRIMARY_ADDRESS
-    MONERO_NETWORK=testnet
-    PAYMENT_MODE=monero
+| Método | Endpoint                 | Descripción                     |
+| ------ | ------------------------ | ------------------------------- |
+| POST   | `/api/orders`            | Crear un pedido                 |
+| GET    | `/api/orders`            | Listar pedidos                  |
+| GET    | `/api/orders/:id`        | Obtener los detalles del pedido |
+| PUT    | `/api/orders/:id/status` | Actualizar el estado del pedido |
 
-🌐 Arquitectura de Despliegue
-text
+### Pagos
 
-┌─────────────────────────────────────────────────────────────┐
-│                         Internet                             │
-└─────────────────────────────────────────────────────────────┘
-                              │
-                              ▼
-                    ┌─────────────────┐
-                    │   Cloudflare    │
-                    │    (DNS + SSL)  │
-                    └─────────────────┘
-                              │
-                              ▼
-                    ┌─────────────────┐
-                    │  Nginx (Port 80/443) │
-                    └─────────────────┘
-                              │
-                              ▼
-                    ┌─────────────────┐
-                    │  Node.js App    │
-                    │  (Port 3000)    │
-                    └─────────────────┘
-                              │
-                              ▼
-                    ┌─────────────────┐
-                    │   MongoDB       │
-                    └─────────────────┘
-                              │
-                              ▼
-                    ┌─────────────────┐
-                    │  Monero Wallet  │
-                    │  RPC (18083)    │
-                    └─────────────────┘
-                              │
-                              ▼
-                    ┌─────────────────┐
-                    │  Tor Onion      │
-                    │  Service        │
-                    └─────────────────┘
+| Método | Endpoint                   | Descripción                  |
+| ------ | -------------------------- | ---------------------------- |
+| POST   | `/api/payments/process`    | Procesar el pago             |
+| GET    | `/api/payments/status/:id` | Comprobar el estado del pago |
 
-🤝 Contribuciones
+### Webhooks
 
-¡Las contribuciones son bienvenidas! Abre un issue o envía un pull request.
+| Método | Endpoint            | Descripción           |
+| ------ | ------------------- | --------------------- |
+| POST   | `/api/webhooks`     | Registrar un webhook  |
+| GET    | `/api/webhooks`     | Listar webhooks       |
+| PUT    | `/api/webhooks/:id` | Actualizar el webhook |
+| DELETE | `/api/webhooks/:id` | Eliminar el webhook   |
 
-    Haz un fork del repositorio
+### Animales y plantas
 
-    Crea tu rama (git checkout -b feature/AmazingFeature)
+| Método | Endpoint                  | Descripción                       |
+| ------ | ------------------------- | --------------------------------- |
+| POST   | `/api/animals/register`   | Registrar un animal               |
+| GET    | `/api/animals`            | Listar animales                   |
+| GET    | `/api/animals/:id`        | Obtener los detalles del animal   |
+| POST   | `/api/animals/:id/verify` | Verificar un animal               |
+| POST   | `/api/plants/register`    | Registrar una planta              |
+| GET    | `/api/plants`             | Listar plantas                    |
+| GET    | `/api/plants/:id`         | Obtener los detalles de la planta |
+| POST   | `/api/plants/:id/verify`  | Verificar una planta              |
 
-    Haz commit de tus cambios (git commit -m 'Añadir AmazingFeature')
+## 🔐 Seguridad
 
-    Haz push a la rama (git push origin feature/AmazingFeature)
+### Autenticación
 
-    Abre un Pull Request
+- Autenticación basada en JWT con rotación de tokens de actualización.
+- Control de acceso basado en roles (RBAC) para endpoints de administrador.
+- Protección contra ataques de fuerza bruta mediante el módulo BruteForceAI.
+- Limitación de solicitudes en todos los endpoints de la API (100 solicitudes por minuto por IP).
 
-📄 Licencia
+### Protección de datos
 
-Este proyecto está bajo la licencia GPLv3 – consulta el archivo LICENSE para más detalles.
-💬 Conéctate conmigo
+- Cifrado PGP para datos confidenciales de pedidos.
+- Se requiere HTTPS/TLS 1.3 en producción.
+- No se almacenan datos PII ni KYC (diseño centrado en la privacidad).
+- Variables de entorno para todos los secretos (sin credenciales escritas directamente en el código).
 
-    Sitio: https://myzubster.com
+### Integración con blockchain
 
-    Tor: http://olqcnbdlt35k2stmmwvzhvuetu2fc4us2jnn5wg6y6wlcddihfmdomid.onion
+- Monero RPC con autenticación segura.
+- Verificación de transacciones con protección contra doble gasto.
+- Validación de direcciones de wallet (solo direcciones Monero que comienzan por 4 u 8).
 
-    GitHub: https://github.com/DanielIoni-creator
+### Webhooks e infraestructura
 
-    Dev.to: https://dev.to/danielioni
+- Firmas HMAC-SHA256 para las cargas útiles de los webhooks y reintentos con retroceso exponencial.
+- Lista de IP permitidas para endpoints de webhooks (opcional).
+- Contenedores Docker con una superficie de ataque mínima, encabezados de seguridad Nginx y actualizaciones automáticas mediante Dependabot.
+- Servicio onion de Tor para acceso con protección de la privacidad (opcional).
 
-    LinkedIn: https://linkedin.com/in/danielioni
+## 🛠️ Stack tecnológico
 
-    Twitter: https://twitter.com/DanielIoni
+| Capa          | Tecnología                              |
+| ------------- | --------------------------------------- |
+| Backend       | Node.js + Express                       |
+| Base de datos | MongoDB + Mongoose                      |
+| Blockchain    | Monero (XMR) RPC                        |
+| Autenticación | JWT + bcrypt                            |
+| Seguridad     | Helmet, CORS, limitación de solicitudes |
+| Pruebas       | Jest + Supertest                        |
+| Despliegue    | Docker + Vercel                         |
 
-⭐ Apoyo
+## 📂 Estructura del repositorio
 
-Si te gusta este proyecto, ¡deja una estrella ⭐ en GitHub y compártelo con otros!
+```text
+MyZubsterGateway/
+├── src/
+│   ├── api/           # Rutas de la API
+│   ├── controllers/   # Lógica de negocio
+│   ├── models/        # Modelos de la base de datos
+│   ├── services/      # Servicios externos
+│   └── utils/         # Utilidades
+├── tests/             # Pruebas unitarias y de integración
+├── docs/              # Documentación
+├── security/          # Herramientas de seguridad
+├── .env.example       # Plantilla de variables de entorno
+├── server.js          # Punto de entrada
+└── package.json       # Dependencias
+```
 
-Construido con ❤️ para la privacidad, la libertad y la descentralización.
+## 🔗 Proyectos relacionados
+
+| Proyecto             | Descripción                                   | Enlace |
+| -------------------- | --------------------------------------------- | ------ |
+| Registro de animales | Documentación para el registro de animales    | GitHub |
+| Mapa de plantas      | Mapa global para el registro de plantas       | GitHub |
+| Mapa de animales     | Mapa interactivo para el registro de animales | GitHub |
+
+## 📚 Documentación
+
+- Referencia de la API: documentación completa de la API.
+- Política de seguridad: directrices de seguridad.
+- Guía de contribución: cómo contribuir.
+- Transparencia de fondos: todas las transacciones son públicas.
+
+## 🤝 Cómo contribuir
+
+¡Agradecemos las contribuciones! Hay issues abiertos con recompensas 💰.
+
+### Programa de recompensas
+
+| Nivel        | XMR    | Tareas                                            |
+| ------------ | ------ | ------------------------------------------------- |
+| Spicciolo    | 0.0005 | Corrección de errores tipográficos, documentación |
+| Spiccioletto | 0.001  | Correcciones pequeñas                             |
+| Spicciona    | 0.003  | Pruebas unitarias                                 |
+| SuperSpiccio | 0.01   | Funciones                                         |
+| Premium      | 0.06   | Funciones complejas                               |
+
+### Cómo reclamar una recompensa
+
+1. Explora los issues con la etiqueta 💰.
+2. Comenta "I'll take this!".
+3. Abre un PR con tu dirección de Monero.
+4. Recibe el pago en XMR.
+
+## 📄 Licencia
+
+MIT – Uso y modificación libres para todo el mundo.
+
+---
+
+💚 Creado con ❤️ para los animales y las plantas por MyZubster-Ecosystem
+
+🌐 GitHub: @MyZubster-Ecosystem
+🌟 ¡Construyamos juntos un ecosistema descentralizado!
+
+Cada contribución cuenta. Únete a nosotros para crear una plataforma transparente y centrada en la privacidad para todo el mundo.
+
+## 🌐 Centro del ecosistema
+
+**Ecosistema MyZubster**: https://github.com/MyZubster-Ecosystem
+
+## 💬 Comunidad
+
+- **Telegram**: [@MyZubster_bot](https://t.me/MyZubster_bot) – para actualizaciones, soporte y conversaciones.
+
+## 🌐 Conecta con nosotros
+
+- **Telegram**: [@MyZubster_bot](https://t.me/MyZubster_bot) – actualizaciones, soporte y conversaciones
+- **Twitter / X**: [@DanielIoni](https://twitter.com/DanielIoni) – anuncios y reflexiones sobre el proyecto
+- **TikTok**: [@danielioni](https://tiktok.com/@danielioni) – contenido entre bastidores y actualizaciones del proyecto
+- **Instagram**: [@danielioni](https://instagram.com/danielioni) – contenido visual e historias de la comunidad
+- **dev.to**: [Daniel Ioni](https://dev.to/danielioni) – artículos técnicos y actualizaciones del proyecto
+
+- **Canal de Telegram**: [@myzubster](https://t.me/myzubster) – síguelo para recibir actualizaciones, noticias y participar en conversaciones sobre el ecosistema MyZubster.

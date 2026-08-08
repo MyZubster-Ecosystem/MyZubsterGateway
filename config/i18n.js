@@ -1,7 +1,7 @@
 const path = require('path');
 
 const DEFAULT_LANGUAGE = 'en';
-const SUPPORTED_LANGUAGES = Object.freeze(['en', 'zh', 'ms', 'ta', 'it']);
+const SUPPORTED_LANGUAGES = Object.freeze(['en', 'zh', 'ms', 'ta', 'it', 'es']);
 const catalogCache = new Map();
 
 function normalizeLanguageTag(value) {
