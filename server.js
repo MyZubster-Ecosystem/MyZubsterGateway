@@ -59,6 +59,9 @@ app.use('/api/benzina/wallet', require('./routes/benzinaXmrWallet'));
 console.log('✅ Caricamento routes IoT sensors...');
 app.use('/api/iot/sensors', require('./routes/iotSensors'));
 
+console.log('✅ Caricamento routes EVA IONI Arm...');
+app.use('/api/robot/eva-ioni-arm', require('./routes/evaIoniArm'));
+
 app.use('/api/backup', require('./routes/backup'));
 
 app.get('/health', (req, res) => {
