@@ -1,0 +1,653 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>🌿 Mappa Interattiva Hera - MyZubster</title>
+
+  <!-- Leaflet (interactive map) -->
+  <link
+    rel="stylesheet"
+    href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
+    integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY="
+    crossorigin=""
+  />
+  <script
+    src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"
+    integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo="
+    crossorigin=""
+  ></script>
+
+  <style>
+    /* Design tokens */
+    :root {
+      --accent: #22c55e;
+      --accent-strong: #16a34a;
+      --bg: #f0fdf4;
+      --surface: #ffffff;
+      --surface-2: #dcfce7;
+      --text: #14532d;
+      --text-soft: #4a7c59;
+      --border: #bbf7d0;
+      --shadow: 0 10px 30px rgba(20, 83, 45, 0.08);
+      --radius: 14px;
+      --status-active: #22c55e;
+      --status-monitoring: #eab308;
+      --status-critical: #ef4444;
+      --map-tiles-filter: none;
+    }
+    [data-theme="dark"] {
+      --accent: #4ade80;
+      --accent-strong: #22c55e;
+      --bg: #0a1a0f;
+      --surface: #142b1a;
+      --surface-2: #1a3a22;
+      --text: #e7f3e7;
+      --text-soft: #8ab89a;
+      --border: #1f3d28;
+      --shadow: 0 10px 30px rgba(0, 0, 0, 0.45);
+      --map-tiles-filter: brightness(0.7) invert(1) contrast(0.85) hue-rotate(180deg) saturate(0.7);
+    }
+
+    * { box-sizing: border-box; }
+    html, body { height: 100%; margin: 0; }
+    body {
+      font-family: 'Segoe UI', system-ui, -apple-system, Roboto, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      -webkit-font-smoothing: antialiased;
+    }
+
+    .hm-page { display: flex; flex-direction: column; min-height: 100vh; }
+
+    /* Header */
+    .hm-header {
+      display: flex; flex-wrap: wrap; gap: 16px;
+      align-items: center; justify-content: space-between;
+      padding: 20px 24px;
+      background: linear-gradient(135deg, var(--accent), var(--accent-strong));
+      color: #fff;
+    }
+    .hm-header__title h1 { margin: 0; font-size: 1.5rem; display: flex; align-items: center; gap: 8px; }
+    .hm-header__title p { margin: 4px 0 0; opacity: 0.92; font-size: 0.9rem; }
+    .hm-header__actions { display: flex; flex-wrap: wrap; gap: 12px; align-items: center; }
+
+    .hm-theme {
+      display: inline-flex; background: rgba(255,255,255,0.18);
+      border-radius: 999px; padding: 3px;
+    }
+    .hm-theme__btn {
+      border: 0; background: transparent; color: #fff; cursor: pointer;
+      padding: 6px 12px; border-radius: 999px; font-size: 0.82rem;
+      display: inline-flex; align-items: center; gap: 6px; opacity: 0.8;
+      transition: background 0.2s, opacity 0.2s;
+    }
+    .hm-theme__btn.is-active { background: #fff; color: var(--accent-strong); opacity: 1; font-weight: 600; }
+
+    .hm-btn {
+      border: 0; cursor: pointer; border-radius: 10px; padding: 8px 14px;
+      font-size: 0.85rem; font-weight: 600; transition: transform 0.12s, filter 0.2s;
+    }
+    .hm-btn:active { transform: translateY(1px); }
+    .hm-btn--primary { background: #fff; color: var(--accent-strong); }
+    .hm-btn--ghost { background: rgba(255,255,255,0.18); color: #fff; }
+    [data-theme="dark"] .hm-btn--ghost { background: var(--surface-2); color: var(--text); }
+    .hm-btn:disabled { opacity: 0.45; cursor: not-allowed; }
+
+    /* Stats bar */
+    .hm-stats {
+      display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+      gap: 12px; padding: 14px 24px;
+      background: var(--surface); border-bottom: 1px solid var(--border);
+    }
+    .hm-stat {
+      text-align: center; padding: 8px 12px; border-radius: 10px;
+      background: var(--surface-2); border: 1px solid var(--border);
+    }
+    .hm-stat__value { font-size: 1.6rem; font-weight: 700; line-height: 1.2; }
+    .hm-stat__value.green { color: var(--status-active); }
+    .hm-stat__value.yellow { color: var(--status-monitoring); }
+    .hm-stat__value.red { color: var(--status-critical); }
+    .hm-stat__label { font-size: 0.75rem; color: var(--text-soft); text-transform: uppercase; letter-spacing: 0.5px; margin-top: 2px; }
+
+    /* Banner */
+    .hm-banner {
+      margin: 14px 24px 0; padding: 10px 14px; border-radius: 10px;
+      background: #fff6e0; color: #7a5b00; font-size: 0.85rem; border: 1px solid #f3dca0;
+    }
+    [data-theme="dark"] .hm-banner { background: #3a2f12; color: #f4d58a; border-color: #5a4a1c; }
+
+    /* Layout */
+    .hm-layout {
+      flex: 1; display: grid; grid-template-columns: 360px 1fr; gap: 18px;
+      padding: 18px 24px 24px; min-height: 0;
+    }
+    @media (max-width: 860px) {
+      .hm-layout { grid-template-columns: 1fr; }
+    }
+
+    /* Sidebar */
+    .hm-sidebar {
+      background: var(--surface); border: 1px solid var(--border);
+      border-radius: var(--radius); box-shadow: var(--shadow);
+      display: flex; flex-direction: column; overflow: hidden;
+      max-height: calc(100vh - 280px);
+    }
+    .hm-sidebar__search {
+      padding: 14px; border-bottom: 1px solid var(--border);
+    }
+    .hm-sidebar__search input {
+      width: 100%; padding: 10px 14px; border-radius: 10px;
+      border: 1px solid var(--border); background: var(--bg);
+      color: var(--text); font-size: 0.88rem; outline: none;
+      transition: border-color 0.2s;
+    }
+    .hm-sidebar__search input:focus { border-color: var(--accent); }
+
+    .hm-sidebar__filters {
+      display: flex; gap: 8px; padding: 10px 14px;
+      border-bottom: 1px solid var(--border); flex-wrap: wrap;
+    }
+    .hm-filter-btn {
+      padding: 4px 12px; border-radius: 999px; border: 1px solid var(--border);
+      background: transparent; color: var(--text-soft); cursor: pointer;
+      font-size: 0.78rem; font-weight: 500; transition: all 0.2s;
+    }
+    .hm-filter-btn.is-active {
+      background: var(--accent); color: #fff; border-color: var(--accent);
+    }
+    .hm-filter-btn--green.is-active { background: var(--status-active); border-color: var(--status-active); }
+    .hm-filter-btn--yellow.is-active { background: var(--status-monitoring); border-color: var(--status-monitoring); }
+    .hm-filter-btn--red.is-active { background: var(--status-critical); border-color: var(--status-critical); }
+
+    .hm-sidebar__list {
+      flex: 1; overflow-y: auto; padding: 8px;
+    }
+    .hm-plant-card {
+      display: flex; gap: 12px; padding: 12px; border-radius: 12px;
+      cursor: pointer; transition: background 0.2s, transform 0.12s;
+      border: 1px solid transparent; margin-bottom: 6px;
+    }
+    .hm-plant-card:hover { background: var(--surface-2); transform: translateX(2px); }
+    .hm-plant-card.is-selected { border-color: var(--accent); background: var(--surface-2); }
+
+    .hm-plant-card__marker {
+      width: 32px; height: 32px; border-radius: 50%; flex-shrink: 0;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 1rem; font-weight: 700; color: #fff;
+    }
+    .hm-plant-card__marker.green { background: var(--status-active); }
+    .hm-plant-card__marker.yellow { background: var(--status-monitoring); }
+    .hm-plant-card__marker.red { background: var(--status-critical); }
+
+    .hm-plant-card__info { flex: 1; min-width: 0; }
+    .hm-plant-card__name { font-weight: 600; font-size: 0.92rem; }
+    .hm-plant-card__place { font-size: 0.8rem; color: var(--text-soft); margin-top: 2px; }
+    .hm-plant-card__status {
+      display: inline-block; font-size: 0.7rem; padding: 2px 8px;
+      border-radius: 999px; font-weight: 600; margin-top: 4px;
+    }
+    .hm-plant-card__status.active { background: #dcfce7; color: #16a34a; }
+    .hm-plant-card__status.monitoring { background: #fef9c3; color: #a16207; }
+    .hm-plant-card__status.critical { background: #fee2e2; color: #dc2626; }
+    [data-theme="dark"] .hm-plant-card__status.active { background: #14532d; color: #4ade80; }
+    [data-theme="dark"] .hm-plant-card__status.monitoring { background: #422006; color: #facc15; }
+    [data-theme="dark"] .hm-plant-card__status.critical { background: #450a0a; color: #f87171; }
+
+    .hm-plant-card__time { font-size: 0.7rem; color: var(--text-soft); margin-top: 2px; }
+    .hm-plant-card__desc { font-size: 0.78rem; color: var(--text-soft); margin-top: 4px; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+
+    /* Map container */
+    .hm-map-wrap {
+      background: var(--surface); border: 1px solid var(--border);
+      border-radius: var(--radius); box-shadow: var(--shadow); overflow: hidden;
+      position: relative;
+    }
+    .hm-map { width: 100%; height: 100%; min-height: 500px; z-index: 1; }
+    .hm-map .leaflet-container { background: var(--bg); }
+
+    /* Detail panel */
+    .hm-detail {
+      position: absolute; bottom: 20px; left: 20px; right: 20px;
+      background: var(--surface); border: 1px solid var(--border);
+      border-radius: var(--radius); box-shadow: var(--shadow);
+      padding: 16px; display: none; z-index: 1000;
+      max-width: 400px;
+    }
+    .hm-detail.is-visible { display: block; }
+    .hm-detail__header {
+      display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 8px;
+    }
+    .hm-detail__name { font-size: 1.1rem; font-weight: 700; }
+    .hm-detail__close {
+      border: 0; background: transparent; cursor: pointer; font-size: 1.2rem;
+      color: var(--text-soft); padding: 4px 8px; border-radius: 6px;
+    }
+    .hm-detail__close:hover { background: var(--surface-2); }
+    .hm-detail__status { display: inline-block; padding: 3px 10px; border-radius: 999px; font-size: 0.75rem; font-weight: 600; }
+    .hm-detail__status.active { background: #dcfce7; color: #16a34a; }
+    .hm-detail__status.monitoring { background: #fef9c3; color: #a16207; }
+    .hm-detail__status.critical { background: #fee2e2; color: #dc2626; }
+    [data-theme="dark"] .hm-detail__status.active { background: #14532d; color: #4ade80; }
+    [data-theme="dark"] .hm-detail__status.monitoring { background: #422006; color: #facc15; }
+    [data-theme="dark"] .hm-detail__status.critical { background: #450a0a; color: #f87171; }
+    .hm-detail__meta { font-size: 0.82rem; color: var(--text-soft); margin-top: 6px; }
+    .hm-detail__meta strong { color: var(--text); }
+    .hm-detail__desc { font-size: 0.85rem; margin-top: 8px; line-height: 1.5; }
+
+    /* Loading */
+    .hm-loading {
+      display: flex; align-items: center; justify-content: center;
+      height: 100%; min-height: 300px; font-size: 1.1rem; color: var(--text-soft);
+    }
+    .hm-loading__spinner {
+      width: 32px; height: 32px; border: 3px solid var(--border);
+      border-top-color: var(--accent); border-radius: 50%;
+      animation: spin 0.8s linear infinite; margin-right: 12px;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    /* Empty state */
+    .hm-empty {
+      display: flex; flex-direction: column; align-items: center; justify-content: center;
+      padding: 40px; text-align: center; color: var(--text-soft);
+    }
+    .hm-empty__icon { font-size: 3rem; margin-bottom: 12px; }
+    .hm-empty__text { font-size: 0.95rem; }
+
+    /* Legend */
+    .hm-legend {
+      position: absolute; bottom: 20px; right: 20px; z-index: 1000;
+      background: var(--surface); border: 1px solid var(--border);
+      border-radius: 10px; padding: 10px 14px; box-shadow: var(--shadow);
+      font-size: 0.78rem;
+    }
+    .hm-legend__item { display: flex; align-items: center; gap: 8px; margin-bottom: 4px; }
+    .hm-legend__item:last-child { margin-bottom: 0; }
+    .hm-legend__dot {
+      width: 12px; height: 12px; border-radius: 50%; flex-shrink: 0;
+    }
+    .hm-legend__dot.green { background: var(--status-active); }
+    .hm-legend__dot.yellow { background: var(--status-monitoring); }
+    .hm-legend__dot.red { background: var(--status-critical); }
+  </style>
+</head>
+<body>
+  <div class="hm-page">
+    <!-- Header -->
+    <header class="hm-header">
+      <div class="hm-header__title">
+        <h1>🌿 Mappa Interattiva Hera</h1>
+        <p>Monitoraggio piante in tempo reale</p>
+      </div>
+      <div class="hm-header__actions">
+        <div class="hm-theme">
+          <button class="hm-theme__btn is-active" data-theme-value="light" onclick="setTheme('light')">☀️</button>
+          <button class="hm-theme__btn" data-theme-value="dark" onclick="setTheme('dark')">🌙</button>
+        </div>
+        <button class="hm-btn hm-btn--primary" onclick="centerMap()">📍 Centra mappa</button>
+      </div>
+    </header>
+
+    <!-- Stats bar -->
+    <div class="hm-stats" id="statsBar">
+      <div class="hm-stat">
+        <div class="hm-stat__value" id="totalPlants">--</div>
+        <div class="hm-stat__label">Totale Piante</div>
+      </div>
+      <div class="hm-stat">
+        <div class="hm-stat__value green" id="activeCount">--</div>
+        <div class="hm-stat__label">🟢 Attive</div>
+      </div>
+      <div class="hm-stat">
+        <div class="hm-stat__value yellow" id="monitoringCount">--</div>
+        <div class="hm-stat__label">🟡 Monitoraggio</div>
+      </div>
+      <div class="hm-stat">
+        <div class="hm-stat__value red" id="criticalCount">--</div>
+        <div class="hm-stat__label">🔴 Critiche</div>
+      </div>
+    </div>
+
+    <!-- Banner (demo mode) -->
+    <div class="hm-banner" id="demoBanner" style="display:none">
+      🧪 Dati dimostrativi — Il server backend non è raggiungibile.
+    </div>
+
+    <!-- Main layout -->
+    <div class="hm-layout">
+      <!-- Sidebar -->
+      <aside class="hm-sidebar" id="sidebar">
+        <div class="hm-sidebar__search">
+          <input type="text" id="searchInput" placeholder="🔍 Cerca piante per specie, luogo..." oninput="filterPlants()" />
+        </div>
+        <div class="hm-sidebar__filters">
+          <button class="hm-filter-btn is-active" data-filter="all" onclick="setFilter('all', this)">Tutte</button>
+          <button class="hm-filter-btn hm-filter-btn--green" data-filter="active" onclick="setFilter('active', this)">🟢 Attive</button>
+          <button class="hm-filter-btn hm-filter-btn--yellow" data-filter="monitoring" onclick="setFilter('monitoring', this)">🟡 Monitoraggio</button>
+          <button class="hm-filter-btn hm-filter-btn--red" data-filter="critical" onclick="setFilter('critical', this)">🔴 Critiche</button>
+        </div>
+        <div class="hm-sidebar__list" id="plantList">
+          <div class="hm-loading" id="loadingIndicator">
+            <div class="hm-loading__spinner"></div>
+            <span>Caricamento piante...</span>
+          </div>
+        </div>
+      </aside>
+
+      <!-- Map -->
+      <div class="hm-map-wrap">
+        <div class="hm-map" id="heraMap"></div>
+
+        <!-- Legend -->
+        <div class="hm-legend">
+          <div class="hm-legend__item"><span class="hm-legend__dot green"></span> Attiva</div>
+          <div class="hm-legend__item"><span class="hm-legend__dot yellow"></span> Monitoraggio</div>
+          <div class="hm-legend__item"><span class="hm-legend__dot red"></span> Critica</div>
+        </div>
+
+        <!-- Detail panel -->
+        <div class="hm-detail" id="detailPanel">
+          <div class="hm-detail__header">
+            <div>
+              <div class="hm-detail__name" id="detailName"></div>
+              <span class="hm-detail__status" id="detailStatus"></span>
+            </div>
+            <button class="hm-detail__close" onclick="closeDetail()">✕</button>
+          </div>
+          <div class="hm-detail__meta" id="detailMeta"></div>
+          <div class="hm-detail__desc" id="detailDesc"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // ===== DEMO DATASET =====
+    const DEMO_PLANTS = [
+      { id: 'p1', species: 'Quercus robur', place: 'Parco Rimini, RN', lat: 44.0594, lng: 12.5653, description: 'Quercia secolare nel parco centrale. Monitoraggio fogliare e stato chioma.', status: 'active', updatedAt: '2026-08-09T10:30:00Z' },
+      { id: 'p2', species: 'Olea europaea', place: 'Colle San Paolo, RN', lat: 44.0450, lng: 12.5600, description: 'Ulivo monumentale. Controllo periodico per Xylella.', status: 'monitoring', updatedAt: '2026-08-09T08:15:00Z' },
+      { id: 'p3', species: 'Pinus pinea', place: 'Lungomare Rimini, RN', lat: 44.0700, lng: 12.5800, description: 'Pino domestico costiero. Segni di stress idrico.', status: 'critical', updatedAt: '2026-08-08T16:45:00Z' },
+      { id: 'p4', species: 'Citrus limon', place: 'Giardino Comunale, RN', lat: 44.0500, lng: 12.5730, description: 'Limone in vaso. Monitoraggio cocciniglia.', status: 'monitoring', updatedAt: '2026-08-09T06:00:00Z' },
+      { id: 'p5', species: 'Laurus nobilis', place: 'Viale Trieste, RN', lat: 44.0550, lng: 12.5780, description: 'Alloro ornamentale. Stato vegetativo ottimo.', status: 'active', updatedAt: '2026-08-09T09:00:00Z' },
+      { id: 'p6', species: 'Ficus carica', place: 'Podere San Lorenzo, RN', lat: 44.0380, lng: 12.5450, description: 'Fico maturo. Potatura e concimazione programmate.', status: 'active', updatedAt: '2026-08-08T14:20:00Z' },
+      { id: 'p7', species: 'Prunus avium', place: 'Frutteto Rimini, RN', lat: 44.0480, lng: 12.5350, description: 'Ciliegio in produzione. Attacco afidi in corso.', status: 'critical', updatedAt: '2026-08-09T07:30:00Z' },
+      { id: 'p8', species: 'Rosmarinus officinalis', place: 'Aiuola Piazza Tre Martiri, RN', lat: 44.0580, lng: 12.5680, description: 'Rosmarino ornamentale. Crescita regolare.', status: 'active', updatedAt: '2026-08-09T08:00:00Z' },
+      { id: 'p9', species: 'Platanus hybrida', place: 'Viale Regina Elena, RN', lat: 44.0620, lng: 12.5900, description: 'Platano storico. Cancro corticale sospetto.', status: 'monitoring', updatedAt: '2026-08-08T11:00:00Z' },
+      { id: 'p10', species: 'Jasminum officinale', place: 'Giardino Pensile, RN', lat: 44.0560, lng: 12.5620, description: 'Gelsomino rampicante. Fioritura abbondante.', status: 'active', updatedAt: '2026-08-09T10:00:00Z' },
+      { id: 'p11', species: 'Tilia cordata', place: 'Parco Cervi, RN', lat: 44.0460, lng: 12.5550, description: 'Tiglio nel parco giochi. Controllo stabilità dopo tempesta.', status: 'monitoring', updatedAt: '2026-08-08T15:20:00Z' },
+      { id: 'p12', species: 'Hydrangea macrophylla', place: 'Villa Alba, RN', lat: 44.0520, lng: 12.5750, description: 'Ortensia. Clorosi fogliare da pH alcalino.', status: 'critical', updatedAt: '2026-08-09T05:45:00Z' },
+      { id: 'p13', species: 'Cupressus sempervirens', place: 'Cimitero Monumentale, RN', lat: 44.0530, lng: 12.5580, description: 'Cipresso secolare. Stato conservativo buono.', status: 'active', updatedAt: '2026-08-08T17:00:00Z' },
+      { id: 'p14', species: 'Morus alba', place: 'Via Monte Titano, RN', lat: 44.0430, lng: 12.5480, description: 'Gelso bianco. Rametti secchi da rimuovere.', status: 'monitoring', updatedAt: '2026-08-09T08:30:00Z' },
+      { id: 'p15', species: 'Nerium oleander', place: 'Lungomare Tintori, RN', lat: 44.0680, lng: 12.5850, description: 'Oleandro costiero. Macchie fogliari sospette.', status: 'critical', updatedAt: '2026-08-08T13:10:00Z' },
+    ];
+
+    // ===== STATE =====
+    let map = null;
+    let markers = [];
+    let markerLayer = null;
+    let plants = [];
+    let allPlants = [];
+    let currentFilter = 'all';
+    let searchQuery = '';
+    let selectedPlantId = null;
+    let isDemo = false;
+
+    // ===== THEME =====
+    function setTheme(theme) {
+      document.documentElement.setAttribute('data-theme', theme);
+      localStorage.setItem('hm-theme', theme);
+      document.querySelectorAll('.hm-theme__btn').forEach(b => {
+        b.classList.toggle('is-active', b.dataset.themeValue === theme);
+      });
+      if (map) map.invalidateSize();
+    }
+
+    function loadTheme() {
+      const saved = localStorage.getItem('hm-theme') || 'light';
+      setTheme(saved);
+    }
+
+    // ===== MAP =====
+    function initMap() {
+      map = L.map('heraMap', {
+        center: [44.055, 12.565],
+        zoom: 13,
+        zoomControl: true,
+        attributionControl: true,
+      });
+
+      const isDark = document.documentElement.getAttribute('data-theme') === 'dark';
+      L.tileLayer(isDark
+        ? 'https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png'
+        : 'https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png',
+        { attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OSM</a> &copy; <a href="https://carto.com/">CARTO</a>', subdomains: 'abcd', maxZoom: 19 }
+      ).addTo(map);
+
+      L.control.scale({ imperial: false, metric: true, position: 'bottomleft' }).addTo(map);
+
+      const resizeObserver = new ResizeObserver(() => map.invalidateSize());
+      resizeObserver.observe(document.getElementById('heraMap'));
+    }
+
+    function createStatusIcon(status) {
+      const colors = { active: '#22c55e', monitoring: '#eab308', critical: '#ef4444' };
+      const color = colors[status] || '#888';
+      return L.divIcon({
+        className: '',
+        html: `<div style="width:28px;height:28px;border-radius:50%;background:${color};border:3px solid #fff;box-shadow:0 2px 8px rgba(0,0,0,0.3);display:flex;align-items:center;justify-content:center;font-size:14px;color:#fff;font-weight:bold;">🌿</div>`,
+        iconSize: [28, 28],
+        iconAnchor: [14, 14],
+      });
+    }
+
+    function updateMap() {
+      if (markerLayer) map.removeLayer(markerLayer);
+      markerLayer = L.layerGroup().addTo(map);
+
+      const filtered = getFilteredPlants();
+
+      if (filtered.length === 0) {
+        map.setView([44.055, 12.565], 13);
+        return;
+      }
+
+      filtered.forEach(p => {
+        const icon = createStatusIcon(p.status);
+        const marker = L.marker([p.lat, p.lng], { icon }).addTo(markerLayer);
+        marker.plantId = p.id;
+        marker.on('click', () => showPlantDetail(p));
+        marker.on('mouseover', () => {
+          marker.bindTooltip(`<strong>${p.species}</strong><br/>${p.place}`, { direction: 'top', offset: [0, -14] }).openTooltip();
+        });
+      });
+
+      // Fit bounds
+      const bounds = filtered.map(p => [p.lat, p.lng]);
+      if (bounds.length === 1) {
+        map.setView(bounds[0], 15);
+      } else {
+        const group = L.featureGroup(bounds.map(b => L.marker(b)));
+        map.fitBounds(group.getBounds().pad(0.1));
+      }
+    }
+
+    function centerMap() {
+      if (plants.length > 0) {
+        const bounds = plants.map(p => [p.lat, p.lng]);
+        const group = L.featureGroup(bounds.map(b => L.marker(b)));
+        map.fitBounds(group.getBounds().pad(0.1));
+      }
+    }
+
+    // ===== DATA =====
+    async function loadPlants() {
+      const loadingEl = document.getElementById('loadingIndicator');
+      const listEl = document.getElementById('plantList');
+      const bannerEl = document.getElementById('demoBanner');
+
+      try {
+        const res = await fetch('/api/plants');
+        if (!res.ok) throw new Error('HTTP ' + res.status);
+        const data = await res.json();
+        const rawPlants = data.data || data.plants || data || [];
+        if (Array.isArray(rawPlants) && rawPlants.length > 0) {
+          plants = normalizePlants(rawPlants);
+          allPlants = [...plants];
+          isDemo = false;
+          bannerEl.style.display = 'none';
+        } else {
+          throw new Error('Empty dataset');
+        }
+      } catch (e) {
+        console.warn('API non disponibile, uso dati dimostrativi:', e.message);
+        plants = [...DEMO_PLANTS];
+        allPlants = [...DEMO_PLANTS];
+        isDemo = true;
+        bannerEl.style.display = 'block';
+      }
+
+      updateStats();
+      updateMap();
+      renderList();
+    }
+
+    function normalizePlants(raw) {
+      return raw.map((p, i) => {
+        // Accept both Italian and English field names
+        const lat = parseFloat(p.lat || p.latitude || p.latitudine || (p.geometry && p.geometry.coordinates ? p.geometry.coordinates[1] : null) || 44.05 + (Math.random() - 0.5) * 0.03);
+        const lng = parseFloat(p.lng || p.longitude || p.longitudine || (p.geometry && p.geometry.coordinates ? p.geometry.coordinates[0] : null) || 12.565 + (Math.random() - 0.5) * 0.03);
+        const status = (p.status || p.stato || 'active').toLowerCase();
+        return {
+          id: p.id || p._id || 'plant-' + i,
+          species: p.species || p.specie || p.name || p.nome || 'Pianta sconosciuta',
+          place: p.place || p.luogo || p.location || p.localita || p.city || 'Località sconosciuta',
+          description: p.description || p.descrizione || '',
+          status: ['active', 'monitoring', 'critical'].includes(status) ? status : 'active',
+          lat: isNaN(lat) ? 44.05 : lat,
+          lng: isNaN(lng) ? 12.565 : lng,
+          updatedAt: p.updatedAt || p.updated_at || p.aggiornato || new Date().toISOString(),
+        };
+      }).filter(p => !isNaN(p.lat) && !isNaN(p.lng));
+    }
+
+    // ===== FILTER & SEARCH =====
+    function getFilteredPlants() {
+      let result = [...allPlants];
+      if (currentFilter !== 'all') {
+        result = result.filter(p => p.status === currentFilter);
+      }
+      if (searchQuery.trim()) {
+        const q = searchQuery.trim().toLowerCase();
+        result = result.filter(p => p.species.toLowerCase().includes(q) || p.place.toLowerCase().includes(q) || p.description.toLowerCase().includes(q));
+      }
+      return result;
+    }
+
+    function setFilter(filter, btn) {
+      currentFilter = filter;
+      document.querySelectorAll('.hm-filter-btn').forEach(b => b.classList.remove('is-active'));
+      if (btn) btn.classList.add('is-active');
+      updateMap();
+      renderList();
+    }
+
+    function filterPlants() {
+      searchQuery = document.getElementById('searchInput').value;
+      updateMap();
+      renderList();
+    }
+
+    // ===== STATS =====
+    function updateStats() {
+      const total = allPlants.length;
+      const active = allPlants.filter(p => p.status === 'active').length;
+      const monitoring = allPlants.filter(p => p.status === 'monitoring').length;
+      const critical = allPlants.filter(p => p.status === 'critical').length;
+
+      document.getElementById('totalPlants').textContent = total;
+      document.getElementById('activeCount').textContent = active;
+      document.getElementById('monitoringCount').textContent = monitoring;
+      document.getElementById('criticalCount').textContent = critical;
+    }
+
+    // ===== LIST =====
+    function renderList() {
+      const listEl = document.getElementById('plantList');
+      const filtered = getFilteredPlants();
+
+      if (filtered.length === 0) {
+        listEl.innerHTML = '<div class="hm-empty"><div class="hm-empty__icon">🔍</div><div class="hm-empty__text">Nessuna pianta trovata</div></div>';
+        return;
+      }
+
+      listEl.innerHTML = filtered.map(p => {
+        const statusLabels = { active: 'Attiva', monitoring: 'Monitoraggio', critical: 'Critica' };
+        const timeAgo = getTimeAgo(p.updatedAt);
+        const isSelected = p.id === selectedPlantId;
+        return `<div class="hm-plant-card ${isSelected ? 'is-selected' : ''}" onclick="showPlantDetail(plants.find(pl => pl.id === '${p.id}'))" data-plant-id="${p.id}">
+          <div class="hm-plant-card__marker ${p.status}">🌿</div>
+          <div class="hm-plant-card__info">
+            <div class="hm-plant-card__name">${p.species}</div>
+            <div class="hm-plant-card__place">📍 ${p.place}</div>
+            <span class="hm-plant-card__status ${p.status}">${statusLabels[p.status]}</span>
+            <span class="hm-plant-card__time">${timeAgo}</span>
+            ${p.description ? `<div class="hm-plant-card__desc">${p.description}</div>` : ''}
+          </div>
+        </div>`;
+      }).join('');
+    }
+
+    function getTimeAgo(dateStr) {
+      if (!dateStr) return '';
+      const now = new Date();
+      const date = new Date(dateStr);
+      const diff = Math.floor((now - date) / 60000);
+      if (diff < 1) return 'Ora';
+      if (diff < 60) return `${diff} min fa`;
+      const hours = Math.floor(diff / 60);
+      if (hours < 24) return `${hours} h fa`;
+      const days = Math.floor(hours / 24);
+      return `${days} g fa`;
+    }
+
+    // ===== DETAIL =====
+    function showPlantDetail(plant) {
+      if (!plant) return;
+      selectedPlantId = plant.id;
+      const panel = document.getElementById('detailPanel');
+      const statusLabels = { active: 'Attiva', monitoring: 'Monitoraggio', critical: 'Critica' };
+
+      document.getElementById('detailName').textContent = `🌿 ${plant.species}`;
+      document.getElementById('detailStatus').textContent = statusLabels[plant.status];
+      document.getElementById('detailStatus').className = `hm-detail__status ${plant.status}`;
+      document.getElementById('detailMeta').innerHTML = `
+        📍 <strong>Luogo:</strong> ${plant.place}<br/>
+        🆔 <strong>ID:</strong> ${plant.id}<br/>
+        🕐 <strong>Ultimo aggiornamento:</strong> ${new Date(plant.updatedAt || Date.now()).toLocaleString('it-IT')}
+      `;
+      document.getElementById('detailDesc').textContent = plant.description || 'Nessuna descrizione disponibile.';
+      panel.classList.add('is-visible');
+
+      // Scroll to card in list
+      const card = document.querySelector(`[data-plant-id="${plant.id}"]`);
+      if (card) {
+        card.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+      }
+
+      renderList();
+    }
+
+    function closeDetail() {
+      document.getElementById('detailPanel').classList.remove('is-visible');
+      selectedPlantId = null;
+      renderList();
+    }
+
+    // ===== INIT =====
+    loadTheme();
+    initMap();
+    loadPlants();
+  </script>
+</body>
+</html>
