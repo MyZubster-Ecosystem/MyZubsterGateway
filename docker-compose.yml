@@ -1,73 +1,64 @@
-version: "3.8"
+version: '3.8'
 
 services:
-  gateway:
-    build: .
-    container_name: myzubster-gateway
-    ports:
-      - "3001:3001"
-    environment:
-      - NODE_ENV=development
-      - PORT=3001
-      - MONGODB_URI=mongodb://mongo:27017/myzubster
-      - TARI_RPC_URL=http://tari-wallet:12021/json_rpc
-      - MONERO_RPC_URL=http://monero-wallet:18082/json_rpc
-      - MONERO_WALLET_RPC=http://monero-wallet:18083/json_rpc
-      - TELEGRAM_BOT_TOKEN=${TELEGRAM_BOT_TOKEN}
-      - TELEGRAM_CHAT_ID=${TELEGRAM_CHAT_ID}
-      - GITHUB_WEBHOOK_SECRET=${GITHUB_WEBHOOK_SECRET}
-      - EMAIL_HOST=${EMAIL_HOST:-smtp.example.com}
-      - EMAIL_PORT=${EMAIL_PORT:-587}
-      - EMAIL_USER=${EMAIL_USER}
-      - EMAIL_PASS=${EMAIL_PASS}
-    depends_on:
-      - mongo
-    volumes:
-      - .:/app
-      - /app/node_modules
-    restart: unless-stopped
-
-  mongo:
+  mongodb:
     image: mongo:7
-    container_name: myzubster-mongo
+    container_name: myzubster-mongodb
+    restart: unless-stopped
     ports:
       - "27017:27017"
-    environment:
-      - MONGO_INITDB_DATABASE=myzubster
     volumes:
-      - mongo_data:/data/db
-    restart: unless-stopped
+      - mongodb_data:/data/db
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: ${MONGO_USER:-admin}
+      MONGO_INITDB_ROOT_PASSWORD: ${MONGO_PASSWORD:-password}
+      MONGO_INITDB_DATABASE: myzubster
+    networks:
+      - myzubster-network
+    healthcheck:
+      test: ["CMD", "mongosh", "--eval", "db.adminCommand('ping')"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 20s
 
-  tari-wallet:
-    image: tari-wallet:latest
-    container_name: myzubster-tari-wallet
-    ports:
-      - "12021:12021"
-    environment:
-      - TARI_NETWORK=mainnet
-      - TARI_WALLET_PASSWORD=${TARI_WALLET_PASSWORD:-password}
-    volumes:
-      - tari_data:/home/tari/.tari
+  gateway:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: myzubster-gateway
     restart: unless-stopped
-    profiles:
-      - with-wallets
-
-  monero-wallet:
-    image: monero-wallet:latest
-    container_name: myzubster-monero-wallet
     ports:
-      - "18082:18082"
-      - "18083:18083"
+      - "${GATEWAY_PORT:-10000}:10000"
+    depends_on:
+      mongodb:
+        condition: service_healthy
     environment:
-      - MONERO_WALLET_PASSWORD=${MONERO_WALLET_PASSWORD:-password}
-      - MONERO_DAEMON_ADDRESS=monero-daemon:18081
-    volumes:
-      - monero_data:/home/monero/.bitmonero
-    restart: unless-stopped
-    profiles:
-      - with-wallets
+      NODE_ENV: ${NODE_ENV:-production}
+      PORT: 10000
+      MONGODB_URI: mongodb://${MONGO_USER:-admin}:${MONGO_PASSWORD:-password}@mongodb:27017/myzubster?authSource=admin
+      JWT_SECRET: ${JWT_SECRET:-change-me-in-production}
+      GATEWAY_PORT: ${GATEWAY_PORT:-10000}
+      CORS_ORIGIN: ${CORS_ORIGIN:-http://localhost:3000}
+    networks:
+      - myzubster-network
+    healthcheck:
+      test: ["CMD", "wget", "--quiet", "--tries=1", "--spider", "http://localhost:10000/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 10s
+    env_file:
+      - .env
+    # Uncomment for development with volume mount
+    # volumes:
+    #   - ./:/app
+    #   - /app/node_modules
 
 volumes:
-  mongo_data:
-  tari_data:
-  monero_data:
+  mongodb_data:
+    driver: local
+
+networks:
+  myzubster-network:
+    driver: bridge
