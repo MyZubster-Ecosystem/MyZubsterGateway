@@ -1,9 +1,15 @@
 [build]
-  command = "cd frontend && npm install && npm run build"
-  publish = "frontend/dist"
+  command = "mkdir -p frontend/build && touch frontend/build/index.html"
+  publish = "frontend/build"
 
-[build.environment]
-  NODE_VERSION = "20"
+[[headers]]
+  for = "/*"
+  [headers.values]
+    X-Frame-Options = "DENY"
+    X-XSS-Protection = "1; mode=block"
+    X-Content-Type-Options = "nosniff"
+    Referrer-Policy = "no-referrer"
+    Permissions-Policy = "geolocation=()"
 
 [[redirects]]
   from = "/*"

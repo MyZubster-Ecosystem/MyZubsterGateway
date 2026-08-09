@@ -1,0 +1,647 @@
+<!DOCTYPE html>
+<html lang="it" data-theme="dark">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>🏪 Interfaccia Clienti - Negozianti - MyZubster</title>
+  <style>
+    :root {
+      --accent: #4A90D9;
+      --accent-2: #1ABC9C;
+      --bg: #0a0e16;
+      --surface: #131923;
+      --surface-2: #1c2533;
+      --text: #e8edf4;
+      --text-soft: #8892b0;
+      --border: #253040;
+      --shadow: 0 10px 30px rgba(0,0,0,0.4);
+      --radius: 12px;
+      --success: #22a06b;
+      --warning: #d99000;
+      --error: #d94f4f;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      margin: 0; padding: 20px;
+      font-family: 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+      background: var(--bg); color: var(--text);
+      min-height: 100vh;
+    }
+    .wrap { max-width: 1100px; margin: 0 auto; }
+
+    /* Header */
+    header {
+      display: flex; align-items: center; gap: 14px;
+      margin-bottom: 24px; flex-wrap: wrap;
+      padding: 16px 20px; background: var(--surface);
+      border: 1px solid var(--border); border-radius: var(--radius);
+    }
+    h1 { font-size: 22px; margin: 0; }
+    .spacer { flex: 1; }
+    .badge {
+      font-size: 12px; padding: 4px 10px; border-radius: 999px;
+      background: rgba(26, 188, 156, 0.15); color: var(--accent-2);
+      border: 1px solid rgba(26, 188, 156, 0.3);
+    }
+    .btn {
+      background: var(--surface-2); color: var(--text);
+      border: 1px solid var(--border); border-radius: 8px;
+      padding: 8px 16px; cursor: pointer; font-size: 13px;
+      transition: all 0.2s; display: inline-flex; align-items: center; gap: 6px;
+    }
+    .btn:hover { border-color: var(--accent); }
+    .btn.primary {
+      background: var(--accent); border-color: var(--accent);
+      color: #fff; font-weight: 600;
+    }
+    .btn.primary:hover { filter: brightness(1.1); }
+    .btn.success { background: var(--success); border-color: var(--success); color: #fff; }
+    .btn.outline { background: transparent; border-color: var(--border); }
+
+    /* Tabs */
+    .tabs {
+      display: flex; gap: 4px; margin-bottom: 20px;
+      background: var(--surface); border: 1px solid var(--border);
+      border-radius: var(--radius); padding: 4px; overflow-x: auto;
+    }
+    .tab {
+      padding: 10px 18px; border-radius: 8px; cursor: pointer;
+      font-size: 13px; color: var(--text-soft); border: none;
+      background: transparent; white-space: nowrap; transition: all 0.2s;
+    }
+    .tab:not(.active):hover { color: var(--text); background: var(--surface-2); }
+    .tab.active { background: var(--accent); color: #fff; font-weight: 600; }
+    .tab .count {
+      display: inline-block; margin-left: 6px; padding: 1px 6px;
+      border-radius: 999px; font-size: 11px;
+      background: rgba(255,255,255,0.15); color: inherit;
+    }
+    .tab.active .count { background: rgba(255,255,255,0.25); }
+
+    /* Panels */
+    .panel {
+      background: var(--surface); border: 1px solid var(--border);
+      border-radius: var(--radius); padding: 20px; margin-bottom: 16px;
+    }
+    .panel-title {
+      font-size: 15px; font-weight: 600; margin-bottom: 14px;
+      display: flex; align-items: center; gap: 8px;
+    }
+
+    /* Forms */
+    .form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+    .form-group { display: flex; flex-direction: column; gap: 4px; }
+    .form-group.full { grid-column: 1 / -1; }
+    label { font-size: 12px; color: var(--text-soft); font-weight: 500; }
+    input, textarea, select {
+      background: var(--surface-2); color: var(--text);
+      border: 1px solid var(--border); border-radius: 8px;
+      padding: 9px 12px; font-size: 13px; font-family: inherit;
+      transition: border-color 0.2s;
+    }
+    input:focus, textarea:focus, select:focus {
+      outline: none; border-color: var(--accent);
+    }
+    textarea { resize: vertical; min-height: 60px; }
+
+    /* Photo upload */
+    .photo-upload {
+      border: 2px dashed var(--border); border-radius: var(--radius);
+      padding: 30px; text-align: center; cursor: pointer;
+      transition: all 0.2s; position: relative;
+    }
+    .photo-upload:hover { border-color: var(--accent); background: rgba(74,144,217,0.05); }
+    .photo-upload input[type="file"] { display: none; }
+    .photo-upload .icon { font-size: 32px; margin-bottom: 8px; }
+    .photo-upload .hint { font-size: 12px; color: var(--text-soft); }
+    .photo-preview {
+      display: flex; gap: 10px; flex-wrap: wrap; margin-top: 12px;
+    }
+    .photo-preview img {
+      width: 80px; height: 80px; object-fit: cover;
+      border-radius: 8px; border: 1px solid var(--border);
+    }
+
+    /* Cards */
+    .cards { display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 14px; }
+    .card {
+      background: var(--surface-2); border: 1px solid var(--border);
+      border-radius: var(--radius); padding: 16px;
+      transition: border-color 0.2s;
+    }
+    .card:hover { border-color: var(--accent); }
+    .card h3 { font-size: 14px; margin-bottom: 6px; }
+    .card .meta { font-size: 12px; color: var(--text-soft); margin-bottom: 8px; }
+    .card .status {
+      display: inline-block; padding: 2px 8px; border-radius: 999px;
+      font-size: 11px; font-weight: 500;
+    }
+    .card .status.draft { background: rgba(217,144,0,0.15); color: var(--warning); }
+    .card .status.published { background: rgba(34,160,107,0.15); color: var(--success); }
+    .card .status.pending { background: rgba(74,144,217,0.15); color: var(--accent); }
+    .card-actions { display: flex; gap: 6px; margin-top: 10px; }
+    .card-actions .btn { font-size: 12px; padding: 4px 10px; }
+
+    /* Post preview */
+    .post-preview {
+      background: var(--bg); border: 1px solid var(--border);
+      border-radius: 8px; padding: 16px; margin-top: 12px;
+    }
+    .post-preview .header {
+      display: flex; align-items: center; gap: 10px; margin-bottom: 10px;
+    }
+    .post-preview .avatar {
+      width: 40px; height: 40px; border-radius: 50%;
+      background: var(--surface-2); display: flex; align-items: center;
+      justify-content: center; font-size: 18px;
+    }
+    .post-preview .shop-name { font-weight: 600; font-size: 14px; }
+    .post-preview .time { font-size: 12px; color: var(--text-soft); }
+    .post-preview .content { font-size: 14px; line-height: 1.5; margin-bottom: 10px; }
+    .post-preview .photos { display: flex; gap: 6px; flex-wrap: wrap; margin-bottom: 10px; }
+    .post-preview .photos img {
+      width: 100px; height: 100px; object-fit: cover;
+      border-radius: 8px; border: 1px solid var(--border);
+    }
+
+    /* Empty state */
+    .empty {
+      text-align: center; padding: 40px 20px; color: var(--text-soft);
+    }
+    .empty .icon { font-size: 48px; margin-bottom: 10px; }
+    .empty h3 { color: var(--text); margin-bottom: 6px; }
+    .empty p { font-size: 13px; }
+
+    /* Toast */
+    .toast {
+      position: fixed; bottom: 20px; right: 20px;
+      background: var(--surface); border: 1px solid var(--border);
+      border-radius: 10px; padding: 12px 18px;
+      box-shadow: var(--shadow); font-size: 13px;
+      display: none; align-items: center; gap: 8px;
+      z-index: 1000; animation: slideIn 0.3s ease;
+    }
+    .toast.show { display: flex; }
+    .toast.success { border-left: 3px solid var(--success); }
+    .toast.error { border-left: 3px solid var(--error); }
+    .toast.info { border-left: 3px solid var(--accent); }
+    @keyframes slideIn { from { transform: translateX(100px); opacity: 0; } to { transform: translateX(0); opacity: 1; } }
+
+    /* Tab content visibility */
+    .tab-content { display: none; }
+    .tab-content.active { display: block; }
+
+    /* Responsive */
+    @media (max-width: 640px) {
+      body { padding: 12px; }
+      .form-grid { grid-template-columns: 1fr; }
+      .cards { grid-template-columns: 1fr; }
+      header { flex-direction: column; align-items: flex-start; }
+      .tabs { overflow-x: auto; }
+      .tab { font-size: 12px; padding: 8px 12px; }
+    }
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <!-- Header -->
+    <header>
+      <span style="font-size:24px;">🏪</span>
+      <h1>Interfaccia Clienti</h1>
+      <span class="badge">100 MYZ</span>
+      <span class="badge" style="background:rgba(74,144,217,0.15);color:var(--accent);border-color:rgba(74,144,217,0.3);">Bounty #381</span>
+      <div class="spacer"></div>
+      <button class="btn primary" onclick="showTab('onboarding')">➕ Nuovo Negozio</button>
+    </header>
+
+    <!-- Tabs -->
+    <div class="tabs" id="mainTabs">
+      <button class="tab active" data-tab="dashboard" onclick="showTab('dashboard')">📊 Dashboard</button>
+      <button class="tab" data-tab="posts" onclick="showTab('posts')">📝 Post <span class="count" id="postCount">0</span></button>
+      <button class="tab" data-tab="onboarding" onclick="showTab('onboarding')">🏪 Onboarding</button>
+      <button class="tab" data-tab="preview" onclick="showTab('preview')">👁️ Anteprima</button>
+    </div>
+
+    <!-- ============= TAB: Dashboard ============= -->
+    <div class="tab-content active" id="tab-dashboard">
+      <div class="cards" style="grid-template-columns:repeat(auto-fit,minmax(200px,1fr));">
+        <div class="card" style="text-align:center;">
+          <div style="font-size:28px;margin-bottom:6px;">🏪</div>
+          <div class="meta">Negozi</div>
+          <div style="font-size:24px;font-weight:700;" id="shopCount">0</div>
+        </div>
+        <div class="card" style="text-align:center;">
+          <div style="font-size:28px;margin-bottom:6px;">📝</div>
+          <div class="meta">Post Generati</div>
+          <div style="font-size:24px;font-weight:700;" id="totalPosts">0</div>
+        </div>
+        <div class="card" style="text-align:center;">
+          <div style="font-size:28px;margin-bottom:6px;">✅</div>
+          <div class="meta">Pubblicati</div>
+          <div style="font-size:24px;font-weight:700;color:var(--success);" id="publishedPosts">0</div>
+        </div>
+        <div class="card" style="text-align:center;">
+          <div style="font-size:28px;margin-bottom:6px;">⏳</div>
+          <div class="meta">In Attesa</div>
+          <div style="font-size:24px;font-weight:700;color:var(--warning);" id="pendingPosts">0</div>
+        </div>
+      </div>
+
+      <!-- Recent shops -->
+      <div class="panel">
+        <div class="panel-title">🏪 Negozi Registrati</div>
+        <div id="shopList"><div class="empty"><div class="icon">🏪</div><h3>Nessun negozio</h3><p>Registra il tuo primo negozio nella sezione Onboarding.</p></div></div>
+      </div>
+    </div>
+
+    <!-- ============= TAB: Posts ============= -->
+    <div class="tab-content" id="tab-posts">
+      <div class="panel">
+        <div class="panel-title" style="justify-content:space-between;">
+          <span>📝 Storico Post</span>
+          <button class="btn outline" onclick="generatePost()">🤖 Genera Post</button>
+        </div>
+        <div id="postList"><div class="empty"><div class="icon">📝</div><h3>Nessun post ancora</h3><p>Genera il tuo primo post con un click.</p></div></div>
+      </div>
+    </div>
+
+    <!-- ============= TAB: Onboarding ============= -->
+    <div class="tab-content" id="tab-onboarding">
+      <div class="panel">
+        <div class="panel-title">🏪 Nuovo Negozio — Onboarding</div>
+        <form id="shopForm" onsubmit="submitShop(event)">
+          <div class="form-grid">
+            <div class="form-group">
+              <label>Nome Negozio *</label>
+              <input type="text" id="shopName" required placeholder="es. Bar Centrale" />
+            </div>
+            <div class="form-group">
+              <label>Categoria</label>
+              <select id="shopCategory">
+                <option value="bar">Bar / Caffè</option>
+                <option value="ristorante">Ristorante</option>
+                <option value="pizzeria">Pizzeria</option>
+                <option value="panetteria">Panetteria</option>
+                <option value="alimentari">Alimentari</option>
+                <option value="abbigliamento">Abbigliamento</option>
+                <option value="altro">Altro</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label>Indirizzo</label>
+              <input type="text" id="shopAddress" placeholder="Via Roma, 1" />
+            </div>
+            <div class="form-group">
+              <label>Telefono</label>
+              <input type="tel" id="shopPhone" placeholder="+39 123 456 7890" />
+            </div>
+            <div class="form-group full">
+              <label>Descrizione</label>
+              <textarea id="shopDesc" placeholder="Descrivi il tuo negozio..."></textarea>
+            </div>
+            <div class="form-group full">
+              <label>Foto del negozio</label>
+              <div class="photo-upload" onclick="document.getElementById('shopPhotos').click()">
+                <div class="icon">📸</div>
+                <div style="margin-bottom:4px;">Clicca per caricare foto</div>
+                <div class="hint">JPG, PNG fino a 5MB</div>
+                <input type="file" id="shopPhotos" accept="image/*" multiple onchange="handlePhotos(event)" />
+              </div>
+              <div class="photo-preview" id="photoPreview"></div>
+            </div>
+          </div>
+          <div style="margin-top:16px;display:flex;gap:10px;flex-wrap:wrap;">
+            <button type="submit" class="btn primary">💾 Salva Negozio</button>
+            <button type="button" class="btn outline" onclick="resetForm()">🗑️ Cancella</button>
+          </div>
+        </form>
+      </div>
+    </div>
+
+    <!-- ============= TAB: Preview ============= -->
+    <div class="tab-content" id="tab-preview">
+      <div class="panel">
+        <div class="panel-title" style="justify-content:space-between;">
+          <span>👁️ Anteprima Post</span>
+          <div style="display:flex;gap:6px;">
+            <button class="btn outline" onclick="regeneratePreview()">🔄 Rigenera</button>
+            <button class="btn success" onclick="publishPost()">✅ Pubblica</button>
+          </div>
+        </div>
+        <div id="postPreviewArea">
+          <div class="empty"><div class="icon">👁️</div><h3>Nessuna anteprima</h3><p>Genera un post dalla sezione Post o seleziona un post esistente.</p></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Toast -->
+  <div class="toast" id="toast"></div>
+
+  <script>
+    // =========== STATE ===========
+    const STATE = {
+      shops: JSON.parse(localStorage.getItem('mzb_merchant_shops') || '[]'),
+      posts: JSON.parse(localStorage.getItem('mzb_merchant_posts') || '[]'),
+      photos: [],
+      selectedPost: null
+    };
+
+    function saveState() {
+      localStorage.setItem('mzb_merchant_shops', JSON.stringify(STATE.shops));
+      localStorage.setItem('mzb_merchant_posts', JSON.stringify(STATE.posts));
+    }
+
+    // =========== TOAST ===========
+    function showToast(msg, type) {
+      const t = document.getElementById('toast');
+      t.textContent = msg;
+      t.className = 'toast show ' + (type || 'info');
+      setTimeout(() => { t.className = 'toast'; }, 3000);
+    }
+
+    // =========== TABS ===========
+    function showTab(name) {
+      document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('active'));
+      document.querySelectorAll('.tab').forEach(el => el.classList.remove('active'));
+      document.getElementById('tab-' + name).classList.add('active');
+      document.querySelector(`.tab[data-tab="${name}"]`).classList.add('active');
+      renderAll();
+    }
+
+    // =========== PHOTOS ===========
+    function handlePhotos(e) {
+      const files = e.target.files;
+      STATE.photos = [];
+      const preview = document.getElementById('photoPreview');
+      preview.innerHTML = '';
+      for (const f of files) {
+        const reader = new FileReader();
+        reader.onload = function(ev) {
+          STATE.photos.push(ev.target.result);
+          const img = document.createElement('img');
+          img.src = ev.target.result;
+          preview.appendChild(img);
+        };
+        reader.readAsDataURL(f);
+      }
+    }
+
+    // =========== SHOP FORM ===========
+    function submitShop(e) {
+      e.preventDefault();
+      const name = document.getElementById('shopName').value.trim();
+      if (!name) { showToast('Inserisci il nome del negozio', 'error'); return; }
+      const shop = {
+        id: Date.now().toString(36) + Math.random().toString(36).slice(2, 6),
+        name: name,
+        category: document.getElementById('shopCategory').value,
+        address: document.getElementById('shopAddress').value.trim(),
+        phone: document.getElementById('shopPhone').value.trim(),
+        description: document.getElementById('shopDesc').value.trim(),
+        photos: [...STATE.photos],
+        createdAt: new Date().toISOString()
+      };
+      STATE.shops.push(shop);
+      saveState();
+      resetForm();
+      showToast('✅ Negozio "' + name + '" registrato con successo!', 'success');
+      renderAll();
+      // Auto-generate a welcome post
+      autoGeneratePost(shop);
+    }
+
+    function resetForm() {
+      document.getElementById('shopForm').reset();
+      document.getElementById('photoPreview').innerHTML = '';
+      STATE.photos = [];
+    }
+
+    // =========== AUTO GENERATE POST ===========
+    function autoGeneratePost(shop) {
+      const templates = [
+        `🎉 Nuovo arrivo! Da oggi ${shop.name} è su MyZubster! Venite a trovarci per scoprire le nostre offerte speciali.`,
+        `📍 ${shop.name} ti aspetta! Scopri i nostri prodotti freschi e di qualità. Passa a trovarci!`,
+        `🔥 Promozione speciale da ${shop.name}! Sconti imperdibili per tutti i clienti MyZubster.`,
+        `🌟 ${shop.name} — qualità e tradizione. Iscriviti al nostro canale per ricevere offerte esclusive!`
+      ];
+      const text = templates[Math.floor(Math.random() * templates.length)];
+      const post = {
+        id: Date.now().toString(36) + Math.random().toString(36).slice(2, 6),
+        shopId: shop.id,
+        shopName: shop.name,
+        text: text,
+        photos: shop.photos.slice(0, 3),
+        status: 'draft',
+        createdAt: new Date().toISOString(),
+        platform: 'MyZubster Social'
+      };
+      STATE.posts.push(post);
+      saveState();
+      renderAll();
+      showToast('🤖 Post generato automaticamente per ' + shop.name, 'info');
+    }
+
+    // =========== GENERATE POST ===========
+    function generatePost() {
+      if (STATE.shops.length === 0) {
+        showToast('Prima registra un negozio nella sezione Onboarding', 'error');
+        return;
+      }
+      // Pick a random shop
+      const shop = STATE.shops[Math.floor(Math.random() * STATE.shops.length)];
+      const templates = [
+        `🍽️ Oggi da ${shop.name}: menù speciale del giorno! Piatti freschi e genuini.`,
+        `🛒 ${shop.name} — nuovi prodotti in arrivo! Non perdete le nostre offerte.`,
+        `🎁 ${shop.name} omaggia i clienti MyZubster! Sconto del 10% su tutti i prodotti.`,
+        `📢 ${shop.name} ringrazia i suoi clienti! Offerta speciale questo weekend.`,
+        `✨ Novità da ${shop.name}! Scopri le nostre ultime proposte e promozioni.`
+      ];
+      const text = templates[Math.floor(Math.random() * templates.length)];
+      const post = {
+        id: Date.now().toString(36) + Math.random().toString(36).slice(2, 6),
+        shopId: shop.id,
+        shopName: shop.name,
+        text: text,
+        photos: shop.photos.slice(0, 3),
+        status: 'draft',
+        createdAt: new Date().toISOString(),
+        platform: 'MyZubster Social'
+      };
+      STATE.posts.push(post);
+      saveState();
+      renderAll();
+      showToast('🤖 Post generato con successo!', 'success');
+    }
+
+    // =========== PUBLISH / PREVIEW ===========
+    function showPreview(postId) {
+      const post = STATE.posts.find(p => p.id === postId);
+      if (!post) return;
+      STATE.selectedPost = post;
+      renderPreview(post);
+      showTab('preview');
+    }
+
+    function publishPost() {
+      if (!STATE.selectedPost) { showToast('Seleziona un post da pubblicare', 'error'); return; }
+      const post = STATE.posts.find(p => p.id === STATE.selectedPost.id);
+      if (!post) return;
+      post.status = 'published';
+      saveState();
+      renderAll();
+      showToast('✅ Post pubblicato con successo!', 'success');
+      // Simulate social robot API integration
+      simulateSocialRobotPost(post);
+    }
+
+    function regeneratePreview() {
+      if (!STATE.selectedPost) { showToast('Nessun post selezionato', 'error'); return; }
+      const templates = [
+        `🔄 Versione aggiornata! ${STATE.selectedPost.shopName} ti offre nuove proposte.`,
+        `📢 ${STATE.selectedPost.shopName} — promozione rinnovata! Affrettati, offerte limitate.`,
+        `⭐ ${STATE.selectedPost.shopName} — i nostri clienti ci scelgono per la qualità!`
+      ];
+      STATE.selectedPost.text = templates[Math.floor(Math.random() * templates.length)];
+      const post = STATE.posts.find(p => p.id === STATE.selectedPost.id);
+      if (post) post.text = STATE.selectedPost.text;
+      saveState();
+      renderPreview(STATE.selectedPost);
+      showToast('🔄 Post rigenerato!', 'info');
+    }
+
+    function approvePost(postId) {
+      const post = STATE.posts.find(p => p.id === postId);
+      if (!post) return;
+      post.status = 'published';
+      saveState();
+      renderAll();
+      showToast('✅ Post approvato e pubblicato!', 'success');
+      simulateSocialRobotPost(post);
+    }
+
+    // =========== SOCIAL ROBOT API SIMULATION ===========
+    function simulateSocialRobotPost(post) {
+      console.log('[Social Robot API] Publishing post:', post.id);
+      // Simulate API call to social robot
+      const payload = {
+        shopName: post.shopName,
+        text: post.text,
+        photos: post.photos,
+        platform: post.platform,
+        action: 'publish',
+        timestamp: new Date().toISOString()
+      };
+      console.log('[Social Robot API] Payload:', JSON.stringify(payload));
+      // In production, this would be:
+      // fetch('/api/social-robot/publish', { method: 'POST', body: JSON.stringify(payload) })
+      setTimeout(() => {
+        console.log('[Social Robot API] Post published successfully:', post.id);
+        showToast('🤖 Robot Social: Post pubblicato su ' + post.platform, 'info');
+      }, 500);
+    }
+
+    function deletePost(postId) {
+      STATE.posts = STATE.posts.filter(p => p.id !== postId);
+      saveState();
+      renderAll();
+      showToast('🗑️ Post eliminato', 'info');
+    }
+
+    // =========== RENDER ===========
+    function renderAll() {
+      const shops = STATE.shops;
+      const posts = STATE.posts;
+      const published = posts.filter(p => p.status === 'published');
+      const pending = posts.filter(p => p.status === 'draft' || p.status === 'pending');
+
+      document.getElementById('shopCount').textContent = shops.length;
+      document.getElementById('totalPosts').textContent = posts.length;
+      document.getElementById('publishedPosts').textContent = published.length;
+      document.getElementById('pendingPosts').textContent = pending.length;
+      document.getElementById('postCount').textContent = posts.length;
+
+      // Shop list
+      const shopList = document.getElementById('shopList');
+      if (shops.length === 0) {
+        shopList.innerHTML = '<div class="empty"><div class="icon">🏪</div><h3>Nessun negozio</h3><p>Registra il tuo primo negozio nella sezione Onboarding.</p></div>';
+      } else {
+        shopList.innerHTML = shops.map(s => `
+          <div class="card" style="margin-bottom:10px;">
+            <div style="display:flex;justify-content:space-between;align-items:start;flex-wrap:wrap;gap:8px;">
+              <div>
+                <h3>${s.name}</h3>
+                <div class="meta">${s.category} ${s.address ? '· ' + s.address : ''}</div>
+              </div>
+              <span class="badge">${s.photos.length} 📸</span>
+            </div>
+            <div class="meta" style="margin-top:4px;">Registrato: ${new Date(s.createdAt).toLocaleDateString('it-IT')}</div>
+          </div>
+        `).join('');
+      }
+
+      // Post list
+      const postList = document.getElementById('postList');
+      if (posts.length === 0) {
+        postList.innerHTML = '<div class="empty"><div class="icon">📝</div><h3>Nessun post ancora</h3><p>Genera il tuo primo post con un click.</p></div>';
+      } else {
+        postList.innerHTML = posts.slice().reverse().map(p => `
+          <div class="card" style="margin-bottom:10px;">
+            <div style="display:flex;justify-content:space-between;align-items:start;flex-wrap:wrap;gap:8px;">
+              <div>
+                <h3>${p.shopName}</h3>
+                <div class="meta">${new Date(p.createdAt).toLocaleString('it-IT')} · ${p.platform}</div>
+              </div>
+              <span class="status ${p.status}">${p.status === 'draft' ? 'Bozza' : p.status === 'published' ? 'Pubblicato' : 'In attesa'}</span>
+            </div>
+            <div style="font-size:13px;margin:8px 0;line-height:1.5;">${p.text}</div>
+            ${p.photos.length > 0 ? '<div class="photos">' + p.photos.slice(0, 3).map(ph => '<img src="' + ph + '" style="width:60px;height:60px;object-fit:cover;border-radius:6px;border:1px solid var(--border);" />').join('') + '</div>' : ''}
+            <div class="card-actions">
+              <button class="btn" onclick="showPreview('${p.id}')">👁️ Anteprima</button>
+              ${p.status !== 'published' ? '<button class="btn success" onclick="approvePost(\'' + p.id + '\')">✅ Approva</button>' : ''}
+              <button class="btn" onclick="deletePost('${p.id}')" style="color:var(--error);">🗑️</button>
+            </div>
+          </div>
+        `).join('');
+      }
+    }
+
+    // =========== RENDER PREVIEW ===========
+    function renderPreview(post) {
+      const area = document.getElementById('postPreviewArea');
+      if (!post) {
+        area.innerHTML = '<div class="empty"><div class="icon">👁️</div><h3>Nessuna anteprima</h3><p>Genera un post dalla sezione Post o seleziona un post esistente.</p></div>';
+        return;
+      }
+      const now = new Date().toLocaleString('it-IT');
+      area.innerHTML = `
+        <div class="post-preview">
+          <div class="header">
+            <div class="avatar">🏪</div>
+            <div>
+              <div class="shop-name">${post.shopName}</div>
+              <div class="time">${now} · ${post.platform}</div>
+            </div>
+          </div>
+          <div class="content">${post.text}</div>
+          ${post.photos.length > 0 ? '<div class="photos">' + post.photos.slice(0, 3).map(ph => '<img src="' + ph + '" />').join('') + '</div>' : ''}
+          <div style="display:flex;gap:8px;padding-top:10px;border-top:1px solid var(--border);">
+            <span>❤️ 0</span>
+            <span>💬 0</span>
+            <span>🔄 0</span>
+          </div>
+        </div>
+        <div style="margin-top:12px;padding:12px;background:var(--surface-2);border-radius:8px;font-size:12px;color:var(--text-soft);">
+          <strong>🤖 Social Robot API</strong><br/>
+          Questo post verrà pubblicato tramite il robot social di MyZubster su ${post.platform}.
+          ${post.status === 'published' ? '<br/><span style="color:var(--success);">✅ Post pubblicato</span>' : '<br/><span style="color:var(--warning);">⏳ In attesa di approvazione</span>'}
+        </div>
+      `;
+    }
+
+    // =========== INIT ===========
+    renderAll();
+    if (STATE.selectedPost) renderPreview(STATE.selectedPost);
+  </script>
+</body>
+</html>
