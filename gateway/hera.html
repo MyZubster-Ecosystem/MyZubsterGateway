@@ -1,0 +1,158 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>🌿 Hera - Mappa delle Piante</title>
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: #0a0a2e;
+            color: #e0e0e0;
+            height: 100vh;
+        }
+        #map { height: 100vh; width: 100%; }
+        .overlay {
+            position: absolute;
+            top: 20px;
+            left: 20px;
+            z-index: 1000;
+            background: rgba(10, 10, 46, 0.85);
+            padding: 20px;
+            border-radius: 12px;
+            border: 1px solid rgba(79, 195, 247, 0.2);
+            max-width: 300px;
+            backdrop-filter: blur(10px);
+        }
+        .overlay h2 {
+            color: #81c784;
+            font-size: 20px;
+            margin-bottom: 8px;
+        }
+        .overlay p {
+            color: #8888bb;
+            font-size: 14px;
+        }
+        .overlay .back {
+            display: inline-block;
+            margin-top: 10px;
+            color: #4fc3f7;
+            text-decoration: none;
+            font-size: 14px;
+        }
+        .overlay .back:hover {
+            text-decoration: underline;
+        }
+        .legend {
+            position: absolute;
+            bottom: 30px;
+            left: 20px;
+            z-index: 1000;
+            background: rgba(10, 10, 46, 0.85);
+            padding: 15px;
+            border-radius: 10px;
+            border: 1px solid rgba(79, 195, 247, 0.2);
+            backdrop-filter: blur(10px);
+        }
+        .legend-item {
+            display: flex;
+            align-items: center;
+            margin: 5px 0;
+            font-size: 13px;
+        }
+        .legend-item .color {
+            width: 16px;
+            height: 16px;
+            border-radius: 50%;
+            margin-right: 10px;
+        }
+    </style>
+</head>
+<body>
+    <div id="map"></div>
+
+    <div class="overlay">
+        <h2>🌿 Hera Map</h2>
+        <p>Mappa interattiva delle piante di Hera</p>
+        <a href="/" class="back">← Torna alla Home</a>
+    </div>
+
+    <div class="legend">
+        <div class="legend-item">
+            <div class="color" style="background: #4caf50;"></div>
+            <span>Piante attive</span>
+        </div>
+        <div class="legend-item">
+            <div class="color" style="background: #ff9800;"></div>
+            <span>Piante in monitoraggio</span>
+        </div>
+        <div class="legend-item">
+            <div class="color" style="background: #f44336;"></div>
+            <span>Piante critiche</span>
+        </div>
+    </div>
+
+    <script>
+        // Inizializza la mappa
+        const map = L.map('map').setView([41.9028, 12.4964], 13);
+
+        // Aggiungi il layer Tile
+        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+            attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+        }).addTo(map);
+
+        // Dati esempio delle piante (sostituisci con i dati reali)
+        const plants = [
+            { id: 1, name: 'Olivo Secolare', lat: 41.9028, lng: 12.4964, status: 'active', icon: '🌳' },
+            { id: 2, name: 'Vite Rossa', lat: 41.9128, lng: 12.5064, status: 'monitoring', icon: '🍇' },
+            { id: 3, name: 'Limone Bio', lat: 41.8928, lng: 12.4864, status: 'critical', icon: '🍋' },
+            { id: 4, name: 'Fico d\'India', lat: 41.9228, lng: 12.5164, status: 'active', icon: '🌵' },
+            { id: 5, name: 'Rosmarino Selvatico', lat: 41.8828, lng: 12.4764, status: 'active', icon: '🌿' },
+        ];
+
+        // Colori per i marker
+        const statusColors = {
+            active: '#4caf50',
+            monitoring: '#ff9800',
+            critical: '#f44336'
+        };
+
+        // Aggiungi i marker alla mappa
+        plants.forEach(plant => {
+            const marker = L.circleMarker([plant.lat, plant.lng], {
+                radius: 12,
+                fillColor: statusColors[plant.status] || '#4caf50',
+                color: '#fff',
+                weight: 2,
+                opacity: 1,
+                fillOpacity: 0.8
+            }).addTo(map);
+
+            marker.bindPopup(`
+                <div style="color:#0a0a2e;">
+                    <strong>${plant.icon} ${plant.name}</strong><br>
+                    Status: <span style="color:${statusColors[plant.status]}">${plant.status}</span><br>
+                    ID: ${plant.id}
+                </div>
+            `);
+        });
+
+        // Aggiungi alcuni marker con icone personalizzate
+        const greenIcon = L.icon({
+            iconUrl: 'https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-2x-green.png',
+            shadowUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-shadow.png',
+            iconSize: [25, 41],
+            iconAnchor: [12, 41],
+            popupAnchor: [1, -34],
+            shadowSize: [41, 41]
+        });
+
+        L.marker([41.9028, 12.4964], { icon: greenIcon })
+            .addTo(map)
+            .bindPopup('🌳 Olivo Secolare - Attivo');
+    </script>
+</body>
+</html>
