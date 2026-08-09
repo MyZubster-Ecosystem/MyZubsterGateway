@@ -1,0 +1,266 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MyZubster — Piattaforma Gateway per Sviluppatori</title>
+    <meta name="description" content="MyZubster e la piattaforma gateway che connette sviluppatori, progetti open-source e opportunita di bounty. Guadagna token MYZ contribuendo al codice.">
+    <meta name="keywords" content="MyZubster, gateway, sviluppatori, open source, bounty, MYZ, Tari, blockchain, coding, freelance">
+    <meta name="author" content="MyZubster Ecosystem">
+    <meta name="robots" content="index, follow">
+    <link rel="canonical" href="https://myzubster.com/">
+    <meta property="og:title" content="MyZubster — Piattaforma Gateway per Sviluppatori">
+    <meta property="og:description" content="Connetti il tuo talento con opportunita reali. Sviluppa, guadagna MYZ, cresci nella community.">
+    <meta property="og:type" content="website">
+    <meta property="og:url" content="https://myzubster.com/">
+    <meta property="og:image" content="https://myzubster.com/assets/logo/og-image.png">
+    <meta property="og:locale" content="it_IT">
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="MyZubster — Piattaforma Gateway per Sviluppatori">
+    <meta name="twitter:description" content="Connetti il tuo talento con opportunita reali. Sviluppa, guadagna MYZ, cresci nella community.">
+    <meta name="twitter:image" content="https://myzubster.com/assets/logo/og-image.png">
+    <script type="application/ld+json">
+    {
+        "@context": "https://schema.org",
+        "@type": "SoftwareApplication",
+        "name": "MyZubster Gateway",
+        "applicationCategory": "DeveloperApplication",
+        "operatingSystem": "Web",
+        "description": "Piattaforma gateway per sviluppatori — connetti, sviluppa e guadagna token MYZ.",
+        "offers": { "@type": "Offer", "price": "0", "priceCurrency": "USD" }
+    }
+    </script>
+    <style>
+        :root {
+            --primary: #6366f1; --primary-dark: #4f46e5; --accent: #06b6d4;
+            --bg: #0f172a; --bg-card: #1e293b; --text: #e2e8f0; --text-muted: #94a3b8;
+            --success: #10b981; --gradient: linear-gradient(135deg, #6366f1 0%, #06b6d4 100%);
+        }
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif;
+            background: var(--bg); color: var(--text); line-height: 1.6; overflow-x: hidden;
+        }
+        nav {
+            position: fixed; top: 0; width: 100%;
+            background: rgba(15, 23, 42, 0.95); backdrop-filter: blur(12px);
+            border-bottom: 1px solid rgba(99, 102, 241, 0.2); z-index: 1000; padding: 0 2rem;
+        }
+        .nav-inner { max-width: 1200px; margin: 0 auto; display: flex; justify-content: space-between; align-items: center; height: 64px; }
+        .logo { font-size: 1.5rem; font-weight: 800; background: var(--gradient); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; }
+        .nav-links { display: flex; gap: 2rem; list-style: none; }
+        .nav-links a { color: var(--text-muted); text-decoration: none; font-weight: 500; transition: color 0.2s; }
+        .nav-links a:hover { color: var(--text); }
+        .nav-cta { background: var(--gradient); color: white; border: none; padding: 0.5rem 1.25rem; border-radius: 8px; font-weight: 600; cursor: pointer; transition: transform 0.2s, box-shadow 0.2s; }
+        .nav-cta:hover { transform: translateY(-1px); box-shadow: 0 4px 20px rgba(99, 102, 241, 0.4); }
+        .hero { padding: 8rem 2rem 5rem; text-align: center; max-width: 900px; margin: 0 auto; }
+        .hero h1 { font-size: clamp(2rem, 5vw, 3.5rem); font-weight: 800; line-height: 1.2; margin-bottom: 1.5rem; }
+        .hero .gradient-text { background: var(--gradient); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; }
+        .hero p { font-size: 1.2rem; color: var(--text-muted); max-width: 600px; margin: 0 auto 2.5rem; }
+        .hero-stats { display: flex; justify-content: center; gap: 3rem; margin-top: 3rem; flex-wrap: wrap; }
+        .stat { text-align: center; }
+        .stat-number { font-size: 2rem; font-weight: 800; background: var(--gradient); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; }
+        .stat-label { font-size: 0.875rem; color: var(--text-muted); }
+        .section { padding: 5rem 2rem; max-width: 1200px; margin: 0 auto; }
+        .section h2 { font-size: 2rem; font-weight: 700; text-align: center; margin-bottom: 1rem; }
+        .section-subtitle { text-align: center; color: var(--text-muted); margin-bottom: 3rem; font-size: 1.1rem; }
+        .features { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 2rem; }
+        .feature-card { background: var(--bg-card); border-radius: 16px; padding: 2rem; border: 1px solid rgba(99, 102, 241, 0.15); transition: transform 0.2s, border-color 0.2s; }
+        .feature-card:hover { transform: translateY(-4px); border-color: rgba(99, 102, 241, 0.4); }
+        .feature-icon { font-size: 2rem; margin-bottom: 1rem; }
+        .feature-card h3 { font-size: 1.2rem; margin-bottom: 0.75rem; }
+        .feature-card p { color: var(--text-muted); font-size: 0.95rem; }
+        .steps { display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 2rem; }
+        .step-card { background: var(--bg-card); border-radius: 16px; padding: 2rem; border: 1px solid rgba(99, 102, 241, 0.15); position: relative; }
+        .step-number { position: absolute; top: -15px; left: -15px; width: 40px; height: 40px; background: var(--gradient); border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: 800; font-size: 1.2rem; color: white; }
+        .cta-section { text-align: center; padding: 5rem 2rem; background: linear-gradient(135deg, rgba(99, 102, 241, 0.1) 0%, rgba(6, 182, 212, 0.1) 100%); }
+        .cta-section h2 { font-size: 2.5rem; font-weight: 800; margin-bottom: 1rem; }
+        .cta-buttons { display: flex; gap: 1rem; justify-content: center; flex-wrap: wrap; }
+        .btn-primary { background: var(--gradient); color: white; border: none; padding: 1rem 2.5rem; border-radius: 12px; font-size: 1.1rem; font-weight: 600; cursor: pointer; transition: transform 0.2s, box-shadow 0.2s; text-decoration: none; display: inline-block; }
+        .btn-primary:hover { transform: translateY(-2px); box-shadow: 0 8px 30px rgba(99, 102, 241, 0.4); }
+        .btn-secondary { background: var(--bg-card); color: var(--text); border: 1px solid rgba(99, 102, 241, 0.3); padding: 1rem 2.5rem; border-radius: 12px; font-size: 1.1rem; font-weight: 600; cursor: pointer; transition: background 0.2s; text-decoration: none; display: inline-block; }
+        .btn-secondary:hover { background: rgba(99, 102, 241, 0.1); }
+        .testimonials { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 2rem; }
+        .testimonial-card { background: var(--bg-card); border-radius: 16px; padding: 2rem; border: 1px solid rgba(99, 102, 241, 0.15); }
+        .testimonial-card p { font-style: italic; color: var(--text-muted); margin-bottom: 1rem; }
+        .testimonial-author { font-weight: 600; color: var(--text); }
+        .testimonial-role { font-size: 0.875rem; color: var(--text-muted); }
+        footer { text-align: center; padding: 3rem 2rem; color: var(--text-muted); border-top: 1px solid rgba(99, 102, 241, 0.1); font-size: 0.9rem; }
+        footer a { color: var(--accent); text-decoration: none; }
+        @media (max-width: 768px) {
+            .nav-links { display: none; }
+            .hero { padding: 6rem 1rem 2rem; }
+            .hero-stats { gap: 1.5rem; }
+            .section { padding: 3rem 1rem; }
+            .cta-buttons { flex-direction: column; align-items: center; }
+        }
+        @media (max-width: 480px) {
+            .hero h1 { font-size: 1.75rem; }
+            .features { grid-template-columns: 1fr; }
+            .stat-number { font-size: 1.5rem; }
+        }
+    </style>
+</head>
+<body>
+    <nav>
+        <div class="nav-inner">
+            <div class="logo">MyZubster</div>
+            <ul class="nav-links">
+                <li><a href="#features">Funzionalita</a></li>
+                <li><a href="#how-it-works">Come Funziona</a></li>
+                <li><a href="#testimonials">Sviluppatori</a></li>
+                <li><a href="#cta">Inizia</a></li>
+            </ul>
+            <button class="nav-cta" onclick="trackCTA('nav')">Inizia Ora</button>
+        </div>
+    </nav>
+
+    <section class="hero">
+        <h1>Il <span class="gradient-text">Gateway</span> per Sviluppatori Web3</h1>
+        <p>Connetti il tuo talento con opportunita reali. Sviluppa progetti open-source, partecipa ai bounty e guadagna token <strong>MYZ</strong> sulla rete Tari.</p>
+        <div class="cta-buttons">
+            <a href="#cta" class="btn-primary" onclick="trackCTA('hero-primary')">Inizia a Sviluppare</a>
+            <a href="#how-it-works" class="btn-secondary" onclick="trackCTA('hero-secondary')">Scopri di Piu</a>
+        </div>
+        <div class="hero-stats">
+            <div class="stat"><div class="stat-number">500+</div><div class="stat-label">Sviluppatori</div></div>
+            <div class="stat"><div class="stat-number">200+</div><div class="stat-label">Bounty Completati</div></div>
+            <div class="stat"><div class="stat-number">50K+</div><div class="stat-label">MYZ Distribuiti</div></div>
+            <div class="stat"><div class="stat-number">15+</div><div class="stat-label">Repo Attivi</div></div>
+        </div>
+    </section>
+
+    <section class="section" id="features">
+        <h2>Perche MyZubster?</h2>
+        <p class="section-subtitle">Tutto cio di cui hai bisogno per trasformare il codice in opportunita.</p>
+        <div class="features">
+            <div class="feature-card">
+                <div class="feature-icon">💰</div>
+                <h3>Bounty Realizzati</h3>
+                <p>Guadagna token MYZ completando bounty su progetti open-source reali. Pagamenti trasparenti e tracciabili sulla rete Tari.</p>
+            </div>
+            <div class="feature-card">
+                <div class="feature-icon">🔗</div>
+                <h3>Gateway Unificato</h3>
+                <p>Un unico punto di accesso per tutti i tuoi progetti, PR, wallet e pagamenti. Niente piu dashboard frammentate.</p>
+            </div>
+            <div class="feature-card">
+                <div class="feature-icon">🚀</div>
+                <h3>Crescita Professionale</h3>
+                <p>Costruisci il tuo portfolio open-source, ottieni riconoscimenti dalla community e fatti notare da aziende Web3.</p>
+            </div>
+            <div class="feature-card">
+                <div class="feature-icon">🤖</div>
+                <h3>Automazione Intelligente</h3>
+                <p>CI/CD integrato, testing automatico e notifiche in tempo reale per tenerti sempre aggiornato sui tuoi progetti.</p>
+            </div>
+            <div class="feature-card">
+                <div class="feature-icon">🌍</div>
+                <h3>Community Globale</h3>
+                <p>Connettiti con sviluppatori da tutto il mondo, collabora su progetti internazionali e impara dalle migliori menti.</p>
+            </div>
+            <div class="feature-card">
+                <div class="feature-icon">🔒</div>
+                <h3>Sicurezza Garantita</h3>
+                <p>Smart contract verificati, audit di sicurezza e protezione dei tuoi asset digitali su blockchain Tari.</p>
+            </div>
+        </div>
+    </section>
+
+    <section class="section" id="how-it-works">
+        <h2>Come Funziona</h2>
+        <p class="section-subtitle">Quattro semplici passi per iniziare a guadagnare.</p>
+        <div class="steps">
+            <div class="step-card"><div class="step-number">1</div><h3>Registrati</h3><p>Crea il tuo account sviluppatore e connetti il tuo wallet Tari per ricevere i pagamenti in MYZ.</p></div>
+            <div class="step-card"><div class="step-number">2</div><h3>Scegli un Bounty</h3><p>Esplora i progetti disponibili e seleziona i bounty che corrispondono alle tue competenze.</p></div>
+            <div class="step-card"><div class="step-number">3</div><h3>Sviluppa & Consegna</h3><p>Implementa la soluzione, apri una Pull Request e supera la code review della community.</p></div>
+            <div class="step-card"><div class="step-number">4</div><h3>Ricevi MYZ</h3><p>Dopo il merge della tua PR, ricevi automaticamente i token MYZ direttamente nel tuo wallet Tari.</p></div>
+        </div>
+    </section>
+
+    <section class="section" id="testimonials">
+        <h2>Cosa Dicono gli Sviluppatori</h2>
+        <p class="section-subtitle">La nostra community e il nostro piu grande orgoglio.</p>
+        <div class="testimonials">
+            <div class="testimonial-card">
+                <p>"MyZubster mi ha permesso di trasformare la mia passione per l'open-source in un'attivita redditizia. I bounty sono stimolanti e i pagamenti sempre puntuali."</p>
+                <div class="testimonial-author">Marco R.</div><div class="testimonial-role">Full-Stack Developer</div>
+            </div>
+            <div class="testimonial-card">
+                <p>"La piattaforma e incredibilmente ben organizzata. Ho completato 15 bounty in due mesi e costruito un portfolio che mi ha aperto porte inaspettate."</p>
+                <div class="testimonial-author">Elena S.</div><div class="testimonial-role">Smart Contract Developer</div>
+            </div>
+            <div class="testimonial-card">
+                <p>"Finalmente un posto dove il codice parla da se. Niente burocrazia, niente intermediari: scrivi codice, vieni pagato. Semplice."</p>
+                <div class="testimonial-author">Ahmed K.</div><div class="testimonial-role">Backend Engineer</div>
+            </div>
+        </div>
+    </section>
+
+    <section class="cta-section" id="cta">
+        <h2>Pronto a Iniziare?</h2>
+        <p class="section-subtitle">Unisciti a 500+ sviluppatori che stanno gia guadagnando con MyZubster.</p>
+        <div class="cta-buttons">
+            <a href="https://github.com/MyZubster-Ecosystem/MyZubsterGateway" class="btn-primary" onclick="trackCTA('cta-primary')">🚀 Inizia Ora — E Gratis</a>
+            <a href="https://github.com/MyZubster-Ecosystem/MyZubsterGateway/discussions" class="btn-secondary" onclick="trackCTA('cta-secondary')">💬 Unisciti alla Community</a>
+        </div>
+    </section>
+
+    <footer>
+        <p>&copy; 2026 <a href="https://github.com/MyZubster-Ecosystem">MyZubster Ecosystem</a>. Tutti i diritti riservati. 
+        <a href="https://github.com/MyZubster-Ecosystem/MyZubsterGateway/blob/main/LICENSE">Licenza</a> | 
+        <a href="https://github.com/MyZubster-Ecosystem/MyZubsterGateway/blob/main/CONTRIBUTING.md">Contribuisci</a></p>
+    </footer>
+
+    <script async src="https://www.googletagmanager.com/gtag/js?id=G-XXXXXXXXXX"></script>
+    <script>
+        window.dataLayer = window.dataLayer || [];
+        function gtag(){dataLayer.push(arguments);}
+        gtag('js', new Date());
+        gtag('config', 'G-XXXXXXXXXX', { 'anonymize_ip': true, 'cookie_flags': 'SameSite=None;Secure' });
+    </script>
+    <script>
+        function trackCTA(location) {
+            if (typeof gtag !== 'undefined') { gtag('event', 'cta_click', { 'event_category': 'engagement', 'event_label': location, 'value': 1 }); }
+            console.log('[Analytics] CTA click:', location);
+        }
+    </script>
+    <script>
+        (function() {
+            var AB_COOKIE = 'myzubster_ab_variant';
+            var AB_VARIANTS = [
+                { name: 'A', weight: 50, cta: 'Inizia Ora' },
+                { name: 'B', weight: 50, cta: 'Guadagna Subito' }
+            ];
+            function getCookie(name) {
+                var match = document.cookie.match(new RegExp('(^| )' + name + '=([^;]+)'));
+                return match ? match[2] : null;
+            }
+            function setCookie(name, value, days) {
+                var d = new Date();
+                d.setTime(d.getTime() + (days * 24 * 60 * 60 * 1000));
+                document.cookie = name + '=' + value + ';expires=' + d.toUTCString() + ';path=/;SameSite=Lax';
+            }
+            function selectVariant() {
+                var existing = getCookie(AB_COOKIE);
+                if (existing) return existing;
+                var totalWeight = AB_VARIANTS.reduce(function(s, v) { return s + v.weight; }, 0);
+                var rand = Math.random() * totalWeight;
+                var sum = 0;
+                for (var i = 0; i < AB_VARIANTS.length; i++) {
+                    sum += AB_VARIANTS[i].weight;
+                    if (rand <= sum) { setCookie(AB_COOKIE, AB_VARIANTS[i].name, 30); return AB_VARIANTS[i].name; }
+                }
+                return AB_VARIANTS[0].name;
+            }
+            var variant = selectVariant();
+            if (typeof gtag !== 'undefined') { gtag('event', 'ab_test', { 'event_category': 'experiment', 'event_label': 'landing_page_v' + variant, 'non_interaction': true }); }
+            console.log('[A/B Test] Variant:', variant);
+            if (variant === 'B') {
+                var primaryCTA = document.querySelector('.btn-primary');
+                if (primaryCTA) { primaryCTA.textContent = '\u{1F680} Guadagna Subito \u2014 E Gratis'; }
+            }
+        })();
+    </script>
+</body>
+</html>
