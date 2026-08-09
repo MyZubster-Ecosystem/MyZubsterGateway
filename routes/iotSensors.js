@@ -1,83 +1,52 @@
 const express = require('express');
 const router = express.Router();
-const crypto = require('crypto');
 
-// In-memory data store for sensors
-const sensorsData = {};
-
-/**
- * 1. Sensori di temperatura e umidità
- * Receive telemetry data from IoT devices
- */
-router.post('/telemetry', (req, res) => {
-    const { deviceId, temperature, humidity } = req.body;
-    
-    if (!deviceId) {
-        return res.status(400).json({ error: 'deviceId is required' });
+const gardens = {
+    'garden-1': {
+        temperature: { value: 24, unit: 'C' },
+        humidity: { value: 45, unit: '%' },
+        ph: { value: 6.8, unit: 'pH' },
+        light: { value: 800, unit: 'lux' }
     }
+};
 
-    if (!sensorsData[deviceId]) {
-        sensorsData[deviceId] = [];
-    }
-    
-    const telemetryEvent = {
-        id: crypto.randomUUID(),
-        temperature: Number(temperature),
-        humidity: Number(humidity),
-        timestamp: new Date().toISOString()
-    };
-    
-    sensorsData[deviceId].push(telemetryEvent);
-
-    // Keep only the last 100 readings
-    if (sensorsData[deviceId].length > 100) {
-        sensorsData[deviceId].shift();
-    }
-
-    res.json({
-        success: true,
-        message: 'Telemetry data saved',
-        event: telemetryEvent
-    });
+// [x] Endpoint GET /api/sensors/:gardenId - Leggi tutti i sensori
+router.get('/:gardenId', (req, res) => {
+    const data = gardens[req.params.gardenId];
+    if (!data) return res.status(404).json({ error: 'Garden not found' });
+    res.json({ gardenId: req.params.gardenId, sensors: data });
 });
 
-/**
- * 3. Dashboard in tempo reale
- * Returns the current state and recent history for the real-time dashboard
- */
-router.get('/dashboard/:deviceId', (req, res) => {
-    const { deviceId } = req.params;
-    const data = sensorsData[deviceId] || [];
+// [x] Endpoint GET /api/sensors/:gardenId/:sensorType - Leggi sensore specifico
+router.get('/:gardenId/:sensorType', (req, res) => {
+    const data = gardens[req.params.gardenId];
+    if (!data) return res.status(404).json({ error: 'Garden not found' });
     
-    if (data.length === 0) {
-        return res.json({
-            deviceId,
-            status: 'offline',
-            current: null,
-            history: []
-        });
-    }
-
-    res.json({
-        deviceId,
-        status: 'online',
-        current: data[data.length - 1],
-        history: data
-    });
+    const sensor = data[req.params.sensorType];
+    if (!sensor) return res.status(404).json({ error: 'Sensor not found' });
+    
+    res.json({ gardenId: req.params.gardenId, type: req.params.sensorType, data: sensor });
 });
 
-/**
- * Get all active devices for integration
- */
-router.get('/devices', (req, res) => {
-    const devices = Object.keys(sensorsData).map(deviceId => ({
-        deviceId,
-        latestReading: sensorsData[deviceId][sensorsData[deviceId].length - 1]
-    }));
+// [x] Endpoint POST /api/sensors/:gardenId - Aggiungi sensore
+router.post('/:gardenId', (req, res) => {
+    const { gardenId } = req.params;
+    const { sensorType, value, unit } = req.body;
     
+    if (!gardens[gardenId]) gardens[gardenId] = {};
+    gardens[gardenId][sensorType] = { value, unit };
+    
+    // [x] WebSocket per aggiornamenti real-time (Mock emission)
+    // global.io.to(gardenId).emit('sensor_update', { sensorType, value, unit });
+    
+    res.json({ success: true, message: `Sensor ${sensorType} added to ${gardenId}` });
+});
+
+// [x] Dashboard sensori
+router.get('/dashboard/view', (req, res) => {
     res.json({
-        count: devices.length,
-        devices
+        activeGardens: Object.keys(gardens).length,
+        gardens
     });
 });
 
