@@ -10,7 +10,11 @@ import ComplianceDashboard from './pages/ComplianceDashboard';
 =======
 import AdminDashboard from './pages/AdminDashboard';
 import ApiDocs from './pages/ApiDocs';
+<<<<<<< HEAD
 >>>>>>> origin/main
+=======
+import ComplianceDashboard from './pages/ComplianceDashboard';
+>>>>>>> main
 
 function App() {
   return (
@@ -26,7 +30,11 @@ function App() {
 =======
         <Route path="/admin" element={<AdminDashboard />} />
         <Route path="/api-docs" element={<ApiDocs />} />
+<<<<<<< HEAD
 >>>>>>> origin/main
+=======
+        <Route path="/compliance" element={<ComplianceDashboard />} />
+>>>>>>> main
       </Routes>
     </BrowserRouter>
   );

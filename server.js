@@ -32,3 +32,18 @@ app.get('/api/test-error', (req, res) => {
 app.listen(PORT, '0.0.0.0', () => {
   console.log(`✅ Gateway running on port ${PORT}`);
 });
+
+// Swagger UI
+const swaggerUi = require('swagger-ui-express');
+const YAML = require('yamljs');
+try {
+  const swaggerDocument = YAML.load('./docs/swagger.yaml');
+  app.use('/api/docs', swaggerUi.serve, swaggerUi.setup(swaggerDocument));
+  console.log('✅ Swagger UI available at /api/docs');
+} catch (err) {
+  console.log('⚠️ Swagger not available:', err.message);
+}
+
+// Webhook routes
+const webhookRoutes = require("./routes/webhookRoutes");
+app.use("/webhook", webhookRoutes);
