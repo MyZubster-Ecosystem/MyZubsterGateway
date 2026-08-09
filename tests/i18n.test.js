@@ -205,11 +205,17 @@ describe('translation catalogs', () => {
       'Demasiadas solicitudes, inténtalo de nuevo más tarde'
     );
 
+    const englishReadme = fs.readFileSync(
+      path.join(__dirname, '..', 'README.md'),
+      'utf8'
+    );
     const spanishReadme = fs.readFileSync(
       path.join(__dirname, '..', 'README.es.md'),
       'utf8'
     );
 
+    expect(englishReadme).toContain('[Español](README.es.md)');
+    expect(spanishReadme).toContain('[English](README.md)');
     expect(spanishReadme).toContain('## 📡 Endpoints de la API');
     expect(spanishReadme).toContain('## 🔐 Seguridad');
     expect(spanishReadme).toContain('## 🤝 Cómo contribuir');

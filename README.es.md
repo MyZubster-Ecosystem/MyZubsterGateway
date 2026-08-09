@@ -4,6 +4,8 @@
 
 **API backend para MyZubster: Gateway de pagos Monero y registro de animales**
 
+**Leer en:** [English](README.md) | [Español](README.es.md) | [Français](README.fr.md) | [Italiano](README.it.md)
+
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 [![Monero](https://img.shields.io/badge/Powered%20by-Monero-orange)](https://www.getmonero.org/)
 [![Node.js](https://img.shields.io/badge/Node.js-20.x-green)](https://nodejs.org/)
