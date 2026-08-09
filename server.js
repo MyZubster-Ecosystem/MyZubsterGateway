@@ -148,6 +148,8 @@ app.get("*", (req, res) => {
   res.sendFile(path.join(__dirname, "frontend/build", "index.html"));
 });
 
+  try { const routes = require('./routes/analyticsRoutes'); app.use('/api/analytics', routes); } catch(e) { console.log('Analytics:', e.message); }
+
 // Start server
 app.listen(PORT, () => {
   console.log(`🚪 MyZubster Gateway avviato sulla porta ${PORT}`);
