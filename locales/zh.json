@@ -1,6 +1,7 @@
 {
   "health": {
-    "message": "{{service}} Gateway 正在运行！"
+    "message": "{{service}} Gateway 正在运行！",
+    "rateLimit": "每 15 分钟 100 次请求"
   },
   "auth": {
     "loginEndpoint": "登录端点",

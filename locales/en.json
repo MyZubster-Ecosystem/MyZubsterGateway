@@ -1,6 +1,7 @@
 {
   "health": {
-    "message": "{{service}} Gateway is running!"
+    "message": "{{service}} Gateway is running!",
+    "rateLimit": "100 requests per 15 minutes"
   },
   "auth": {
     "loginEndpoint": "Login endpoint",

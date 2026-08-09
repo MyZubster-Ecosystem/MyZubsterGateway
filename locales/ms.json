@@ -1,6 +1,7 @@
 {
   "health": {
-    "message": "Gateway {{service}} sedang berjalan!"
+    "message": "Gateway {{service}} sedang berjalan!",
+    "rateLimit": "100 permintaan setiap 15 minit"
   },
   "auth": {
     "loginEndpoint": "Titik akhir log masuk",

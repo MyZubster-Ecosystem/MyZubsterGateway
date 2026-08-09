@@ -188,11 +188,22 @@ describe('translation catalogs', () => {
       it: 'MyZubster Gateway è operativo!',
       es: 'MyZubster Gateway está en funcionamiento!',
     };
+    const expectedRateLimitMessages = {
+      en: '100 requests per 15 minutes',
+      zh: '每 15 分钟 100 次请求',
+      ms: '100 permintaan setiap 15 minit',
+      ta: '15 நிமிடங்களுக்கு 100 கோரிக்கைகள்',
+      it: '100 richieste ogni 15 minuti',
+      es: '100 solicitudes cada 15 minutos',
+    };
 
     for (const language of SUPPORTED_LANGUAGES) {
       expect(
         translate(language, 'health.message', { service: 'MyZubster' })
       ).toBe(expectedHealthMessages[language]);
+      expect(translate(language, 'health.rateLimit')).toBe(
+        expectedRateLimitMessages[language]
+      );
       expect(translate(language, 'errors.internal')).not.toBe(
         'errors.internal'
       );
@@ -236,6 +247,7 @@ describe('translation catalogs', () => {
     expect(englishReadme).toContain('[Español](README.es.md)');
     expect(spanishReadme).toContain('[English](README.md)');
     expect(spanishReadme).toContain('## 📡 Endpoints de la API');
+    expect(spanishReadme).toContain('## 🌍 Localización de la API');
     expect(spanishReadme).toContain('## 🔐 Seguridad');
     expect(spanishReadme).toContain('## 🤝 Cómo contribuir');
   });
@@ -354,7 +366,10 @@ describe('production localization', () => {
       (layer) => layer.route?.path === '/api/health'
     );
     const req = {
-      t: jest.fn(() => 'MyZubster Gateway está en funcionamiento!'),
+      t: jest.fn((key) => ({
+        'health.message': 'MyZubster Gateway está en funcionamiento!',
+        'health.rateLimit': '100 solicitudes cada 15 minutos',
+      })[key]),
     };
     const res = { json: jest.fn() };
 
@@ -363,10 +378,12 @@ describe('production localization', () => {
     expect(req.t).toHaveBeenCalledWith('health.message', {
       service: 'MyZubster',
     });
+    expect(req.t).toHaveBeenCalledWith('health.rateLimit');
     expect(res.json).toHaveBeenCalledWith(
       expect.objectContaining({
         status: 'ok',
         message: 'MyZubster Gateway está en funcionamiento!',
+        rateLimit: '100 solicitudes cada 15 minutos',
       })
     );
   });

@@ -1,6 +1,7 @@
 {
   "health": {
-    "message": "{{service}} Gateway இயங்குகிறது!"
+    "message": "{{service}} Gateway இயங்குகிறது!",
+    "rateLimit": "15 நிமிடங்களுக்கு 100 கோரிக்கைகள்"
   },
   "auth": {
     "loginEndpoint": "உள்நுழைவு முனையம்",

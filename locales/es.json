@@ -1,6 +1,7 @@
 {
   "health": {
-    "message": "{{service}} Gateway está en funcionamiento!"
+    "message": "{{service}} Gateway está en funcionamiento!",
+    "rateLimit": "100 solicitudes cada 15 minutos"
   },
   "auth": {
     "loginEndpoint": "Endpoint de inicio de sesión",

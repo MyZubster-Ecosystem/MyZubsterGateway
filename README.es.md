@@ -123,6 +123,10 @@ MONERO_RPC_URL=http://localhost:18081
 MONERO_WALLET_RPC_URL=http://localhost:18082
 ```
 
+## 🌍 Localización de la API
+
+Envía el encabezado `Accept-Language` para recibir los mensajes de la API en el idioma que prefieras. Se admite español, por ejemplo `es`, `es-ES` y `es-MX`; la respuesta incluye el encabezado `Content-Language` con el idioma seleccionado. Si el idioma solicitado no está disponible, la API responde en inglés.
+
 ## 📡 Endpoints de la API
 
 ### Endpoints públicos

@@ -80,7 +80,7 @@ app.get('/api/health', (req, res) => {
     timestamp: new Date().toISOString(),
     uptime: process.uptime(),
     memory: process.memoryUsage(),
-    rateLimit: '100 requests per 15 minutes'
+    rateLimit: req.t('health.rateLimit')
   });
 });
 
