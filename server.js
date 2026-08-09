@@ -148,6 +148,9 @@ app.get("*", (req, res) => {
   res.sendFile(path.join(__dirname, "frontend/build", "index.html"));
 });
 
+
+// XMR Monero wallet routes
+app.use('/api/xmr', require('./routes/xmr'));
 // Start server
 app.listen(PORT, '0.0.0.0', () => {
   console.log(`🚪 MyZubster Gateway avviato sulla porta ${PORT}`);
