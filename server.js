@@ -62,6 +62,9 @@ app.use('/api/iot/sensors', require('./routes/iotSensors'));
 console.log('✅ Caricamento routes EVA IONI Arm...');
 app.use('/api/robot/eva-ioni-arm', require('./routes/evaIoniArm'));
 
+console.log('✅ Caricamento routes Multi-Currency...');
+app.use('/api/payments/multi-currency', require('./routes/multiCurrency'));
+
 app.use('/api/backup', require('./routes/backup'));
 
 app.get('/health', (req, res) => {
