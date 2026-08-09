@@ -7,6 +7,7 @@ import HospitalDashboard from './pages/HospitalDashboard';
 import TransactionHistory from './pages/TransactionHistory';
 import AdminDashboard from './pages/AdminDashboard';
 import ApiDocs from './pages/ApiDocs';
+import ComplianceDashboard from './pages/ComplianceDashboard';
 
 function App() {
   return (
@@ -19,6 +20,7 @@ function App() {
         <Route path="/transactions" element={<TransactionHistory />} />
         <Route path="/admin" element={<AdminDashboard />} />
         <Route path="/api-docs" element={<ApiDocs />} />
+        <Route path="/compliance" element={<ComplianceDashboard />} />
       </Routes>
     </BrowserRouter>
   );
