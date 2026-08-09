@@ -125,6 +125,9 @@ try { const routes = require("./routes/massBounty998"); app.use("/api/bounty-998
 // Mass Bounty 999
 try { const routes = require("./routes/massBounty999"); app.use("/api/bounty-999", routes); } catch(e) {}
 
+// Blockchain Ambientale (#1029)
+try { const routes = require("./routes/blockchain"); app.use("/api/blockchain", routes); } catch(e) {}
+
 // Swagger UI
 try {
   const swaggerUi = require('swagger-ui-express');
