@@ -50,6 +50,9 @@ app.use('/api/robot/code', require('./routes/robotCode'));
 console.log('✅ Caricamento routes robotAnimal...');
 app.use('/api/robot/animal', require('./routes/robotAnimal'));
 
+console.log('✅ Caricamento routes benzina XMR...');
+app.use('/api/benzina/xmr', require('./routes/benzinaXmr'));
+
 app.use('/api/backup', require('./routes/backup'));
 
 app.get('/health', (req, res) => {
