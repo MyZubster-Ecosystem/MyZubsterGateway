@@ -1,138 +1,161 @@
-require('dotenv').config();
-const express = require('express');
-const mongoose = require('mongoose');
-const cors = require('cors');
-const helmet = require('helmet');
-const morgan = require('morgan');
-const rateLimit = require('express-rate-limit');
-const mongoSanitize = require('express-mongo-sanitize');
-const xss = require('xss-clean');
-const compression = require('compression');
-const hpp = require('hpp');
+#!/usr/bin/env node
+
+const express = require("express");
+const cors = require("cors");
+const helmet = require("helmet");
+const morgan = require("morgan");
+const bodyParser = require("body-parser");
+const path = require("path");
+
+// Importa Sentry in modo sicuro
+let Sentry;
+try {
+  Sentry = require('./config/sentry');
+  console.log('✅ Sentry monitoring attivo');
+} catch (err) {
+  console.log('⚠️ Sentry non configurato, continuo senza...');
+  Sentry = {
+    init: () => {},
+    captureException: (err) => console.error('Sentry error:', err.message),
+    Handlers: {
+      requestHandler: () => (req, res, next) => next(),
+      errorHandler: () => (err, req, res, next) => next(err)
+    }
+  };
+}
 
 const app = express();
+const PORT = process.env.PORT || 5002;
 
-// ============ SECURITY MIDDLEWARE ============
-app.use(helmet({
-  contentSecurityPolicy: {
-    directives: {
-      defaultSrc: ["'self'"],
-      scriptSrc: ["'self'", "'unsafe-inline'"],
-      styleSrc: ["'self'", "'unsafe-inline'"],
-      imgSrc: ["'self'", "data:", "https:"],
-      connectSrc: ["'self'", "https://api.myzubster.com"]
-    }
-  },
-  hsts: {
-    maxAge: 31536000,
-    includeSubDomains: true,
-    preload: true
-  }
-}));
+// Sentry request handler (solo se disponibile)
+if (Sentry.Handlers && Sentry.Handlers.requestHandler) {
+  app.use(Sentry.Handlers.requestHandler());
+} else {
+  console.log('⚠️ Sentry requestHandler non disponibile');
+}
 
-const limiter = rateLimit({
-  windowMs: 15 * 60 * 1000,
-  max: 100,
-  message: 'Troppe richieste da questo IP, riprova tra 15 minuti'
+// Middleware
+app.use(helmet({ crossOriginResourcePolicy: { policy: "cross-origin" } }));
+app.use(cors({ origin: "*", credentials: true }));
+app.use(morgan("combined"));
+app.use(bodyParser.json({ limit: "10mb" }));
+app.use(bodyParser.urlencoded({ extended: true, limit: "10mb" }));
+
+// Static files
+app.use(express.static(path.join(__dirname, "frontend/build")));
+app.use(express.static(path.join(__dirname, "frontend/dist")));
+
+// Health check
+app.get("/api/health", (req, res) => {
+  res.json({ status: "online", version: "1.0.0", timestamp: new Date().toISOString(), uptime: process.uptime() });
 });
-app.use('/api', limiter);
-
-const allowedOrigins = process.env.CORS_ORIGIN ? process.env.CORS_ORIGIN.split(',') : ['http://localhost:3000'];
-app.use(cors({
-  origin: function(origin, callback) {
-    if (!origin) return callback(null, true);
-    if (allowedOrigins.indexOf(origin) !== -1) {
-      callback(null, true);
-    } else {
-      callback(new Error('CORS not allowed'));
-    }
-  },
-  credentials: true
-}));
-
-app.use(express.json({ limit: '10kb' }));
-app.use(express.urlencoded({ extended: true, limit: '10kb' }));
-app.use(mongoSanitize());
-app.use(xss());
-app.use(compression());
-app.use(hpp());
-app.use(morgan('combined'));
-app.use(express.static('public'));
-
-// ============ DATABASE ============
-mongoose.connect(process.env.MONGODB_URI, {
-  useNewUrlParser: true,
-  useUnifiedTopology: true
-})
-.then(() => console.log('✅ Connected to MongoDB'))
-.catch(err => console.error('❌ MongoDB connection error:', err));
 
 // ============ ROUTES ============
-app.get('/health', (req, res) => {
-  res.json({
-    success: true,
-    status: 'ok',
-    timestamp: new Date().toISOString(),
-    security: {
-      rateLimit: 'active',
-      helmet: 'active',
-      cors: 'restricted',
-      sanitize: 'active',
-      xss: 'active',
-      hpp: 'active'
-    }
-  });
-});
 
-// Token Balance Routes
-const tokenBalanceRoutes = require("./routes/tokenBalanceRoutes");
-app.use("/api/tokens/balance", tokenBalanceRoutes);
+// Robot Universal Integration
+try {
+  const robotIntegrationRoutes = require('./robot-integration/api/routes');
+  app.use('/api/robots', robotIntegrationRoutes);
+  console.log('✅ Robot Universal Integration loaded');
+} catch(e) {
+  console.log('⚠️ Robot Universal Integration not available:', e.message);
+}
 
-// Notification Routes
-const notificationRoutes = require("./routes/notificationRoutes");
-app.use("/api/notifications", notificationRoutes);
+// NFT Routes
+try {
+  const routes = require("./routes/nftRoutes");
+  app.use("/api/nft", routes);
+  console.log("✅ NFT routes loaded");
+} catch(e) {
+  console.log("⚠️ NFT routes not available:", e.message);
+}
 
-// Message Routes
-const messageRoutes = require("./routes/messageRoutes");
-app.use("/api/messages", messageRoutes);
+// DeepSeek Routes
+try {
+  const deepseekRoutes = require("./routes/deepseekRoutes");
+  app.use("/api/deepseek", deepseekRoutes);
+  console.log("✅ DeepSeek routes loaded");
+} catch(e) {
+  console.log("⚠️ DeepSeek routes not available:", e.message);
+}
 
-// Wallet Routes
-const walletRoutes = require("./routes/walletRoutes");
-app.use("/api/wallet", walletRoutes);
+// Notifications
+try { const routes = require("./routes/notificationRoutes"); app.use("/api/notifications", routes); } catch(e) {}
 
-// Swap Routes
-const swapRoutes = require("./routes/swapRoutes");
-app.use("/api/swap", swapRoutes);
+// Messages
+try { const routes = require("./routes/messageRoutes"); app.use("/api/messages", routes); } catch(e) {}
 
-// Token Routes
-const tokenRoutes = require("./routes/tokenRoutes");
-app.use("/api/tokens", tokenRoutes);
+// IoT Sensors
+try { const routes = require("./routes/sensorRoutes"); app.use("/api/sensors", routes); } catch(e) {}
 
-// Distribution Routes
-const distributionRoutes = require("./routes/distributionRoutes");
-app.use("/api/distributions", distributionRoutes);
+// Fiat Payments
+try { const routes = require("./routes/fiatRoutes"); app.use("/api/payments/fiat", routes); } catch(e) {}
 
-// Status Routes
-const statusRoutes = require("./routes/statusRoutes");
-app.use("/api/status", statusRoutes);
+// Crypto
+try { const routes = require("./routes/cryptoRoutes"); app.use("/api/crypto", routes); } catch(e) {}
 
-// Code Review Routes
-const codeReviewRoutes = require("./routes/codeReviewRoutes");
-app.use("/api/code-review", codeReviewRoutes);
+// EVA IONI Arm
+try { const routes = require("./routes/armRoutes"); app.use("/api/arm", routes); } catch(e) {}
 
-// ============ ERROR HANDLER ============
+// Mobile App
+try { const routes = require("./routes/mobileRoutes"); app.use("/api/mobile", routes); } catch(e) {}
+
+// Webhook
+try { const routes = require("./routes/webhookRoutes"); app.use("/webhook", routes); } catch(e) {}
+
+// Benzina XMR
+try { const routes = require("./routes/benzinaXmr"); app.use("/api/benzina-xmr", routes); } catch(e) {}
+
+// Mass Bounty 990-999
+try { const routes = require("./routes/massBounty990"); app.use("/api/bounty-990", routes); } catch(e) {}
+try { const routes = require("./routes/massBounty991"); app.use("/api/bounty-991", routes); } catch(e) {}
+try { const routes = require("./routes/massBounty992"); app.use("/api/bounty-992", routes); } catch(e) {}
+try { const routes = require("./routes/massBounty993"); app.use("/api/bounty-993", routes); } catch(e) {}
+try { const routes = require("./routes/massBounty994"); app.use("/api/bounty-994", routes); } catch(e) {}
+try { const routes = require("./routes/massBounty995"); app.use("/api/bounty-995", routes); } catch(e) {}
+try { const routes = require("./routes/massBounty996"); app.use("/api/bounty-996", routes); } catch(e) {}
+try { const routes = require("./routes/massBounty997"); app.use("/api/bounty-997", routes); } catch(e) {}
+try { const routes = require("./routes/massBounty998"); app.use("/api/bounty-998", routes); } catch(e) {}
+try { const routes = require("./routes/massBounty999"); app.use("/api/bounty-999", routes); } catch(e) {}
+
+// Anthea modules
+try { const routes = require("./core-backend/routes/antheaPayroll"); app.use("/api/anthea/payroll", routes); } catch(e) {}
+try { const routes = require("./core-backend/routes/antheaCompliance"); app.use("/api/anthea/compliance", routes); } catch(e) {}
+try { const routes = require("./core-backend/routes/antheaWelfare"); app.use("/api/anthea/welfare", routes); } catch(e) {}
+
+// Swagger UI
+try {
+  const swaggerUi = require('swagger-ui-express');
+  const YAML = require('yamljs');
+  const swaggerDocument = YAML.load('./docs/swagger.yaml');
+  app.use('/api/docs', swaggerUi.serve, swaggerUi.setup(swaggerDocument));
+  console.log('📚 Swagger UI available at /api/docs');
+} catch(err) { console.log('⚠️ Swagger not available'); }
+
+// Sentry error handler
+if (Sentry.Handlers && Sentry.Handlers.errorHandler) {
+  app.use(Sentry.Handlers.errorHandler());
+}
+
+// Error handler
 app.use((err, req, res, next) => {
-  console.error('Error:', err);
-  res.status(err.status || 500).json({
-    success: false,
-    error: process.env.NODE_ENV === 'production' ? 'Internal server error' : err.message
-  });
+  console.error("Error:", err.stack || err.message);
+  res.status(err.status || 500).json({ error: err.message || "Internal Server Error", status: err.status || 500 });
 });
 
-// ============ START SERVER ============
-const PORT = process.env.PORT || 10000;
-app.listen(PORT, () => {
-  console.log(`🚀 Server running on port ${PORT}`);
-  console.log(`📊 Health check: http://localhost:${PORT}/health`);
-  console.log(`🔒 Security: Rate Limiting, Helmet, CORS, Sanitization, XSS, HPP`);
+// Serve React app
+app.get("*", (req, res) => {
+  res.sendFile(path.join(__dirname, "frontend/build", "index.html"));
 });
+
+// Start server
+app.listen(PORT, '0.0.0.0', () => {
+  console.log(`🚪 MyZubster Gateway avviato sulla porta ${PORT}`);
+  console.log(`🔍 Health: /api/health`);
+  console.log(`📚 Swagger: /api/docs`);
+  console.log(`🤖 Robot Universal: /api/robots`);
+  console.log(`🌌 NFT: /api/nft`);
+  console.log(`🧠 DeepSeek: /api/deepseek`);
+});
+
+module.exports = app;
