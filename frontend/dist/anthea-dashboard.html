@@ -1,0 +1,642 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>👤 Anthea - Dashboard Dipendenti - MyZubster</title>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    :root {
+      --bg: #f0f2f5;
+      --surface: #ffffff;
+      --text: #1a1a2e;
+      --text-secondary: #6b7280;
+      --border: #e5e7eb;
+      --primary: #6c5ce7;
+      --primary-light: #a29bfe;
+      --primary-bg: #f0eeff;
+      --accent: #00b894;
+      --accent-bg: #e6faf5;
+      --warning: #fdcb6e;
+      --warning-bg: #fff9e6;
+      --danger: #e17055;
+      --danger-bg: #fef0ed;
+      --shadow: 0 2px 8px rgba(0,0,0,0.06);
+      --radius: 12px;
+      --radius-sm: 8px;
+      --header-bg: linear-gradient(135deg, #6c5ce7, #a29bfe);
+    }
+    body.dark {
+      --bg: #0f0f23;
+      --surface: #1a1a2e;
+      --text: #e4e4e7;
+      --text-secondary: #a1a1aa;
+      --border: #2d2d44;
+      --primary-bg: #1e1b3e;
+      --accent-bg: #0d2f26;
+      --warning-bg: #2e2600;
+      --danger-bg: #2e1008;
+      --shadow: 0 2px 8px rgba(0,0,0,0.3);
+    }
+    body { font-family: 'Segoe UI', -apple-system, sans-serif; background: var(--bg); color: var(--text); padding: 20px; transition: background 0.3s, color 0.3s; }
+    .dashboard { max-width: 1280px; margin: 0 auto; }
+    .header { position: relative; overflow: hidden; text-align: center; margin-bottom: 28px; padding: 28px 24px; background: var(--header-bg); border-radius: var(--radius); color: white; }
+    .header h1 { font-size: 2rem; margin: 0; }
+    .header p { margin: 8px 0 0; opacity: 0.9; font-size: 0.95rem; }
+    .theme-toggle { position: absolute; top: 16px; right: 16px; background: rgba(255,255,255,0.15); border: 1px solid rgba(255,255,255,0.3); color: white; padding: 8px 14px; border-radius: 8px; cursor: pointer; font-size: 0.9rem; transition: background 0.2s; }
+    .theme-toggle:hover { background: rgba(255,255,255,0.25); }
+    .tabs { display: flex; gap: 4px; margin-bottom: 24px; background: var(--surface); border-radius: var(--radius); padding: 4px; box-shadow: var(--shadow); overflow-x: auto; }
+    .tab-btn { flex: 1; min-width: 120px; padding: 12px 16px; border: none; background: transparent; color: var(--text-secondary); cursor: pointer; border-radius: var(--radius-sm); font-size: 0.9rem; font-weight: 500; transition: all 0.2s; white-space: nowrap; }
+    .tab-btn:hover { background: var(--primary-bg); color: var(--primary); }
+    .tab-btn.active { background: var(--primary); color: white; box-shadow: 0 2px 4px rgba(108,92,231,0.3); }
+    .tab-content { display: none; }
+    .tab-content.active { display: block; }
+    .kpi-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 16px; margin-bottom: 24px; }
+    .kpi-card { background: var(--surface); border-radius: var(--radius); padding: 20px; box-shadow: var(--shadow); display: flex; align-items: center; gap: 14px; }
+    .kpi-icon { width: 48px; height: 48px; border-radius: 12px; display: flex; align-items: center; justify-content: center; font-size: 1.5rem; flex-shrink: 0; }
+    .kpi-icon.purple { background: var(--primary-bg); color: var(--primary); }
+    .kpi-icon.green { background: var(--accent-bg); color: var(--accent); }
+    .kpi-icon.orange { background: var(--warning-bg); color: #d4a017; }
+    .kpi-icon.red { background: var(--danger-bg); color: var(--danger); }
+    .kpi-info h3 { font-size: 0.8rem; color: var(--text-secondary); margin-bottom: 2px; }
+    .kpi-value { font-size: 1.6rem; font-weight: 700; }
+    .card { background: var(--surface); border-radius: var(--radius); padding: 24px; margin-bottom: 20px; box-shadow: var(--shadow); }
+    .card h2 { font-size: 1.1rem; margin-bottom: 16px; color: var(--text); display: flex; align-items: center; gap: 8px; }
+    .card-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px; flex-wrap: wrap; gap: 8px; }
+    .card-header h2 { margin-bottom: 0; }
+    .btn { display: inline-flex; align-items: center; gap: 6px; padding: 8px 16px; border: none; border-radius: var(--radius-sm); cursor: pointer; font-size: 0.85rem; font-weight: 500; transition: all 0.2s; }
+    .btn-primary { background: var(--primary); color: white; }
+    .btn-primary:hover { opacity: 0.9; transform: translateY(-1px); }
+    .btn-accent { background: var(--accent); color: white; }
+    .btn-accent:hover { opacity: 0.9; }
+    .btn-danger { background: var(--danger); color: white; }
+    .btn-danger:hover { opacity: 0.9; }
+    .btn-sm { padding: 5px 10px; font-size: 0.8rem; }
+    .btn-ghost { background: transparent; color: var(--text-secondary); border: 1px solid var(--border); }
+    .btn-ghost:hover { background: var(--primary-bg); color: var(--primary); border-color: var(--primary); }
+    .table-container { overflow-x: auto; }
+    table { width: 100%; border-collapse: collapse; }
+    th { background: var(--bg); padding: 10px 12px; text-align: left; font-weight: 600; color: var(--text-secondary); font-size: 0.8rem; text-transform: uppercase; letter-spacing: 0.5px; white-space: nowrap; }
+    td { padding: 10px 12px; border-bottom: 1px solid var(--border); font-size: 0.9rem; }
+    tr:hover td { background: var(--primary-bg); }
+    .badge { display: inline-block; padding: 3px 10px; border-radius: 20px; font-size: 0.78rem; font-weight: 500; }
+    .badge.presente { background: var(--accent-bg); color: var(--accent); }
+    .badge.assente { background: var(--danger-bg); color: var(--danger); }
+    .badge.permesso { background: var(--warning-bg); color: #d4a017; }
+    .badge.ferie { background: var(--primary-bg); color: var(--primary); }
+    .badge.todo { background: #f0f0f0; color: #666; }
+    body.dark .badge.todo { background: #2a2a40; color: #aaa; }
+    .badge.in-corso { background: var(--primary-bg); color: var(--primary); }
+    .badge.completato { background: var(--accent-bg); color: var(--accent); }
+    .badge.in-attesa { background: var(--warning-bg); color: #d4a017; }
+    .badge.inviato { background: var(--primary-bg); color: var(--primary); }
+    .badge.letto { background: var(--accent-bg); color: var(--accent); }
+    .badge.bozza { background: #f0f0f0; color: #666; }
+    body.dark .badge.bozza { background: #2a2a40; color: #aaa; }
+    .badge.firmato { background: var(--accent-bg); color: var(--accent); }
+    .badge.in-attesa-firma { background: var(--warning-bg); color: #d4a017; }
+    .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
+    .grid-3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 16px; }
+    .profile-card { display: flex; align-items: center; gap: 16px; padding: 16px; background: var(--bg); border-radius: var(--radius-sm); }
+    .avatar { width: 64px; height: 64px; border-radius: 50%; background: var(--primary); color: white; display: flex; align-items: center; justify-content: center; font-size: 1.8rem; flex-shrink: 0; }
+    .profile-info h4 { font-size: 1rem; margin-bottom: 2px; }
+    .profile-info p { font-size: 0.85rem; color: var(--text-secondary); }
+    .profile-detail { display: flex; justify-content: space-between; padding: 10px 0; border-bottom: 1px solid var(--border); }
+    .profile-detail:last-child { border-bottom: none; }
+    .profile-detail .label { color: var(--text-secondary); font-size: 0.85rem; }
+    .profile-detail .value { font-weight: 500; }
+    .timbratura { display: flex; align-items: center; gap: 16px; padding: 16px; background: var(--bg); border-radius: var(--radius-sm); margin-bottom: 16px; }
+    .timbratura-info { flex: 1; }
+    .timbratura-info .time { font-size: 2rem; font-weight: 700; color: var(--primary); }
+    .timbratura-info .date { font-size: 0.85rem; color: var(--text-secondary); }
+    .chart-container { position: relative; height: 250px; }
+    .chart-container-sm { position: relative; height: 200px; }
+    .comunicazione-item { display: flex; gap: 12px; padding: 14px; border-radius: var(--radius-sm); background: var(--bg); margin-bottom: 10px; cursor: pointer; transition: transform 0.2s; }
+    .comunicazione-item:hover { transform: translateX(4px); }
+    .com-icon { width: 40px; height: 40px; border-radius: 10px; display: flex; align-items: center; justify-content: center; font-size: 1.2rem; flex-shrink: 0; }
+    .com-icon.blue { background: var(--primary-bg); color: var(--primary); }
+    .com-icon.green { background: var(--accent-bg); color: var(--accent); }
+    .com-icon.orange { background: var(--warning-bg); color: #d4a017; }
+    .com-info { flex: 1; }
+    .com-info h4 { font-size: 0.9rem; margin-bottom: 2px; }
+    .com-info p { font-size: 0.8rem; color: var(--text-secondary); }
+    .com-time { font-size: 0.75rem; color: var(--text-secondary); }
+    .documento-item { display: flex; align-items: center; gap: 12px; padding: 12px; border-radius: var(--radius-sm); background: var(--bg); margin-bottom: 8px; }
+    .doc-icon { width: 36px; height: 36px; border-radius: 8px; display: flex; align-items: center; justify-content: center; font-size: 1.1rem; }
+    .doc-icon.pdf { background: #fef0ed; color: #e17055; }
+    .doc-icon.doc { background: var(--primary-bg); color: var(--primary); }
+    .doc-icon.img { background: var(--accent-bg); color: var(--accent); }
+    .doc-info { flex: 1; }
+    .doc-info h4 { font-size: 0.85rem; margin-bottom: 1px; }
+    .doc-info p { font-size: 0.75rem; color: var(--text-secondary); }
+    .doc-actions { display: flex; gap: 6px; }
+    .loading, .error, .empty { text-align: center; padding: 40px; color: var(--text-secondary); }
+    .loading { font-size: 1.2rem; }
+    .error { color: var(--danger); }
+    .modal-overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.5); z-index: 1000; justify-content: center; align-items: center; padding: 20px; }
+    .modal-overlay.open { display: flex; }
+    .modal { background: var(--surface); border-radius: var(--radius); padding: 24px; max-width: 500px; width: 100%; max-height: 80vh; overflow-y: auto; }
+    .modal h3 { margin-bottom: 16px; }
+    .modal-close { float: right; background: none; border: none; color: var(--text-secondary); font-size: 1.5rem; cursor: pointer; }
+    .form-group { margin-bottom: 14px; }
+    .form-group label { display: block; font-size: 0.85rem; color: var(--text-secondary); margin-bottom: 4px; }
+    .form-group input, .form-group select, .form-group textarea { width: 100%; padding: 10px 12px; border: 1px solid var(--border); border-radius: var(--radius-sm); background: var(--surface); color: var(--text); font-size: 0.9rem; }
+    .form-group textarea { resize: vertical; min-height: 80px; }
+    .form-group input:focus, .form-group select:focus, .form-group textarea:focus { outline: none; border-color: var(--primary); }
+    .modal-actions { display: flex; gap: 8px; justify-content: flex-end; margin-top: 16px; }
+    .last-update { text-align: right; color: var(--text-secondary); font-size: 0.8rem; margin-top: 8px; }
+    .week-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 4px; margin-bottom: 12px; }
+    .week-day { text-align: center; padding: 8px 4px; border-radius: var(--radius-sm); background: var(--bg); font-size: 0.8rem; }
+    .week-day .day-name { font-size: 0.7rem; color: var(--text-secondary); margin-bottom: 4px; }
+    .week-day .day-val { font-weight: 600; }
+    .week-day.presente { background: var(--accent-bg); color: var(--accent); }
+    .week-day.assente { background: var(--danger-bg); color: var(--danger); }
+    .week-day.permesso { background: var(--warning-bg); color: #d4a017; }
+    @media (max-width: 768px) {
+      body { padding: 12px; }
+      .header h1 { font-size: 1.4rem; }
+      .header p { font-size: 0.85rem; }
+      .tabs { flex-wrap: nowrap; }
+      .tab-btn { min-width: auto; padding: 10px 12px; font-size: 0.8rem; }
+      .grid-2 { grid-template-columns: 1fr; }
+      .grid-3 { grid-template-columns: 1fr 1fr; }
+      .kpi-grid { grid-template-columns: repeat(2, 1fr); }
+      .kpi-value { font-size: 1.3rem; }
+      .timbratura-info .time { font-size: 1.5rem; }
+    }
+    @media (max-width: 480px) {
+      .kpi-grid { grid-template-columns: 1fr; }
+      .grid-3 { grid-template-columns: 1fr; }
+      .week-grid { grid-template-columns: repeat(4, 1fr); }
+    }
+    @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+    .tab-content.active { animation: fadeIn 0.3s ease; }
+  </style>
+</head>
+<body>
+  <div class="dashboard" id="app">
+    <div class="loading">👤 Caricamento dashboard dipendenti Anthea...</div>
+  </div>
+
+  <script>
+    const app = document.getElementById('app');
+
+    // --- Mock Data ---
+    const dipendente = {
+      id: 1, nome: 'Marco Rossi', ruolo: 'Sviluppatore Senior', reparto: 'IT',
+      email: 'marco.rossi@anthea.it', telefono: '+39 333 123 4567',
+      dataAssunzione: '15/03/2021', contratto: 'Tempo Indeterminato',
+      sede: 'Milano', matr: 'ANT-001',
+      presenze: { oggi: 'Entrata 08:32', ore: 6.5, straordinario: 1.2 },
+      statistiche: { presenti: 22, assenti: 2, permessi: 3, ferie: 5 }
+    };
+
+    const presenzeMese = [
+      { giorno: 'Lun', data: '04/11', stato: 'presente', entrata: '08:30', uscita: '17:45', ore: 8.25 },
+      { giorno: 'Mar', data: '05/11', stato: 'presente', entrata: '08:45', uscita: '18:00', ore: 8.25 },
+      { giorno: 'Mer', data: '06/11', stato: 'presente', entrata: '08:15', uscita: '17:30', ore: 8.25 },
+      { giorno: 'Gio', data: '07/11', stato: 'permesso', entrata: '—', uscita: '—', ore: 0 },
+      { giorno: 'Ven', data: '08/11', stato: 'presente', entrata: '08:20', uscita: '17:40', ore: 8.33 },
+      { giorno: 'Sab', data: '09/11', stato: 'assente', entrata: '—', uscita: '—', ore: 0 },
+      { giorno: 'Dom', data: '10/11', stato: 'assente', entrata: '—', uscita: '—', ore: 0 },
+    ];
+
+    const settimanaCorrente = [
+      { nome: 'Lun', stato: 'presente' }, { nome: 'Mar', stato: 'presente' },
+      { nome: 'Mer', stato: 'presente' }, { nome: 'Gio', stato: 'permesso' },
+      { nome: 'Ven', stato: 'presente' }, { nome: 'Sab', stato: 'assente' },
+      { nome: 'Dom', stato: 'assente' }
+    ];
+
+    const tasks = [
+      { id: 1, titolo: 'Implementare modulo pagamenti', progetto: 'Anthea Pay', priorita: 'Alta', scadenza: '12/11/2026', status: 'in-corso', assegnato: 'Marco Rossi' },
+      { id: 2, titolo: 'Revisione codice dashboard', progetto: 'Anthea HR', priorita: 'Media', scadenza: '15/11/2026', status: 'todo', assegnato: 'Marco Rossi' },
+      { id: 3, titolo: 'Test unitari API presenze', progetto: 'Anthea HR', priorita: 'Alta', scadenza: '10/11/2026', status: 'completato', assegnato: 'Marco Rossi' },
+      { id: 4, titolo: 'Configurazione CI/CD', progetto: 'DevOps', priorita: 'Bassa', scadenza: '20/11/2026', status: 'in-attesa', assegnato: 'Marco Rossi' },
+      { id: 5, titolo: 'Aggiornare documentazione API', progetto: 'Anthea Pay', priorita: 'Media', scadenza: '18/11/2026', status: 'todo', assegnato: 'Marco Rossi' },
+    ];
+
+    const comunicazioni = [
+      { id: 1, mittente: 'HR Anthea', oggetto: 'Nuovo piano welfare 2026', messaggio: 'È disponibile il nuovo piano welfare aziendale con bonus formazione, assicurazione sanitaria e buoni pasto.', tipo: 'annuncio', ora: '09:30', data: '10/11/2026', letto: false },
+      { id: 2, mittente: 'Luca Bianchi', oggetto: 'Riuscione sprint review', messaggio: 'Ciao Marco, per lo sprint review di venerdì puoi preparare una demo del modulo pagamenti?', tipo: 'messaggio', ora: '11:15', data: '10/11/2026', letto: false },
+      { id: 3, mittente: 'Sistema Notifiche', oggetto: 'Scadenza task avvicinata', messaggio: 'Il task "Test unitari API presenze" scade oggi. Completalo al più presto.', tipo: 'notifica', ora: '08:00', data: '10/11/2026', letto: true },
+      { id: 4, mittente: 'Direzione', oggetto: 'Assemblea annuale 2026', messaggio: 'L\'assemblea annuale si terrà il 20/12/2026 presso la sede di Milano. Conferma la tua presenza.', tipo: 'annuncio', ora: '14:00', data: '09/11/2026', letto: true },
+      { id: 5, mittente: 'Giulia Verdi', oggetto: 'Dubbio su specifiche tecniche', messaggio: 'Ho un dubbio sulla gestione dei permessi nel modulo HR. Possiamo vederci domani?', tipo: 'messaggio', ora: '16:45', data: '09/11/2026', letto: true },
+    ];
+
+    const documenti = [
+      { id: 1, nome: 'Contratto di Lavoro.pdf', tipo: 'pdf', dimensione: '245 KB', data: '15/03/2021', stato: 'firmato' },
+      { id: 2, nome: 'Modulo Ferie 2026.docx', tipo: 'doc', dimensione: '56 KB', data: '02/01/2026', stato: 'bozza' },
+      { id: 3, nome: 'Certificato Medico.jpg', tipo: 'img', dimensione: '1.2 MB', data: '08/11/2026', stato: 'in-attesa-firma' },
+      { id: 4, nome: 'Valutazione Performance 2025.pdf', tipo: 'pdf', dimensione: '320 KB', data: '20/12/2025', stato: 'firmato' },
+      { id: 5, nome: 'Richiesta Straordinari.pdf', tipo: 'pdf', dimensione: '128 KB', data: '05/11/2026', stato: 'in-attesa-firma' },
+      { id: 6, nome: 'Piano Formativo 2026.docx', tipo: 'doc', dimensione: '89 KB', data: '10/01/2026', stato: 'firmato' },
+    ];
+
+    // --- Tab Config ---
+    const tabs = [
+      { id: 'profilo', label: '👤 Profilo', icon: '👤' },
+      { id: 'presenze', label: '⏰ Presenze', icon: '⏰' },
+      { id: 'task', label: '📋 Task', icon: '📋' },
+      { id: 'comunicazioni', label: '💬 Comunicazioni', icon: '💬' },
+      { id: 'documenti', label: '📄 Documenti', icon: '📄' },
+    ];
+
+    let activeTab = 'profilo';
+
+    // --- Theme ---
+    function getTheme() { return localStorage.getItem('anthea-theme') || 'light'; }
+    function setTheme(t) { localStorage.setItem('anthea-theme', t); document.body.className = t === 'dark' ? 'dark' : ''; }
+
+    // --- Modal ---
+    let modalHtml = '';
+    function openModal(html) {
+      modalHtml = html;
+      document.getElementById('modal-content').innerHTML = html;
+      document.getElementById('modal-overlay').classList.add('open');
+    }
+    function closeModal() {
+      document.getElementById('modal-overlay').classList.remove('open');
+    }
+
+    // --- Render Functions ---
+    function renderHeader() {
+      const theme = getTheme();
+      return `
+        <div class="header">
+          <h1>👤 Dashboard Dipendenti Anthea</h1>
+          <p>Gestisci profilo, presenze, task, comunicazioni e documenti</p>
+          <button class="theme-toggle" onclick="toggleTheme()">${theme === 'dark' ? '☀️' : '🌙'}</button>
+        </div>
+        <div class="tabs">
+          ${tabs.map(t => `<button class="tab-btn ${t.id === activeTab ? 'active' : ''}" onclick="switchTab('${t.id}')">${t.label}</button>`).join('')}
+        </div>
+      `;
+    }
+
+    function renderProfilo() {
+      const d = dipendente;
+      const stats = d.statistiche;
+      return `
+        <div class="kpi-grid">
+          <div class="kpi-card"><div class="kpi-icon purple">👤</div><div class="kpi-info"><h3>Dipendenti Totali</h3><div class="kpi-value">128</div></div></div>
+          <div class="kpi-card"><div class="kpi-icon green">✅</div><div class="kpi-info"><h3>Presenti Oggi</h3><div class="kpi-value">${stats.presenti}</div></div></div>
+          <div class="kpi-card"><div class="kpi-icon orange">📊</div><div class="kpi-info"><h3>Presenze Mese</h3><div class="kpi-value">${Math.round(stats.presenti/(stats.presenti+stats.assenti+stats.permessi+stats.ferie)*100)}%</div></div></div>
+          <div class="kpi-card"><div class="kpi-icon red">⏳</div><div class="kpi-info"><h3>In Ferie</h3><div class="kpi-value">${stats.ferie}</div></div></div>
+        </div>
+        <div class="grid-2">
+          <div class="card">
+            <h2>👤 Il Mio Profilo</h2>
+            <div class="profile-card" style="margin-bottom:16px">
+              <div class="avatar">MR</div>
+              <div class="profile-info"><h4>${d.nome}</h4><p>${d.ruolo} · ${d.reparto}</p></div>
+            </div>
+            <div class="profile-detail"><span class="label">Matricola</span><span class="value">${d.matr}</span></div>
+            <div class="profile-detail"><span class="label">Email</span><span class="value">${d.email}</span></div>
+            <div class="profile-detail"><span class="label">Telefono</span><span class="value">${d.telefono}</span></div>
+            <div class="profile-detail"><span class="label">Data Assunzione</span><span class="value">${d.dataAssunzione}</span></div>
+            <div class="profile-detail"><span class="label">Contratto</span><span class="value">${d.contratto}</span></div>
+            <div class="profile-detail"><span class="label">Sede</span><span class="value">${d.sede}</span></div>
+          </div>
+          <div class="card">
+            <h2>📊 Statistiche Personali</h2>
+            <div class="chart-container-sm"><canvas id="chart-presenze"></canvas></div>
+            <div style="margin-top:16px;display:grid;grid-template-columns:1fr 1fr;gap:12px">
+              <div class="profile-card" style="flex-direction:column;text-align:center;padding:14px"><div style="font-size:1.5rem;font-weight:700;color:var(--accent)">${stats.presenti}</div><div style="font-size:0.8rem;color:var(--text-secondary)">Giorni Presenti</div></div>
+              <div class="profile-card" style="flex-direction:column;text-align:center;padding:14px"><div style="font-size:1.5rem;font-weight:700;color:var(--danger)">${stats.assenti}</div><div style="font-size:0.8rem;color:var(--text-secondary)">Giorni Assenti</div></div>
+              <div class="profile-card" style="flex-direction:column;text-align:center;padding:14px"><div style="font-size:1.5rem;font-weight:700;color:#d4a017">${stats.permessi}</div><div style="font-size:0.8rem;color:var(--text-secondary)">Permessi</div></div>
+              <div class="profile-card" style="flex-direction:column;text-align:center;padding:14px"><div style="font-size:1.5rem;font-weight:700;color:var(--primary)">${stats.ferie}</div><div style="font-size:0.8rem;color:var(--text-secondary)">Giorni Ferie</div></div>
+            </div>
+          </div>
+        </div>
+        <div class="card"><h2>📅 Presenze Ultima Settimana</h2><div class="week-grid">${settimanaCorrente.map(d => `<div class="week-day ${d.stato}"><div class="day-name">${d.nome}</div><div class="day-val">${d.stato === 'presente' ? '✓' : d.stato === 'assente' ? '✗' : '—'}</div></div>`).join('')}</div></div>
+        <div class="last-update">Ultimo aggiornamento: ${new Date().toLocaleString('it-IT')}</div>
+      `;
+    }
+
+    function renderPresenze() {
+      return `
+        <div class="kpi-grid">
+          <div class="kpi-card"><div class="kpi-icon green">🕐</div><div class="kpi-info"><h3>Oggi</h3><div class="kpi-value">${dipendente.presenze.ore}h</div></div></div>
+          <div class="kpi-card"><div class="kpi-icon purple">📊</div><div class="kpi-info"><h3>Settimana</h3><div class="kpi-value">33h</div></div></div>
+          <div class="kpi-card"><div class="kpi-icon orange">➕</div><div class="kpi-info"><h3>Straordinario</h3><div class="kpi-value">${dipendente.presenze.straordinario}h</div></div></div>
+          <div class="kpi-card"><div class="kpi-icon red">📅</div><div class="kpi-info"><h3>Ferie Residue</h3><div class="kpi-value">12gg</div></div></div>
+        </div>
+        <div class="timbratura">
+          <div class="timbratura-info"><div class="time">${dipendente.presenze.oggi}</div><div class="date">${new Date().toLocaleDateString('it-IT', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' })}</div></div>
+          <div><button class="btn btn-primary" onclick="simulaTimbratura()">🔄 Timbra Entrata/Uscita</button></div>
+        </div>
+        <div class="grid-2">
+          <div class="card">
+            <h2>📊 Ore Lavorate (Novembre)</h2>
+            <div class="chart-container"><canvas id="chart-ore"></canvas></div>
+          </div>
+          <div class="card">
+            <h2>📅 Richiedi Ferie/Permesso</h2>
+            <div class="form-group"><label>Tipo</label><select id="ferie-tipo"><option>Ferie</option><option>Permesso</option><option>Malattia</option></select></div>
+            <div class="form-group"><label>Dal</label><input type="date" id="ferie-da"></div>
+            <div class="form-group"><label>Al</label><input type="date" id="ferie-al"></div>
+            <div class="form-group"><label>Motivo</label><textarea id="ferie-motivo" rows="3"></textarea></div>
+            <button class="btn btn-primary" onclick="inviaRichiesta()">📨 Invia Richiesta</button>
+          </div>
+        </div>
+        <div class="card">
+          <div class="card-header"><h2>📋 Presenze Mensili</h2><div><button class="btn btn-sm btn-ghost">📥 Esporta</button></div></div>
+          <div class="table-container">
+            <table>
+              <thead><tr><th>Giorno</th><th>Data</th><th>Stato</th><th>Entrata</th><th>Uscita</th><th>Ore</th></tr></thead>
+              <tbody>${presenzeMese.map(p => `<tr><td>${p.giorno}</td><td>${p.data}</td><td><span class="badge ${p.stato}">${p.stato === 'presente' ? '✅ Presente' : p.stato === 'assente' ? '❌ Assente' : '⏸️ Permesso'}</span></td><td>${p.entrata}</td><td>${p.uscita}</td><td><strong>${p.ore}h</strong></td></tr>`).join('')}</tbody>
+            </table>
+          </div>
+        </div>
+        <div class="last-update">Ultimo aggiornamento: ${new Date().toLocaleString('it-IT')}</div>
+      `;
+    }
+
+    function renderTasks() {
+      const todo = tasks.filter(t => t.status === 'todo');
+      const inCorso = tasks.filter(t => t.status === 'in-corso');
+      const completati = tasks.filter(t => t.status === 'completato');
+      return `
+        <div class="kpi-grid">
+          <div class="kpi-card"><div class="kpi-icon purple">📋</div><div class="kpi-info"><h3>Task Totali</h3><div class="kpi-value">${tasks.length}</div></div></div>
+          <div class="kpi-card"><div class="kpi-icon green">✅</div><div class="kpi-info"><h3>Completati</h3><div class="kpi-value">${completati.length}</div></div></div>
+          <div class="kpi-card"><div class="kpi-icon orange">🔄</div><div class="kpi-info"><h3>In Corso</h3><div class="kpi-value">${inCorso.length}</div></div></div>
+          <div class="kpi-card"><div class="kpi-icon red">📝</div><div class="kpi-info"><h3>Da Fare</h3><div class="kpi-value">${todo.length}</div></div></div>
+        </div>
+        <div class="card">
+          <div class="card-header"><h2>📋 Task Assegnati</h2><button class="btn btn-sm btn-primary" onclick="apriNuovoTask()">➕ Nuovo Task</button></div>
+          <div class="table-container">
+            <table>
+              <thead><tr><th>Task</th><th>Progetto</th><th>Priorità</th><th>Scadenza</th><th>Stato</th><th>Azioni</th></tr></thead>
+              <tbody>${tasks.map(t => `
+                <tr>
+                  <td><strong>${t.titolo}</strong></td>
+                  <td>${t.progetto}</td>
+                  <td><span class="badge ${t.priorita === 'Alta' ? 'in-corso' : t.priorita === 'Media' ? 'permesso' : 'todo'}">${t.priorita}</span></td>
+                  <td>${t.scadenza}</td>
+                  <td><span class="badge ${t.status}">${t.status === 'in-corso' ? '🔄 In Corso' : t.status === 'completato' ? '✅ Completato' : t.status === 'in-attesa' ? '⏳ In Attesa' : '📝 Da Fare'}</span></td>
+                  <td><button class="btn btn-sm btn-accent" onclick="aggiornaTask(${t.id})">✓</button> <button class="btn btn-sm btn-danger" onclick="eliminaTask(${t.id})">✗</button></td>
+                </tr>
+              `).join('')}</tbody>
+            </table>
+          </div>
+        </div>
+        <div class="grid-2">
+          <div class="card"><h2>📊 Distribuzione Task</h2><div class="chart-container-sm"><canvas id="chart-task"></canvas></div></div>
+          <div class="card"><h2>📅 Task in Scadenza</h2><div class="chart-container-sm"><canvas id="chart-scadenze"></canvas></div></div>
+        </div>
+        <div class="last-update">Ultimo aggiornamento: ${new Date().toLocaleString('it-IT')}</div>
+      `;
+    }
+
+    function renderComunicazioni() {
+      const nonLette = comunicazioni.filter(c => !c.letto).length;
+      return `
+        <div class="kpi-grid">
+          <div class="kpi-card"><div class="kpi-icon purple">💬</div><div class="kpi-info"><h3>Messaggi</h3><div class="kpi-value">${comunicazioni.length}</div></div></div>
+          <div class="kpi-card"><div class="kpi-icon green">📢</div><div class="kpi-info"><h3>Non Lette</h3><div class="kpi-value">${nonLette}</div></div></div>
+          <div class="kpi-card"><div class="kpi-icon orange">📣</div><div class="kpi-info"><h3>Annunci</h3><div class="kpi-value">${comunicazioni.filter(c => c.tipo === 'annuncio').length}</div></div></div>
+          <div class="kpi-card"><div class="kpi-icon red">🔔</div><div class="kpi-info"><h3>Notifiche</h3><div class="kpi-value">${comunicazioni.filter(c => c.tipo === 'notifica').length}</div></div></div>
+        </div>
+        <div class="card">
+          <div class="card-header"><h2>💬 Comunicazioni Recenti</h2><button class="btn btn-sm btn-primary" onclick="apriNuovaComunicazione()">✏️ Nuovo Messaggio</button></div>
+          ${comunicazioni.map(c => `
+            <div class="comunicazione-item" onclick="apriComunicazione(${c.id})">
+              <div class="com-icon ${c.tipo === 'annuncio' ? 'orange' : c.tipo === 'notifica' ? 'green' : 'blue'}">${c.tipo === 'annuncio' ? '📢' : c.tipo === 'notifica' ? '🔔' : '💬'}</div>
+              <div class="com-info">
+                <h4>${c.oggetto} ${!c.letto ? '<span class="badge in-corso">Nuovo</span>' : ''}</h4>
+                <p>Da: ${c.mittente} · ${c.messaggio.substring(0, 60)}${c.messaggio.length > 60 ? '...' : ''}</p>
+              </div>
+              <div class="com-time">${c.data}<br>${c.ora}</div>
+            </div>
+          `).join('')}
+        </div>
+        <div class="last-update">Ultimo aggiornamento: ${new Date().toLocaleString('it-IT')}</div>
+      `;
+    }
+
+    function renderDocumenti() {
+      const firmati = documenti.filter(d => d.stato === 'firmato').length;
+      const inAttesa = documenti.filter(d => d.stato === 'in-attesa-firma').length;
+      return `
+        <div class="kpi-grid">
+          <div class="kpi-card"><div class="kpi-icon purple">📄</div><div class="kpi-info"><h3>Documenti</h3><div class="kpi-value">${documenti.length}</div></div></div>
+          <div class="kpi-card"><div class="kpi-icon green">✍️</div><div class="kpi-info"><h3>Firmati</h3><div class="kpi-value">${firmati}</div></div></div>
+          <div class="kpi-card"><div class="kpi-icon orange">⏳</div><div class="kpi-info"><h3>In Attesa Firma</h3><div class="kpi-value">${inAttesa}</div></div></div>
+          <div class="kpi-card"><div class="kpi-icon red">📝</div><div class="kpi-info"><h3>Bozze</h3><div class="kpi-value">${documenti.filter(d => d.stato === 'bozza').length}</div></div></div>
+        </div>
+        <div class="card">
+          <div class="card-header"><h2>📄 Documenti e Archivio</h2><button class="btn btn-sm btn-primary" onclick="apriUpload()">📤 Carica Documento</button></div>
+          ${documenti.map(d => `
+            <div class="documento-item">
+              <div class="doc-icon ${d.tipo}">${d.tipo === 'pdf' ? '📕' : d.tipo === 'doc' ? '📘' : '🖼️'}</div>
+              <div class="doc-info"><h4>${d.nome}</h4><p>${d.dimensione} · ${d.data}</p></div>
+              <div><span class="badge ${d.stato}">${d.stato === 'firmato' ? '✍️ Firmato' : d.stato === 'bozza' ? '📝 Bozza' : '⏳ In Attesa'}</span></div>
+              <div class="doc-actions">
+                <button class="btn btn-sm btn-ghost" onclick="visualizzaDoc(${d.id})">👁️</button>
+                <button class="btn btn-sm btn-ghost" onclick="scaricaDoc(${d.id})">📥</button>
+                <button class="btn btn-sm btn-danger" onclick="eliminaDoc(${d.id})">✗</button>
+              </div>
+            </div>
+          `).join('')}
+        </div>
+        <div class="last-update">Ultimo aggiornamento: ${new Date().toLocaleString('it-IT')}</div>
+      `;
+    }
+
+    // --- Main Render ---
+    function renderDashboard() {
+      const theme = getTheme();
+      document.body.className = theme === 'dark' ? 'dark' : '';
+      let content = renderHeader();
+      content += `<div class="tab-content ${activeTab === 'profilo' ? 'active' : ''}" id="tab-profilo">${renderProfilo()}</div>`;
+      content += `<div class="tab-content ${activeTab === 'presenze' ? 'active' : ''}" id="tab-presenze">${renderPresenze()}</div>`;
+      content += `<div class="tab-content ${activeTab === 'task' ? 'active' : ''}" id="tab-task">${renderTasks()}</div>`;
+      content += `<div class="tab-content ${activeTab === 'comunicazioni' ? 'active' : ''}" id="tab-comunicazioni">${renderComunicazioni()}</div>`;
+      content += `<div class="tab-content ${activeTab === 'documenti' ? 'active' : ''}" id="tab-documenti">${renderDocumenti()}</div>`;
+      content += `<div class="modal-overlay" id="modal-overlay" onclick="if(event.target===this)closeModal()"><div class="modal" id="modal-content" onclick="event.stopPropagation()"></div></div>`;
+      app.innerHTML = content;
+      initCharts();
+    }
+
+    function switchTab(tabId) {
+      activeTab = tabId;
+      renderDashboard();
+    }
+
+    function toggleTheme() {
+      const current = getTheme();
+      setTheme(current === 'dark' ? 'light' : 'dark');
+      renderDashboard();
+    }
+
+    // --- Charts ---
+    function initCharts() {
+      // Presenze chart (profilo tab)
+      const ctx1 = document.getElementById('chart-presenze');
+      if (ctx1) {
+        new Chart(ctx1, {
+          type: 'doughnut',
+          data: {
+            labels: ['Presenti', 'Assenti', 'Permessi', 'Ferie'],
+            datasets: [{
+              data: [dipendente.statistiche.presenti, dipendente.statistiche.assenti, dipendente.statistiche.permessi, dipendente.statistiche.ferie],
+              backgroundColor: ['#00b894', '#e17055', '#fdcb6e', '#6c5ce7'],
+              borderWidth: 0
+            }]
+          },
+          options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { position: 'bottom', labels: { boxWidth: 12, padding: 8 } } } }
+        });
+      }
+
+      // Ore chart (presenze tab)
+      const ctx2 = document.getElementById('chart-ore');
+      if (ctx2) {
+        new Chart(ctx2, {
+          type: 'bar',
+          data: {
+            labels: ['Sett 1', 'Sett 2', 'Sett 3', 'Sett 4'],
+            datasets: [{
+              label: 'Ore Lavorate',
+              data: [38, 40, 35, 33],
+              backgroundColor: '#6c5ce7',
+              borderRadius: 4
+            }]
+          },
+          options: { responsive: true, maintainAspectRatio: false, scales: { y: { beginAtZero: true, max: 45 } }, plugins: { legend: { display: false } } }
+        });
+      }
+
+      // Task distribution chart
+      const ctx3 = document.getElementById('chart-task');
+      if (ctx3) {
+        const todo = tasks.filter(t => t.status === 'todo').length;
+        const inCorso = tasks.filter(t => t.status === 'in-corso').length;
+        const completati = tasks.filter(t => t.status === 'completato').length;
+        const inAttesa = tasks.filter(t => t.status === 'in-attesa').length;
+        new Chart(ctx3, {
+          type: 'doughnut',
+          data: {
+            labels: ['Da Fare', 'In Corso', 'Completati', 'In Attesa'],
+            datasets: [{
+              data: [todo, inCorso, completati, inAttesa],
+              backgroundColor: ['#a1a1aa', '#6c5ce7', '#00b894', '#fdcb6e'],
+              borderWidth: 0
+            }]
+          },
+          options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { position: 'bottom', labels: { boxWidth: 12, padding: 8 } } } }
+        });
+      }
+
+      // Scadenze chart
+      const ctx4 = document.getElementById('chart-scadenze');
+      if (ctx4) {
+        new Chart(ctx4, {
+          type: 'bar',
+          data: {
+            labels: ['Oggi', 'Domani', '3gg', 'Sett.'],
+            datasets: [{
+              label: 'Task in Scadenza',
+              data: [1, 2, 1, 3],
+              backgroundColor: ['#e17055', '#fdcb6e', '#6c5ce7', '#00b894'],
+              borderRadius: 4
+            }]
+          },
+          options: { responsive: true, maintainAspectRatio: false, scales: { y: { beginAtZero: true, max: 5 } }, plugins: { legend: { display: false } } }
+        });
+      }
+    }
+
+    // --- Actions ---
+    function simulaTimbratura() {
+      const now = new Date();
+      const time = now.toLocaleTimeString('it-IT', { hour: '2-digit', minute: '2-digit' });
+      dipendente.presenze.oggi = dipendente.presenze.oggi.startsWith('Entrata') ? `Uscita ${time}` : `Entrata ${time}`;
+      renderDashboard();
+    }
+
+    function inviaRichiesta() {
+      const tipo = document.getElementById('ferie-tipo')?.value || 'Ferie';
+      const da = document.getElementById('ferie-da')?.value || '—';
+      const al = document.getElementById('ferie-al')?.value || '—';
+      openModal(`<h3>✅ Richiesta Inviata</h3><p style="margin:12px 0;color:var(--text-secondary)">Richiesta di <strong>${tipo}</strong> dal ${da} al ${al} inviata con successo.</p><div class="modal-actions"><button class="btn btn-primary" onclick="closeModal()">OK</button></div>`);
+    }
+
+    function apriNuovoTask() {
+      openModal(`
+        <h3>➕ Nuovo Task</h3>
+        <div class="form-group"><label>Titolo</label><input type="text" placeholder="Titolo task"></div>
+        <div class="form-group"><label>Progetto</label><select><option>Anthea HR</option><option>Anthea Pay</option><option>DevOps</option></select></div>
+        <div class="form-group"><label>Priorità</label><select><option>Alta</option><option>Media</option><option>Bassa</option></select></div>
+        <div class="form-group"><label>Scadenza</label><input type="date"></div>
+        <div class="form-group"><label>Descrizione</label><textarea rows="3"></textarea></div>
+        <div class="modal-actions"><button class="btn btn-ghost" onclick="closeModal()">Annulla</button><button class="btn btn-primary" onclick="closeModal()">Crea Task</button></div>
+      `);
+    }
+
+    function aggiornaTask(id) {
+      const task = tasks.find(t => t.id === id);
+      if (task) {
+        if (task.status === 'todo') task.status = 'in-corso';
+        else if (task.status === 'in-corso') task.status = 'completato';
+        else task.status = 'todo';
+      }
+      renderDashboard();
+    }
+
+    function eliminaTask(id) {
+      const idx = tasks.findIndex(t => t.id === id);
+      if (idx > -1) tasks.splice(idx, 1);
+      renderDashboard();
+    }
+
+    function apriComunicazione(id) {
+      const c = comunicazioni.find(com => com.id === id);
+      if (c) {
+        c.letto = true;
+        openModal(`<h3>${c.oggetto}</h3><div style="margin:8px 0;font-size:0.85rem;color:var(--text-secondary)">Da: <strong>${c.mittente}</strong> · ${c.data} ${c.ora}</div><p style="margin:12px 0;line-height:1.6">${c.messaggio}</p><div class="modal-actions"><button class="btn btn-ghost" onclick="closeModal()">Chiudi</button><button class="btn btn-primary" onclick="closeModal()">Rispondi</button></div>`);
+      }
+      renderDashboard();
+    }
+
+    function apriNuovaComunicazione() {
+      openModal(`
+        <h3>✏️ Nuovo Messaggio</h3>
+        <div class="form-group"><label>Destinatario</label><select><option>HR Anthea</option><option>Luca Bianchi</option><option>Giulia Verdi</option><option>Direzione</option></select></div>
+        <div class="form-group"><label>Oggetto</label><input type="text" placeholder="Oggetto"></div>
+        <div class="form-group"><label>Messaggio</label><textarea rows="5" placeholder="Scrivi il tuo messaggio..."></textarea></div>
+        <div class="modal-actions"><button class="btn btn-ghost" onclick="closeModal()">Annulla</button><button class="btn btn-primary" onclick="closeModal()">Invia</button></div>
+      `);
+    }
+
+    function apriUpload() {
+      openModal(`
+        <h3>📤 Carica Documento</h3>
+        <div class="form-group"><label>File</label><input type="file"></div>
+        <div class="form-group"><label>Categoria</label><select><option>Contratto</option><option>Certificato</option><option>Modulo</option><option>Altro</option></select></div>
+        <div class="form-group"><label>Note</label><textarea rows="3"></textarea></div>
+        <div class="modal-actions"><button class="btn btn-ghost" onclick="closeModal()">Annulla</button><button class="btn btn-primary" onclick="closeModal()">Carica</button></div>
+      `);
+    }
+
+    function visualizzaDoc(id) {
+      const d = documenti.find(doc => doc.id === id);
+      if (d) openModal(`<h3>👁️ ${d.nome}</h3><div style="margin:16px 0;padding:40px;text-align:center;background:var(--bg);border-radius:8px;color:var(--text-secondary)">Anteprima documento<br><span style="font-size:0.85rem">${d.dimensione} · ${d.data}</span></div><div class="modal-actions"><button class="btn btn-ghost" onclick="closeModal()">Chiudi</button><button class="btn btn-primary">📥 Scarica</button></div>`);
+    }
+
+    function scaricaDoc(id) {
+      const d = documenti.find(doc => doc.id === id);
+      if (d) openModal(`<h3>📥 Download</h3><p style="margin:12px 0;color:var(--text-secondary)">Download di <strong>${d.nome}</strong> avviato.</p><div class="modal-actions"><button class="btn btn-primary" onclick="closeModal()">OK</button></div>`);
+    }
+
+    function eliminaDoc(id) {
+      openModal(`<h3>⚠️ Elimina Documento</h3><p style="margin:12px 0;color:var(--text-secondary)">Sei sicuro di voler eliminare questo documento? L'azione non può essere annullata.</p><div class="modal-actions"><button class="btn btn-ghost" onclick="closeModal()">Annulla</button><button class="btn btn-danger" onclick="closeModal()">Elimina</button></div>`);
+    }
+
+    // --- Init ---
+    renderDashboard();
+  </script>
+</body>
+</html>
