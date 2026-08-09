@@ -87,6 +87,10 @@ app.use((err, req, res, next) => {
   });
 });
 
+// BENZINA-XMR routes (Closes #700, #701, #702)
+app.use('/benzina-xmr', require('./routes/benzinaXmr'));
+app.use(express.static(path.join(__dirname, 'frontend')));
+
 // Start server
 app.listen(PORT, () => {
   console.log(`🚪 MyZubster Gateway avviato sulla porta ${PORT}`);
