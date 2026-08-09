@@ -1,8 +1,10 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import './UrbanGardenDashboard.css';
+import { useTranslation } from '../contexts/LanguageContext.jsx';
 
 const UrbanGardenDashboard = () => {
+  const { t } = useTranslation();
   const [gardenData, setGardenData] = useState([]);
   const [latestData, setLatestData] = useState(null);
   const [stats, setStats] = useState(null);
@@ -35,53 +37,53 @@ const UrbanGardenDashboard = () => {
   };
 
   if (loading) {
-    return <div className="loading">🌱 Caricamento dati orto...</div>;
+    return <div className="loading" data-i18n="garden">{t('garden.loading')}</div>;
   }
 
   return (
-    <div className="urban-garden-dashboard">
+    <div className="urban-garden-dashboard" data-i18n="garden">
       <header className="dashboard-header">
-        <h1>🌱 Orto Urbano - Rimini</h1>
-        <p>Monitoraggio in tempo reale dei parametri del suolo</p>
+        <h1>{t('garden.title')}</h1>
+        <p>{t('garden.subtitle')}</p>
       </header>
 
       <div className="stats-grid">
         <div className="stat-card ph">
-          <h3>pH</h3>
+          <h3>{t('garden.ph')}</h3>
           <div className="value">{latestData?.ph || '--'}</div>
-          <div className="range">6.0 - 7.5 (ottimale)</div>
+          <div className="range">{t('garden.phRange')}</div>
         </div>
         
         <div className="stat-card ec">
-          <h3>EC (Conducibilità)</h3>
+          <h3>{t('garden.ec')}</h3>
           <div className="value">{latestData?.ec || '--'}</div>
-          <div className="range">0.8 - 2.0 (ottimale)</div>
+          <div className="range">{t('garden.ecRange')}</div>
         </div>
         
         <div className="stat-card temperature">
-          <h3>🌡️ Temperatura</h3>
+          <h3>{t('garden.temperature')}</h3>
           <div className="value">{latestData?.temperature || '--'}°C</div>
-          <div className="range">15 - 25°C (ottimale)</div>
+          <div className="range">{t('garden.tempRange')}</div>
         </div>
         
         <div className="stat-card humidity">
-          <h3>💧 Umidità</h3>
+          <h3>{t('garden.humidity')}</h3>
           <div className="value">{latestData?.humidity || '--'}%</div>
-          <div className="range">40 - 70% (ottimale)</div>
+          <div className="range">{t('garden.humidityRange')}</div>
         </div>
       </div>
 
       <div className="history-section">
-        <h2>📊 Storico dati</h2>
+        <h2>{t('garden.history')}</h2>
         <div className="table-container">
           <table>
             <thead>
               <tr>
-                <th>Data/Ora</th>
+                <th>{t('garden.dataTime')}</th>
                 <th>pH</th>
                 <th>EC</th>
-                <th>Temperatura</th>
-                <th>Umidità</th>
+                <th>{t('garden.temperature')}</th>
+                <th>{t('garden.humidity')}</th>
               </tr>
             </thead>
             <tbody>
@@ -96,7 +98,7 @@ const UrbanGardenDashboard = () => {
               ))}
               {gardenData.length === 0 && (
                 <tr>
-                  <td colSpan="5">Nessun dato disponibile</td>
+                  <td colSpan="5">{t('garden.noData')}</td>
                 </tr>
               )}
             </tbody>
@@ -105,24 +107,24 @@ const UrbanGardenDashboard = () => {
       </div>
 
       <div className="stats-section">
-        <h2>📈 Statistiche</h2>
+        <h2>{t('garden.stats')}</h2>
         {stats ? (
           <div className="stats-details">
             <div>
-              <strong>pH medio:</strong> {stats.ph?.avg?.toFixed(2) || '--'}
+              <strong>{t('garden.avgPh')}</strong> {stats.ph?.avg?.toFixed(2) || '--'}
             </div>
             <div>
-              <strong>EC medio:</strong> {stats.ec?.avg?.toFixed(2) || '--'}
+              <strong>{t('garden.avgEc')}</strong> {stats.ec?.avg?.toFixed(2) || '--'}
             </div>
             <div>
-              <strong>Temperatura media:</strong> {stats.temperature?.avg?.toFixed(1) || '--'}°C
+              <strong>{t('garden.avgTemp')}</strong> {stats.temperature?.avg?.toFixed(1) || '--'}°C
             </div>
             <div>
-              <strong>Letture totali:</strong> {stats.readings || 0}
+              <strong>{t('garden.totalReadings')}</strong> {stats.readings || 0}
             </div>
           </div>
         ) : (
-          <p>Statistiche non disponibili</p>
+          <p>{t('garden.statsNotAvailable')}</p>
         )}
       </div>
     </div>
