@@ -77,6 +77,9 @@ app.use('/api/gateway', require('./routes/apiGateway'));
 console.log('✅ Caricamento routes Monitoring...');
 app.use('/api/system/monitoring', require('./routes/monitoring'));
 
+console.log('✅ Caricamento routes Analytics Dashboard...');
+app.use('/api/system/analytics', require('./routes/analyticsDashboard'));
+
 app.use('/api/backup', require('./routes/backup'));
 
 app.get('/health', (req, res) => {
