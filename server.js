@@ -159,3 +159,12 @@ app.listen(PORT, '0.0.0.0', () => {
 });
 
 module.exports = app;
+
+// 👽 Route Alieno Reale
+app.get('/alien', (req, res) => {
+  res.sendFile('/opt/MyZubster/MyZubsterGateway/public/alien-zorgax.html');
+});
+
+// 👽 Route Connessione ZORGAX-Terra
+const alienConnectionRoutes = require('./routes/alienConnectionRoutes');
+app.use('/api/alien', alienConnectionRoutes);

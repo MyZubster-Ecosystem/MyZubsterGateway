@@ -1,11 +1,43 @@
 const express = require('express');
 const router = express.Router();
+const fs = require('fs');
+const path = require('path');
 
-// Database NFT in memoria
-const nftDB = {
-  nfts: [],
-  counters: {}
-};
+// File di persistenza
+const NFT_DB_PATH = path.join(__dirname, '../data/nfts.json');
+
+// Assicura che la cartella data esista
+const dataDir = path.join(__dirname, '../data');
+if (!fs.existsSync(dataDir)) {
+  fs.mkdirSync(dataDir, { recursive: true });
+}
+
+// Carica i dati da file o inizializza
+function loadNFTs() {
+  try {
+    if (fs.existsSync(NFT_DB_PATH)) {
+      const data = JSON.parse(fs.readFileSync(NFT_DB_PATH, 'utf8'));
+      return data;
+    }
+  } catch (e) {
+    console.error('⚠️ Errore caricamento NFT:', e.message);
+  }
+  return { nfts: [], counters: {} };
+}
+
+// Salva i dati su file
+function saveNFTs(data) {
+  try {
+    fs.writeFileSync(NFT_DB_PATH, JSON.stringify(data, null, 2));
+    return true;
+  } catch (e) {
+    console.error('❌ Errore salvataggio NFT:', e.message);
+    return false;
+  }
+}
+
+// Carica i dati
+let db = loadNFTs();
 
 // Middleware di autenticazione
 const authMiddleware = (req, res, next) => {
@@ -13,7 +45,6 @@ const authMiddleware = (req, res, next) => {
   if (!authHeader) {
     return res.status(401).json({ error: 'Authorization header required' });
   }
-  // Per test, accetta qualsiasi token
   req.user = { id: 'cosmic-explorer' };
   next();
 };
@@ -21,16 +52,23 @@ const authMiddleware = (req, res, next) => {
 // Funzione per generare tokenId
 function generateTokenId(type, count) {
   const prefix = {
-    'galaxy': 'GALAXY',
-    'star': 'STAR',
-    'planet': 'PLANET',
-    'constellation': 'CONST',
-    'nebula': 'NEBULA',
-    'element': 'ELEMENT',
-    'molecule': 'MOLECULE',
-    'bounty': 'BOUNTY'
+    'hera_robot': 'NFT',
+    'waste_robot': 'NFT',
+    'resource': 'NFT',
+    'galaxy': 'NFT',
+    'star': 'NFT',
+    'planet': 'NFT',
+    'constellation': 'NFT',
+    'nebula': 'NFT',
+    'element': 'NFT',
+    'molecule': 'NFT',
+    'bounty': 'NFT',
+    'test': 'NFT'
   }[type] || 'NFT';
-  return `${prefix}-${String(count).padStart(6, '0')}`;
+  
+  // Conta quanti NFT di questo tipo esistono già
+  const typeCount = (db.nfts || []).filter(n => n.type === type).length;
+  return `${prefix}-${String(typeCount + count).padStart(6, '0')}`;
 }
 
 // ============ MINT NFT ============
@@ -42,23 +80,27 @@ router.post('/mint', authMiddleware, (req, res) => {
       return res.status(400).json({ error: 'type and name required' });
     }
     
-    // Incrementa il contatore
-    if (!nftDB.counters[type]) nftDB.counters[type] = 0;
-    nftDB.counters[type]++;
+    // Calcola il prossimo ID per il tipo
+    const typeCount = (db.nfts || []).filter(n => n.type === type).length;
+    const nextId = typeCount + 1;
     
-    const tokenId = generateTokenId(type, nftDB.counters[type]);
+    const tokenId = generateTokenId(type, nextId);
     
     const nft = {
       tokenId,
       type,
       name,
       metadata: metadata || {},
-      owner: req.user.id,
+      owner: req.user.id || 'cosmic-explorer',
       mintedAt: new Date().toISOString(),
       blockchain: 'MyZubster Chain'
     };
     
-    nftDB.nfts.push(nft);
+    if (!db.nfts) db.nfts = [];
+    db.nfts.push(nft);
+    
+    // Salva su file
+    saveNFTs(db);
     
     res.status(201).json({
       success: true,
@@ -66,7 +108,6 @@ router.post('/mint', authMiddleware, (req, res) => {
       nft
     });
   } catch (error) {
-    console.error('❌ Errore mint:', error);
     res.status(500).json({ error: error.message });
   }
 });
@@ -74,14 +115,16 @@ router.post('/mint', authMiddleware, (req, res) => {
 // ============ GET STATS ============
 router.get('/stats', (req, res) => {
   try {
-    const types = ['galaxy', 'star', 'planet', 'constellation', 'nebula', 'element', 'molecule', 'bounty'];
+    const types = ['hera_robot', 'waste_robot', 'resource', 'galaxy', 'star', 'planet', 'constellation', 'nebula', 'element', 'molecule', 'bounty', 'test'];
     const stats = {};
     let total = 0;
     
     for (const type of types) {
-      const count = nftDB.nfts.filter(n => n.type === type).length;
-      stats[type + 's'] = count;
-      total += count;
+      const count = (db.nfts || []).filter(n => n.type === type).length;
+      if (count > 0) {
+        stats[type + 's'] = count;
+        total += count;
+      }
     }
     stats.total = total;
     
@@ -93,29 +136,45 @@ router.get('/stats', (req, res) => {
 
 // ============ GET ALL NFTs ============
 router.get('/all', (req, res) => {
-  res.json({ success: true, total: nftDB.nfts.length, nfts: nftDB.nfts });
+  try {
+    const nfts = db.nfts || [];
+    res.json({ success: true, total: nfts.length, nfts });
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
 });
 
 // ============ GET MY NFTs ============
 router.get('/my-nfts', authMiddleware, (req, res) => {
-  const nfts = nftDB.nfts.filter(n => n.owner === req.user.id);
-  res.json({ success: true, count: nfts.length, nfts });
+  try {
+    const nfts = (db.nfts || []).filter(n => n.owner === req.user.id);
+    res.json({ success: true, count: nfts.length, nfts });
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
 });
 
 // ============ GET NFT BY TOKEN ID ============
 router.get('/token/:tokenId', (req, res) => {
-  const nft = nftDB.nfts.find(n => n.tokenId === req.params.tokenId);
-  if (!nft) {
-    return res.status(404).json({ error: 'NFT not found' });
+  try {
+    const nft = (db.nfts || []).find(n => n.tokenId === req.params.tokenId);
+    if (!nft) {
+      return res.status(404).json({ error: 'NFT not found' });
+    }
+    res.json({ success: true, nft });
+  } catch (error) {
+    res.status(500).json({ error: error.message });
   }
-  res.json({ success: true, nft });
 });
 
-// ============ DEBUG: RESET NFT DATABASE ============
-router.post('/reset', (req, res) => {
-  nftDB.nfts = [];
-  nftDB.counters = {};
-  res.json({ success: true, message: 'NFT database resettato' });
+// ============ RELOAD DATABASE ============
+router.post('/reload', (req, res) => {
+  try {
+    db = loadNFTs();
+    res.json({ success: true, message: 'NFT database reloaded', total: db.nfts?.length || 0 });
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
 });
 
 module.exports = router;
