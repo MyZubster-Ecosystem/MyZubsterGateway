@@ -17,6 +17,8 @@
     "sentWithRetry": "Webhook dihantar dengan percubaan semula automatik"
   },
   "errors": {
-    "internal": "Ralat pelayan dalaman"
+    "internal": "Ralat pelayan dalaman",
+    "notFound": "Tidak ditemui",
+    "rateLimitExceeded": "Terlalu banyak permintaan, sila cuba lagi kemudian"
   }
 }

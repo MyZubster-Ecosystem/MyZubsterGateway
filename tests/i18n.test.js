@@ -15,6 +15,10 @@ const i18nMiddleware = require('../middleware/i18n');
 const authRouter = require('../src/routes/auth');
 const webhookRouter = require('../routes/webhook');
 const WebhookService = require('../services/webhookService');
+const {
+  localizedNotFoundMessage,
+  localizedRateLimitMessage,
+} = require('../config/apiMessages');
 const productionApp = require('../server');
 
 function flattenCatalog(value, prefix = '', result = {}) {
@@ -196,6 +200,10 @@ describe('translation catalogs', () => {
     expect(translate('es', 'errors.internal')).toBe(
       'Error interno del servidor'
     );
+    expect(translate('es', 'errors.notFound')).toBe('No encontrado');
+    expect(translate('es', 'errors.rateLimitExceeded')).toBe(
+      'Demasiadas solicitudes, inténtalo de nuevo más tarde'
+    );
 
     const spanishReadme = fs.readFileSync(
       path.join(__dirname, '..', 'README.es.md'),
@@ -212,6 +220,33 @@ describe('translation catalogs', () => {
       'Internal server error'
     );
     expect(translate('it', 'missing.key')).toBe('missing.key');
+  });
+});
+
+describe('production API messages', () => {
+  test('uses Spanish translation callbacks for rate-limit and 404 responses', () => {
+    const translateSpanish = jest.fn((key) => {
+      const messages = {
+        'errors.notFound': 'No encontrado',
+        'errors.rateLimitExceeded':
+          'Demasiadas solicitudes, inténtalo de nuevo más tarde',
+      };
+
+      return messages[key];
+    });
+    const req = { t: translateSpanish };
+
+    expect(localizedRateLimitMessage(req)).toEqual({
+      error: 'Demasiadas solicitudes, inténtalo de nuevo más tarde',
+    });
+    expect(localizedNotFoundMessage(req)).toEqual({
+      error: 'No encontrado',
+    });
+    expect(translateSpanish).toHaveBeenNthCalledWith(
+      1,
+      'errors.rateLimitExceeded'
+    );
+    expect(translateSpanish).toHaveBeenNthCalledWith(2, 'errors.notFound');
   });
 });
 

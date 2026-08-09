@@ -3,6 +3,10 @@ const mongoose = require('mongoose');
 const cors = require('cors');
 const rateLimit = require('express-rate-limit');
 const express = require('express');
+const {
+  localizedNotFoundMessage,
+  localizedRateLimitMessage,
+} = require('./config/apiMessages');
 const i18nMiddleware = require('./middleware/i18n');
 const app = express();
 const PORT = process.env.PORT || 10000;
@@ -11,7 +15,7 @@ const PORT = process.env.PORT || 10000;
 const limiter = rateLimit({
   windowMs: 15 * 60 * 1000,
   max: 100,
-  message: '⚠️ Troppe richieste, riprova più tardi.',
+  message: localizedRateLimitMessage,
   standardHeaders: true,
   legacyHeaders: false
 });
@@ -161,7 +165,7 @@ app.use((req, res, next) => {
 
 // Error handler per 404
 app.use((req, res) => {
-  res.status(404).json({ error: 'Not found' });
+  res.status(404).json(localizedNotFoundMessage(req));
 });
 
 if (require.main === module) {

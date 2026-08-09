@@ -17,6 +17,8 @@
     "sentWithRetry": "Webhook sent with automatic retry"
   },
   "errors": {
-    "internal": "Internal server error"
+    "internal": "Internal server error",
+    "notFound": "Not found",
+    "rateLimitExceeded": "Too many requests, please try again later"
   }
 }
