@@ -1,5 +1,18 @@
 <!DOCTYPE html>
 <html>
+<<<<<<< HEAD
+<head><title>MyZubster Status</title></head>
+<body>
+<h1>System Status Dashboard</h1>
+<p>Loading status...</p>
+<script>
+fetch('/api/status')
+  .then(r => r.json())
+  .then(data => {
+    document.body.innerHTML = `<pre>${JSON.stringify(data, null, 2)}</pre>`;
+  });
+</script>
+=======
 <head>
     <title>MyZubster - System Status</title>
     <style>
@@ -145,5 +158,6 @@
         // Auto-refresh every 30 seconds
         setInterval(loadStatus, 30000);
     </script>
+>>>>>>> origin/main
 </body>
 </html>

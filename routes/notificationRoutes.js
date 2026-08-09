@@ -1,6 +1,9 @@
 const express = require('express');
 const router = express.Router();
 <<<<<<< HEAD
+=======
+<<<<<<< HEAD
+>>>>>>> origin/main
 const {
   sendWelcomeEmail,
   sendTokenPurchaseEmail,
@@ -16,9 +19,12 @@ router.post('/token-purchase', sendTokenPurchaseEmail);
 // POST /api/notifications/bounty-completed
 router.post('/bounty-completed', sendBountyCompletedEmail);
 
+<<<<<<< HEAD
+=======
 =======
 router.get('/', (req, res) => {
   res.json({ notifications: [{ id: 1, message: 'Benvenuto!', read: false, timestamp: new Date().toISOString() }], unread: 1, total: 1 });
 });
+>>>>>>> origin/main
 >>>>>>> origin/main
 module.exports = router;
