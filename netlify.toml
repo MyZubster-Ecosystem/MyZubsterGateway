@@ -1,6 +1,11 @@
 [build]
+<<<<<<< HEAD
   command = "echo 'Skipping frontend build for now'"
   publish = "."
+=======
+  command = "mkdir -p frontend/build && touch frontend/build/index.html"
+  publish = "frontend/build"
+>>>>>>> origin/main
 
 [build.environment]
   NODE_VERSION = "20"
