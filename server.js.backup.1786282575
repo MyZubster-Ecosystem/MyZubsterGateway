@@ -52,16 +52,21 @@ app.get("/api/health", (req, res) => {
 
 // ============ ROUTES ============
 
-// Robot Universal Integration
-try {
-  const robotIntegrationRoutes = require('./robot-integration/api/routes');
-  app.use('/api/robots', robotIntegrationRoutes);
-  console.log('✅ Robot Universal Integration loaded');
-} catch(e) {
-  console.log('⚠️ Robot Universal Integration not available:', e.message);
-}
-
 // NFT Routes
+try {
+  const robotRoutes = require("./routes/robotRoutes");
+  app.use("/api/robot", robotRoutes);
+  console.log("✅ Robot routes loaded");
+} catch(e) {
+  console.log("⚠️ Robot routes not available:", e.message);
+}
+try {
+  const deepseekRoutes = require("./routes/deepseekRoutes");
+  app.use("/api/deepseek", deepseekRoutes);
+  console.log("✅ DeepSeek routes loaded");
+} catch(e) {
+  console.log("⚠️ DeepSeek routes not available:", e.message);
+}
 try {
   const routes = require("./routes/nftRoutes");
   app.use("/api/nft", routes);
@@ -69,14 +74,12 @@ try {
 } catch(e) {
   console.log("⚠️ NFT routes not available:", e.message);
 }
-
-// DeepSeek Routes
 try {
-  const deepseekRoutes = require("./routes/deepseekRoutes");
-  app.use("/api/deepseek", deepseekRoutes);
-  console.log("✅ DeepSeek routes loaded");
+  const routes = require("./routes/nftRoutes");
+  app.use("/api/nft", routes);
+  console.log('✅ NFT routes loaded');
 } catch(e) {
-  console.log("⚠️ DeepSeek routes not available:", e.message);
+  console.log('⚠️ NFT routes not available:', e.message);
 }
 
 // Notifications
@@ -153,9 +156,15 @@ app.listen(PORT, '0.0.0.0', () => {
   console.log(`🚪 MyZubster Gateway avviato sulla porta ${PORT}`);
   console.log(`🔍 Health: /api/health`);
   console.log(`📚 Swagger: /api/docs`);
-  console.log(`🤖 Robot Universal: /api/robots`);
-  console.log(`🌌 NFT: /api/nft`);
-  console.log(`🧠 DeepSeek: /api/deepseek`);
 });
 
 module.exports = app;
+
+// Robot Universal Integration
+try {
+  const robotIntegrationRoutes = require('./robot-integration/api/routes');
+  app.use('/api/robots', robotIntegrationRoutes);
+  console.log('✅ Robot Universal Integration loaded');
+} catch(e) {
+  console.log('⚠️ Robot Universal Integration not available:', e.message);
+}
