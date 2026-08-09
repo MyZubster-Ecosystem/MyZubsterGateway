@@ -5,7 +5,9 @@
   "auth": {
     "loginEndpoint": "Endpoint de inicio de sesión",
     "registerEndpoint": "Endpoint de registro",
-    "required": "Se requiere autenticación"
+    "required": "Se requiere autenticación",
+    "tokenRequired": "Se requiere un token de autenticación",
+    "invalidToken": "Token de autenticación no válido"
   },
   "admin": {
     "required": "Se requieren privilegios de administrador"

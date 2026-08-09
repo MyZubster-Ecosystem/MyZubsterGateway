@@ -5,7 +5,9 @@
   "auth": {
     "loginEndpoint": "உள்நுழைவு முனையம்",
     "registerEndpoint": "பதிவு முனையம்",
-    "required": "அங்கீகாரம் தேவை"
+    "required": "அங்கீகாரம் தேவை",
+    "tokenRequired": "அங்கீகார டோக்கன் தேவை",
+    "invalidToken": "தவறான அங்கீகார டோக்கன்"
   },
   "admin": {
     "required": "நிர்வாகி அனுமதி தேவை"

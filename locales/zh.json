@@ -5,7 +5,9 @@
   "auth": {
     "loginEndpoint": "登录端点",
     "registerEndpoint": "注册端点",
-    "required": "需要身份验证"
+    "required": "需要身份验证",
+    "tokenRequired": "需要身份验证令牌",
+    "invalidToken": "身份验证令牌无效"
   },
   "admin": {
     "required": "需要管理员权限"

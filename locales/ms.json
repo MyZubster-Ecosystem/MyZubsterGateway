@@ -5,7 +5,9 @@
   "auth": {
     "loginEndpoint": "Titik akhir log masuk",
     "registerEndpoint": "Titik akhir pendaftaran",
-    "required": "Pengesahan diperlukan"
+    "required": "Pengesahan diperlukan",
+    "tokenRequired": "Token pengesahan diperlukan",
+    "invalidToken": "Token pengesahan tidak sah"
   },
   "admin": {
     "required": "Keistimewaan pentadbir diperlukan"

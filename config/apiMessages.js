@@ -17,4 +17,5 @@ function localizedNotFoundMessage(req) {
 module.exports = {
   localizedNotFoundMessage,
   localizedRateLimitMessage,
+  translateRequest,
 };

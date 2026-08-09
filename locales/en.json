@@ -5,7 +5,9 @@
   "auth": {
     "loginEndpoint": "Login endpoint",
     "registerEndpoint": "Register endpoint",
-    "required": "Authentication required"
+    "required": "Authentication required",
+    "tokenRequired": "Authentication token is required",
+    "invalidToken": "Invalid authentication token"
   },
   "admin": {
     "required": "Admin privileges required"

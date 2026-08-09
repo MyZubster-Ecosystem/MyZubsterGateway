@@ -13,6 +13,11 @@ const { authorizeAdmin } = require('../middleware/admin');
 const authMiddleware = require('../middleware/auth');
 const i18nMiddleware = require('../middleware/i18n');
 const authRouter = require('../src/routes/auth');
+const disputeRouter = require('../src/routes/disputeRoutes');
+const escrowRouter = require('../src/routes/escrowRoutes');
+const multiCurrencyEscrowRouter = require('../src/routes/multiCurrencyEscrowRoutes');
+const paymentVerificationRouter = require('../src/routes/paymentVerificationRoutes');
+const walletRouter = require('../src/routes/walletRoutes');
 const webhookRouter = require('../routes/webhook');
 const WebhookService = require('../services/webhookService');
 const {
@@ -95,6 +100,20 @@ function buildRouteIntegrationApp() {
     }
   );
   app.use('/webhook', webhookRouter);
+
+  return app;
+}
+
+function buildProtectedRouteIntegrationApp() {
+  const app = express();
+
+  app.use(express.json());
+  app.use(i18nMiddleware);
+  app.use('/wallet', walletRouter);
+  app.use('/escrow', escrowRouter);
+  app.use('/multi-currency-escrow', multiCurrencyEscrowRouter);
+  app.use('/verification', paymentVerificationRouter);
+  app.use('/disputes', disputeRouter);
 
   return app;
 }
@@ -432,5 +451,42 @@ describe('mounted route and middleware integration', () => {
     } finally {
       sendWebhook.mockRestore();
     }
+  });
+});
+
+describe('protected route localization', () => {
+  const app = buildProtectedRouteIntegrationApp();
+
+  test.each([
+    ['/wallet/deposit'],
+    ['/escrow'],
+    ['/multi-currency-escrow'],
+    ['/verification'],
+    ['/disputes'],
+  ])('localizes missing authentication tokens for %s', async (endpoint) => {
+    const response = await request(app)
+      .post(endpoint)
+      .set('Accept-Language', 'es-MX')
+      .send({})
+      .expect(401);
+
+    expect(response.body).toEqual({
+      error: 'Se requiere un token de autenticación',
+    });
+    expect(response.headers['content-language']).toBe('es');
+  });
+
+  test('localizes invalid authentication tokens', async () => {
+    const response = await request(app)
+      .post('/wallet/deposit')
+      .set('Accept-Language', 'es')
+      .set('Authorization', 'Bearer invalid-token')
+      .send({})
+      .expect(401);
+
+    expect(response.body).toEqual({
+      error: 'Token de autenticación no válido',
+    });
+    expect(response.headers['content-language']).toBe('es');
   });
 });

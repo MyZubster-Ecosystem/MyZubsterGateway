@@ -5,7 +5,9 @@
   "auth": {
     "loginEndpoint": "Endpoint di accesso",
     "registerEndpoint": "Endpoint di registrazione",
-    "required": "Autenticazione richiesta"
+    "required": "Autenticazione richiesta",
+    "tokenRequired": "Token di autenticazione richiesto",
+    "invalidToken": "Token di autenticazione non valido"
   },
   "admin": {
     "required": "Privilegi di amministratore richiesti"
