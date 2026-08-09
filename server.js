@@ -125,6 +125,9 @@ try { const routes = require("./routes/massBounty998"); app.use("/api/bounty-998
 // Mass Bounty 999
 try { const routes = require("./routes/massBounty999"); app.use("/api/bounty-999", routes); } catch(e) {}
 
+// Sensori Ambientali Avanzati (#1026)
+try { const routes = require("./routes/sensorAdvancedRoutes"); app.use("/api/sensors/advanced", routes); } catch(e) {}
+
 // Swagger UI
 try {
   const swaggerUi = require('swagger-ui-express');
