@@ -1,0 +1,118 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MyZubster Robot Dashboard</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: 'Segoe UI', system-ui, sans-serif; background: #0a0a1a; color: #e0e0e0; }
+        .header { background: linear-gradient(135deg, #1a1a3e, #0d0d2b); padding: 1.5rem 2rem; border-bottom: 2px solid #333; }
+        .header h1 { font-size: 1.8rem; color: #7cff7c; }
+        .header p { color: #888; margin-top: 0.3rem; }
+        .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap: 1.5rem; padding: 2rem; }
+        .card { background: #141428; border-radius: 12px; padding: 1.5rem; border: 1px solid #2a2a4a; }
+        .card h3 { color: #7cff7c; margin-bottom: 1rem; font-size: 1.1rem; }
+        .stat-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 0.8rem; }
+        .stat { background: #1a1a35; padding: 0.8rem; border-radius: 8px; text-align: center; }
+        .stat-value { font-size: 1.5rem; font-weight: bold; color: #fff; }
+        .stat-label { font-size: 0.75rem; color: #888; margin-top: 0.2rem; }
+        .robot-list { list-style: none; }
+        .robot-item { display: flex; align-items: center; padding: 0.6rem 0; border-bottom: 1px solid #1a1a35; }
+        .robot-indicator { width: 10px; height: 10px; border-radius: 50%; margin-right: 10px; }
+        .robot-indicator.online { background: #4cff4c; box-shadow: 0 0 8px #4cff4c; }
+        .robot-indicator.offline { background: #ff4444; }
+        .robot-name { flex: 1; font-weight: 500; }
+        .robot-status { font-size: 0.8rem; color: #888; }
+        .bounty-list { list-style: none; }
+        .bounty-item { display: flex; justify-content: space-between; padding: 0.5rem 0; border-bottom: 1px solid #1a1a35; }
+        .bounty-amount { color: #ffd700; font-weight: bold; }
+        .ws-indicator { display: flex; align-items: center; gap: 0.5rem; margin-top: 1rem; padding: 0.5rem; background: #1a1a35; border-radius: 8px; }
+        .ws-dot { width: 8px; height: 8px; border-radius: 50%; background: #4cff4c; }
+        .ws-dot.disconnected { background: #ff4444; }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>MyZubster Robot Dashboard</h1>
+        <p>Monitoraggio in tempo reale dei robot e bounty</p>
+        <div class="ws-indicator" id="ws-indicator">
+            <span class="ws-dot" id="ws-dot"></span>
+            <span id="ws-status">Connessione WebSocket...</span>
+        </div>
+    </div>
+    <div class="grid">
+        <div class="card">
+            <h3>Panoramica Robot</h3>
+            <div class="stat-grid">
+                <div class="stat"><div class="stat-value" id="total-robots">--</div><div class="stat-label">Totale Robot</div></div>
+                <div class="stat"><div class="stat-value" id="active-robots">--</div><div class="stat-label">Attivi</div></div>
+                <div class="stat"><div class="stat-value" id="pending-bounties">--</div><div class="stat-label">Bounty Aperti</div></div>
+                <div class="stat"><div class="stat-value" id="total-rewards">--</div><div class="stat-label">Ricompense MYZ</div></div>
+            </div>
+        </div>
+        <div class="card">
+            <h3>Stato Robot</h3>
+            <ul class="robot-list" id="robot-list">
+                <li class="robot-item"><span class="robot-indicator offline"></span><span class="robot-name">Caricamento...</span><span class="robot-status">--</span></li>
+            </ul>
+        </div>
+        <div class="card">
+            <h3>Bounty Recenti</h3>
+            <ul class="bounty-list" id="bounty-list">
+                <li class="bounty-item"><span>Caricamento...</span><span class="bounty-amount">--</span></li>
+            </ul>
+        </div>
+    </div>
+    <script>
+        const wsProtocol = location.protocol === 'https:' ? 'wss:' : 'ws:';
+        const ws = new WebSocket(wsProtocol + '//' + location.host + '/ws');
+        const wsDot = document.getElementById('ws-dot');
+        const wsStatus = document.getElementById('ws-status');
+
+        ws.onopen = () => {
+            wsDot.classList.remove('disconnected');
+            wsStatus.textContent = 'Connesso in tempo reale';
+        };
+        ws.onclose = () => {
+            wsDot.classList.add('disconnected');
+            wsStatus.textContent = 'Disconnesso - riconnessione...';
+        };
+        ws.onmessage = (event) => {
+            const data = JSON.parse(event.data);
+            console.log('WS:', data);
+            if (data.type === 'robot_update') updateRobots(data.data);
+            if (data.type === 'bounty_update') updateBounties(data.data);
+        };
+
+        function updateRobots(data) {
+            const list = document.getElementById('robot-list');
+            list.innerHTML = (data.robots || []).map(r => 
+                `<li class="robot-item">
+                    <span class="robot-indicator ${r.online ? 'online' : 'offline'}"></span>
+                    <span class="robot-name">${r.name}</span>
+                    <span class="robot-status">${r.status || '--'}</span>
+                </li>`
+            ).join('');
+            document.getElementById('total-robots').textContent = data.total || '0';
+            document.getElementById('active-robots').textContent = data.active || '0';
+        }
+
+        function updateBounties(data) {
+            const list = document.getElementById('bounty-list');
+            list.innerHTML = (data.bounties || []).map(b =>
+                `<li class="bounty-item">
+                    <span>${b.title}</span>
+                    <span class="bounty-amount">${b.amount} MYZ</span>
+                </li>`
+            ).join('');
+            document.getElementById('pending-bounties').textContent = data.total || '0';
+            document.getElementById('total-rewards').textContent = data.rewards || '0';
+        }
+
+        // Fetch initial data
+        fetch('/api/robots').then(r => r.json()).then(d => updateRobots(d)).catch(() => {});
+        fetch('/api/bounties').then(r => r.json()).then(d => updateBounties(d)).catch(() => {});
+    </script>
+</body>
+</html>
