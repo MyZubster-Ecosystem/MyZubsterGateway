@@ -84,6 +84,9 @@ app.use('/api/system/monitoring', require('./routes/monitoring'));
 console.log('✅ Caricamento routes Analytics Dashboard...');
 app.use('/api/system/analytics', require('./routes/analyticsDashboard'));
 
+console.log('✅ Caricamento routes Community Ambientale...');
+app.use('/api/futura/community', require('./routes/communityAmbientale'));
+
 app.use('/api/backup', require('./routes/backup'));
 
 app.get('/health', (req, res) => {
