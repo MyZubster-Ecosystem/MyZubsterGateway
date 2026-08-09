@@ -1,106 +1,111 @@
-// services/paymentService.js
-// Servizio di pagamento - Versione MOCK per sviluppo
+const axios = require('axios');
+const crypto = require('crypto');
 
 class PaymentService {
-  // Metodi base (da implementare nelle sottoclassi)
-  async createPayment(orderId, amount, currency) {
-    throw new Error('Metodo non implementato');
+  constructor(config = {}) {
+    this.apiUrl = config.apiUrl || process.env.PAYMENT_API_URL || 'https://api.myzubster.com/payment';
+    this.apiKey = config.apiKey || process.env.PAYMENT_API_KEY;
+    this.timeout = config.timeout || 30000;
   }
 
-  async confirmPayment(paymentId) {
-    throw new Error('Metodo non implementato');
+  // Create a new payment
+  async createPayment(data) {
+    try {
+      const response = await axios.post(`${this.apiUrl}/create`, data, {
+        headers: this._getHeaders(),
+        timeout: this.timeout
+      });
+      return response.data;
+    } catch (error) {
+      throw new Error(`Failed to create payment: ${error.message}`);
+    }
   }
 
+  // Get payment status
   async getPaymentStatus(paymentId) {
-    throw new Error('Metodo non implementato');
+    try {
+      const response = await axios.get(`${this.apiUrl}/status/${paymentId}`, {
+        headers: this._getHeaders(),
+        timeout: this.timeout
+      });
+      return response.data;
+    } catch (error) {
+      throw new Error(`Failed to get payment status: ${error.message}`);
+    }
   }
-}
 
-class MockPaymentService extends PaymentService {
-  constructor() {
-    super();
-    this.payments = new Map();
-    this.counter = 1;
+  // Process a payment
+  async processPayment(paymentId, data) {
+    try {
+      const response = await axios.post(`${this.apiUrl}/process/${paymentId}`, data, {
+        headers: this._getHeaders(),
+        timeout: this.timeout
+      });
+      return response.data;
+    } catch (error) {
+      throw new Error(`Failed to process payment: ${error.message}`);
+    }
   }
 
-  /**
-   * Crea un pagamento fittizio.
-   * @param {string} orderId - ID dell'ordine associato
-   * @param {number} amount - Importo da pagare
-   * @param {string} currency - Valuta (default 'XMR')
-   * @returns {Promise<Object>} Dettagli del pagamento
-   */
-  async createPayment(orderId, amount, currency = 'XMR') {
-    const paymentId = `mock_${Date.now()}_${this.counter++}`;
-    const payment = {
-      id: paymentId,
-      orderId,
-      amount,
-      currency,
-      status: 'pending',
-      createdAt: new Date().toISOString(),
-      address: `4${Math.random().toString(36).substring(2, 15)}...`,
-      qrCode: `https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=${paymentId}`
+  // Refund a payment
+  async refundPayment(paymentId, data) {
+    try {
+      const response = await axios.post(`${this.apiUrl}/refund/${paymentId}`, data, {
+        headers: this._getHeaders(),
+        timeout: this.timeout
+      });
+      return response.data;
+    } catch (error) {
+      throw new Error(`Failed to refund payment: ${error.message}`);
+    }
+  }
+
+  // Get payment history
+  async getPaymentHistory(userId, limit = 50, offset = 0) {
+    try {
+      const response = await axios.get(`${this.apiUrl}/history/${userId}`, {
+        params: { limit, offset },
+        headers: this._getHeaders(),
+        timeout: this.timeout
+      });
+      return response.data;
+    } catch (error) {
+      throw new Error(`Failed to get payment history: ${error.message}`);
+    }
+  }
+
+  // Get headers for API requests
+  _getHeaders() {
+    return {
+      'Content-Type': 'application/json',
+      'X-API-Key': this.apiKey,
+      'User-Agent': 'MyZubster-Payment/1.0.0'
     };
-
-    this.payments.set(paymentId, payment);
-    console.log(`[Mock] Pagamento creato: ${paymentId} per ordine ${orderId}`);
-
-    // Simula conferma automatica dopo 5 secondi
-    setTimeout(() => {
-      this.confirmPayment(paymentId).catch(err =>
-        console.error(`[Mock] Errore conferma pagamento ${paymentId}:`, err)
-      );
-    }, 5000);
-
-    return payment;
   }
 
-  /**
-   * Conferma un pagamento (cambia stato da 'pending' a 'confirmed').
-   * @param {string} paymentId 
-   * @returns {Promise<Object>} Pagamento aggiornato
-   */
-  async confirmPayment(paymentId) {
-    const payment = this.payments.get(paymentId);
-    if (!payment) {
-      throw new Error('Pagamento non trovato');
+  // Validate payment data
+  validatePayment(data) {
+    const required = ['amount', 'currency', 'userId'];
+    for (const field of required) {
+      if (!data[field]) {
+        return { valid: false, error: `${field} is required` };
+      }
     }
-
-    if (payment.status === 'pending') {
-      payment.status = 'confirmed';
-      payment.confirmedAt = new Date().toISOString();
-      console.log(`[Mock] ✅ Pagamento confermato: ${paymentId}`);
-
-      // Notifica il servizio ordini
-      await this._onPaymentConfirmed(payment);
+    if (data.amount <= 0) {
+      return { valid: false, error: 'Amount must be positive' };
     }
-
-    return payment;
+    return { valid: true };
   }
 
-  /**
-   * Recupera lo stato di un pagamento.
-   * @param {string} paymentId 
-   * @returns {Promise<Object>} Dettagli del pagamento
-   */
-  async getPaymentStatus(paymentId) {
-    const payment = this.payments.get(paymentId);
-    if (!payment) {
-      throw new Error('Pagamento non trovato');
-    }
-    return payment;
+  // Calculate fee
+  calculateFee(amount, rate = 0.02) {
+    return amount * rate;
   }
 
-  /**
-   * Metodo interno chiamato quando un pagamento viene confermato.
-   * @param {Object} payment 
-   */
-  async _onPaymentConfirmed(payment) {
-    // Qui puoi aggiornare lo stato dell'ordine nel database
-    console.log(`[Mock] Ordine ${payment.orderId} pagato con successo!`);
+  // Get supported currencies
+  getSupportedCurrencies() {
+    return ['MYZ', 'XMR', 'USDC', 'USDT'];
   }
 }
 
-// Esporta un'istanza singleton del servizio mock
-module.exports = new MockPaymentService();
+module.exports = PaymentService;
