@@ -1,0 +1,142 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>👽 Hera-Alien - MyZubster</title>
+  <style>
+    :root {
+      --bg: #0a0a1a;
+      --surface: #12122a;
+      --surface-2: #1a1a3a;
+      --text: #e8e6f0;
+      --text-soft: #9898b8;
+      --border: #2a2a4a;
+      --shadow: 0 8px 32px rgba(80, 40, 200, 0.2);
+      --radius: 12px;
+      --status-active: #22c55e;
+      --status-warning: #eab308;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      min-height: 100vh;
+      overflow-x: hidden;
+    }
+    .stars { position: fixed; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none; z-index: 0; }
+    .header {
+      position: relative; z-index: 1;
+      background: linear-gradient(135deg, #0f766e, #14b8a6);
+      padding: 24px 32px;
+      display: flex; justify-content: space-between; align-items: center;
+      flex-wrap: wrap; gap: 16px;
+      border-bottom: 2px solid #2dd4bf;
+    }
+    .header h1 { font-size: 1.8rem; color: #fff; }
+    .header p { color: rgba(255,255,255,0.8); font-size: 0.9rem; margin-top: 4px; }
+    .badge {
+      background: rgba(255,255,255,0.15); padding: 6px 14px;
+      border-radius: 20px; font-size: 0.8rem; color: rgba(255,255,255,0.9);
+    }
+    .content { position: relative; z-index: 1; max-width: 1300px; margin: 0 auto; padding: 32px 24px; }
+    .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(340px, 1fr)); gap: 24px; margin-bottom: 32px; }
+    .card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 24px;
+      box-shadow: var(--shadow);
+      transition: transform 0.2s;
+    }
+    .card:hover { transform: translateY(-2px); }
+    .card h3 { font-size: 1.15rem; margin-bottom: 16px; color: #2dd4bf; }
+    .card p { color: var(--text-soft); font-size: 0.85rem; line-height: 1.6; }
+    .stat-row { display: flex; justify-content: space-between; padding: 8px 0; border-bottom: 1px solid var(--border); font-size: 0.9rem; }
+    .stat-row:last-child { border-bottom: none; }
+    .stat-label { color: var(--text-soft); }
+    .stat-value { color: #2dd4bf; font-weight: 600; font-family: monospace; }
+    .sd { display: inline-block; width: 10px; height: 10px; border-radius: 50%; margin-right: 6px; }
+    .sd.active { background: var(--status-active); box-shadow: 0 0 8px var(--status-active); }
+    .progress-bar { height: 8px; background: var(--surface-2); border-radius: 4px; overflow: hidden; margin-top: 8px; }
+    .progress-fill { height: 100%; border-radius: 4px; background: linear-gradient(90deg, #14b8a6, #2dd4bf); }
+    .footer { text-align: center; padding: 24px; color: var(--text-soft); font-size: 0.8rem; position: relative; z-index: 1; }
+    @media (max-width: 768px) { .header { padding: 16px; } .content { padding: 16px; } .grid { grid-template-columns: 1fr; } }
+  </style>
+</head>
+<body>
+  <canvas class="stars" id="stars"></canvas>
+  <header class="header">
+    <div>
+      <h1>👽 Hera-Alien</h1>
+      <p>Contatto con Civiltà Aliene &bull; MyZubster Space Division</p>
+    </div>
+    <div style="display:flex;gap:8px;flex-wrap:wrap;"><span class="badge">Protocollo: Primo Contatto</span><span class="badge">Linguaggio: Universale</span><span class="badge">Tecnologia: Comunicazione Quantistica</span></div>
+  </header>
+  <div class="content">
+    <div class="grid">
+      <div class="card">
+        <h3>📡 Rilevamento Segnali</h3>
+        <div class="stat-row"><span class="stat-label">Segnali ricevuti</span><span class="stat-value">1,247</span></div><div class="stat-row"><span class="stat-label">Analizzati</span><span class="stat-value">892</span></div><div class="stat-row"><span class="stat-label">Candidati</span><span class="stat-value">23</span></div><div class="stat-row"><span class="stat-label">Falsi positivi</span><span class="stat-value">71.3%</span></div>
+        <div class="progress-bar"><div class="progress-fill" style="width:87%"></div></div>
+        <p style="margin-top:12px;">Rete di radiotelescopi e rilevatori gravitazionali per identificare segnali artificiali.</p>
+      </div>
+      <div class="card">
+        <h3>🌐 Protocollo Comunicazione</h3>
+        <div class="stat-row"><span class="stat-label">Linguaggi decodificati</span><span class="stat-value">4</span></div><div class="stat-row"><span class="stat-label">Tasso traduzione</span><span class="stat-value">92.4%</span></div><div class="stat-row"><span class="stat-label">Risposte inviate</span><span class="stat-value">0</span></div><div class="stat-row"><span class="stat-label">Protocollo</span><span class="stat-value">Standby</span></div>
+        <div class="progress-bar"><div class="progress-fill" style="width:92%"></div></div>
+        <p style="margin-top:12px;">Sistema di traduzione universale basato su principi matematici e fisici fondamentali.</p>
+      </div>
+      <div class="card">
+        <h3>🔬 Analisi Bio-Firme</h3>
+        <div class="stat-row"><span class="stat-label">Pianeti analizzati</span><span class="stat-value">342</span></div><div class="stat-row"><span class="stat-label">Bio-firme rilevate</span><span class="stat-value">8</span></div><div class="stat-row"><span class="stat-label">Tipo spettrale</span><span class="stat-value">O₂/CH₄</span></div><div class="stat-row"><span class="stat-label">Conferme</span><span class="stat-value">2</span></div>
+        <div class="progress-bar"><div class="progress-fill" style="width:72%"></div></div>
+        <p style="margin-top:12px;">Spettroscopia atmosferica per rilevamento di gas biogenici in pianeti extrasolari.</p>
+      </div>
+      <div class="card">
+        <h3>🛸 Tecnologia Incontri</h3>
+        <div class="stat-row"><span class="stat-label">Son pronte</span><span class="stat-value">12</span></div><div class="stat-row"><span class="stat-label">Propulsione</span><span class="stat-value">Alcubierre</span></div><div class="stat-row"><span class="stat-label">Scudi</span><span class="stat-value">Elettromagnetici</span></div><div class="stat-row"><span class="stat-label">IA di bordo</span><span class="stat-value">Hera-Diplomat</span></div>
+        <div class="progress-bar"><div class="progress-fill" style="width:95%"></div></div>
+        <p style="margin-top:12px;">Navi diplomatiche con scudi non letali, traduttori universali e IA per protocollo primo contatto.</p>
+      </div>
+      <div class="card">
+        <h3>📚 Database Civiltà</h3>
+        <div class="stat-row"><span class="stat-label">Civiltà catalogate</span><span class="stat-value">5</span></div><div class="stat-row"><span class="stat-label">Tipo I</span><span class="stat-value">1</span></div><div class="stat-row"><span class="stat-label">Tipo II</span><span class="stat-value">3</span></div><div class="stat-row"><span class="stat-label">Tipo III</span><span class="stat-value">1</span></div>
+        <div class="progress-bar"><div class="progress-fill" style="width:60%"></div></div>
+        <p style="margin-top:12px;">Classificazione Kardashev delle civiltà rilevate con database storico e culturale.</p>
+      </div>
+      <div class="card">
+        <h3>🏛️ Diplomazia Galattica</h3>
+        <div class="stat-row"><span class="stat-label">Trattati proposti</span><span class="stat-value">0</span></div><div class="stat-row"><span class="stat-label">Ambasciate</span><span class="stat-value">0</span></div><div class="stat-row"><span class="stat-label">Zone neutrali</span><span class="stat-value">3 designate</span></div><div class="stat-row"><span class="stat-label">Status</span><span class="stat-value">Pre-contatto</span></div>
+        <div class="progress-bar"><div class="progress-fill" style="width:40%"></div></div>
+        <p style="margin-top:12px;">Framework diplomatico per relazioni pacifiche inter-civiltà basato su principi universali.</p>
+      </div>
+    </div>
+  </div>
+  <footer class="footer">MyZubster Hera-Alien &bull; Contatto con Civiltà Aliene &bull; v1.0</footer>
+  <script>
+    const canvas = document.getElementById('stars');
+    const ctx = canvas.getContext('2d');
+    let stars = [];
+    function resize() { canvas.width = window.innerWidth; canvas.height = window.innerHeight; }
+    resize();
+    window.addEventListener('resize', resize);
+    for (let i = 0; i < 150; i++) {
+      stars.push({ x: Math.random() * canvas.width, y: Math.random() * canvas.height, r: Math.random() * 1.2 + 0.3, speed: Math.random() * 0.2 + 0.05 });
+    }
+    function animate() {
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+      stars.forEach(s => {
+        ctx.beginPath(); ctx.arc(s.x, s.y, s.r, 0, Math.PI * 2);
+        ctx.fillStyle = 'rgba(180,190,210,' + (0.4 + Math.random() * 0.4) + ')';
+        ctx.fill();
+        s.y += s.speed;
+        if (s.y > canvas.height) { s.y = 0; s.x = Math.random() * canvas.width; }
+      });
+      requestAnimationFrame(animate);
+    }
+    animate();
+  </script>
+</body>
+</html>
