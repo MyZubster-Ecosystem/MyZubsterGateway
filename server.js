@@ -42,6 +42,9 @@ app.use(morgan("combined"));
 app.use(bodyParser.json({ limit: "10mb" }));
 app.use(bodyParser.urlencoded({ extended: true, limit: "10mb" }));
 
+// Static files
+app.use(express.static(path.join(__dirname, "frontend/build")));
+
 // Health check
 app.get("/api/health", (req, res) => {
   res.json({
@@ -62,18 +65,49 @@ app.get("/api/robot/assign", (req, res) => {
   }
 });
 
+// Token Balance Endpoint
+app.get("/api/tokens/balance/:userId", (req, res) => {
+  try {
+    const { userId } = req.params;
+    res.json({
+      userId,
+      balances: {
+        MYZ: 1250.50,
+        XMR: 0.75,
+        BTC: 0.012,
+        ETH: 0.45,
+        ADA: 125.00
+      },
+      totalUSD: 1450.75,
+      totalSGD: 1950.50,
+      timestamp: new Date().toISOString()
+    });
+  } catch (error) {
+    Sentry.captureException(error);
+    res.status(500).json({ error: error.message });
+  }
+});
+
 // Test error endpoint (per verificare Sentry)
 app.get("/api/test-error", (req, res) => {
   try {
     throw new Error('Test error for Sentry monitoring');
   } catch (error) {
     Sentry.captureException(error);
-    res.status(500).json({ 
+    res.status(500).json({
       error: 'Test error captured by Sentry',
-      message: error.message 
+      message: error.message
     });
   }
 });
+
+// Notification Routes
+const notificationRoutes = require("./routes/notificationRoutes");
+app.use("/api/notifications", notificationRoutes);
+
+// Message Routes
+const messageRoutes = require("./routes/messageRoutes");
+app.use("/api/messages", messageRoutes);
 
 // Sentry error handler
 app.use(Sentry.Handlers.errorHandler());
@@ -87,11 +121,19 @@ app.use((err, req, res, next) => {
   });
 });
 
+// Serve React app
+app.get("*", (req, res) => {
+  res.sendFile(path.join(__dirname, "frontend/build", "index.html"));
+});
+
 // Start server
 app.listen(PORT, () => {
   console.log(`🚪 MyZubster Gateway avviato sulla porta ${PORT}`);
   console.log(`📡 Endpoint: /api/robot/assign`);
   console.log(`🔍 Health: /api/health`);
+  console.log(`💰 Token Balance: /api/tokens/balance/:userId`);
+  console.log(`📨 Notifications: /api/notifications`);
+  console.log(`💬 Messages: /api/messages`);
   console.log(`🧪 Test error: /api/test-error`);
   console.log(`🔒 Sentry monitoring: ${Sentry.captureException ? '✅' : '❌'}`);
 });
