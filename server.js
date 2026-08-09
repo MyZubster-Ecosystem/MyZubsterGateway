@@ -1,132 +1,161 @@
-require('dotenv').config();
-const express = require('express');
-const path = require('path');
-const fs = require('fs');
-const mongoose = require('mongoose');
-const { createOrder, onPaymentReceived } = require('./buy_myz');
-const { createEscrow, lockFunds, submitProof, release, dispute, getEscrow } = require('./escrow_simulator');
-const { mint, balance } = require('./token_simulator');
-const { assignReward } = require('./services/rewardService');
+#!/usr/bin/env node
 
-const app = express();
-app.use(express.json());
+const express = require("express");
+const cors = require("cors");
+const helmet = require("helmet");
+const morgan = require("morgan");
+const bodyParser = require("body-parser");
+const path = require("path");
 
-// i18n Middleware
-const i18nMiddleware = require('./middleware/i18n');
-app.use(i18nMiddleware);
-
-// MongoDB connection
-mongoose.connect(process.env.MONGODB_URI || 'mongodb://localhost:27017/myzubster')
-  .then(() => console.log('✅ Connected to MongoDB'))
-  .catch(err => console.error('❌ MongoDB connection error:', err));
-
-// ---------- API ROUTES (TUTTE prima del frontend SPA) ----------
-app.post('/buy-myz', (req, res) => {
-  const { userTariWallet, amountMYZ } = req.body;
-  const order = createOrder(userTariWallet, amountMYZ);
-  onPaymentReceived(order.id, 10);
-  res.json({ orderId: order.id, xmrAddress: order.xmrAddress, amountXMR: order.amountXMR, status: 'pending' });
-});
-
-app.post('/escrow/create', (req, res) => {
-  const { escrowId, buyer, seller, amount } = req.body;
-  try {
-    const id = createEscrow(escrowId, buyer, seller, amount);
-    res.json({ escrowId: id, status: 'created' });
-  } catch (err) {
-    res.status(400).json({ error: err.message });
-  }
-});
-
-app.use('/api/rewards', require('./routes/rewards'));
-app.use('/api/bounty', require('./routes/bounty'));
-app.use('/api/stake', require('./routes/stake'));
-app.use('/api/escrow/house', require('./routes/escrowHouse'));
-
-console.log('✅ Caricamento routes robot...');
-app.use('/api/robot', require('./routes/robot'));
-app.use('/api/robot/escrow', require('./routes/robotEscrow'));
-app.use('/api/robot/logo', require('./routes/robotLogo'));
-
-console.log('✅ Caricamento routes robotCode...');
-app.use('/api/robot/code', require('./routes/robotCode'));
-
-console.log('✅ Caricamento routes robotAnimal...');
-app.use('/api/robot/animal', require('./routes/robotAnimal'));
-
-console.log('✅ Caricamento routes benzina XMR...');
-app.use('/api/benzina/xmr', require('./routes/benzinaXmr'));
-
-console.log('✅ Caricamento routes benzina XMR Wallet...');
-app.use('/api/benzina/wallet', require('./routes/benzinaXmrWallet'));
-
-console.log('✅ Caricamento routes IoT sensors...');
-app.use('/api/iot/sensors', require('./routes/iotSensors'));
-
-console.log('✅ Caricamento routes EVA IONI Arm...');
-app.use('/api/robot/eva-ioni-arm', require('./routes/evaIoniArm'));
-app.use('/api/arm', require('./routes/arm'));
-
-console.log('✅ Caricamento routes Multi-Currency...');
-app.use('/api/payments/multi-currency', require('./routes/multiCurrency'));
-
-console.log('✅ Caricamento routes Fiat Payments...');
-app.use('/api/payments/fiat', require('./routes/fiatPayments'));
-
-console.log('✅ Caricamento routes Smart Contract...');
-app.use('/api/blockchain/smart-contract', require('./routes/smartContract'));
-
-console.log('✅ Caricamento routes API Gateway...');
-app.use('/api/gateway', require('./routes/apiGateway'));
-
-console.log('✅ Caricamento routes Monitoring...');
-app.use('/api/system/monitoring', require('./routes/monitoring'));
-
-console.log('✅ Caricamento routes Analytics Dashboard...');
-app.use('/api/system/analytics', require('./routes/analyticsDashboard'));
-
-console.log('✅ Caricamento routes Community Ambientale...');
-app.use('/api/futura/community', require('./routes/communityAmbientale'));
-
-app.use('/api/backup', require('./routes/backup'));
-
-app.get('/health', (req, res) => {
-  res.json({
-    status: 'healthy',
-    timestamp: new Date().toISOString(),
-    services: {
-      telegram: !!process.env.TELEGRAM_BOT_TOKEN,
-      github: !!process.env.GITHUB_TOKEN,
-      ai: !!process.env.OPENAI_API_KEY
+// Importa Sentry in modo sicuro
+let Sentry;
+try {
+  Sentry = require('./config/sentry');
+  console.log('✅ Sentry monitoring attivo');
+} catch (err) {
+  console.log('⚠️ Sentry non configurato, continuo senza...');
+  Sentry = {
+    init: () => {},
+    captureException: (err) => console.error('Sentry error:', err.message),
+    Handlers: {
+      requestHandler: () => (req, res, next) => next(),
+      errorHandler: () => (err, req, res, next) => next(err)
     }
-  });
-});
-
-// ---------- FRONTEND STATIC SERVING (DOPO le API) ----------
-const frontendDist = path.join(__dirname, 'frontend', 'dist');
-if (fs.existsSync(frontendDist)) {
-  app.use(express.static(frontendDist));
-  app.use((req, res, next) => {
-    if (req.path.startsWith('/api') || req.path.startsWith('/health')) {
-      return next();
-    }
-    res.sendFile(path.join(frontendDist, 'index.html'));
-  });
-  console.log(`✅ Serving frontend from ${frontendDist}`);
-} else {
-  console.log('ℹ️ Frontend dist not found. Run "npm run build" in frontend/ first.');
+  };
 }
 
-// ---------- START SERVER ----------
-const PORT = process.env.PORT || 10000;
-const server = app.listen(PORT, () => {
-  console.log(`🚀 Gateway running on http://localhost:${PORT}`);
+const app = express();
+const PORT = process.env.PORT || 5002;
+
+// Sentry request handler (solo se disponibile)
+if (Sentry.Handlers && Sentry.Handlers.requestHandler) {
+  app.use(Sentry.Handlers.requestHandler());
+} else {
+  console.log('⚠️ Sentry requestHandler non disponibile');
+}
+
+// Middleware
+app.use(helmet({ crossOriginResourcePolicy: { policy: "cross-origin" } }));
+app.use(cors({ origin: "*", credentials: true }));
+app.use(morgan("combined"));
+app.use(bodyParser.json({ limit: "10mb" }));
+app.use(bodyParser.urlencoded({ extended: true, limit: "10mb" }));
+
+// Static files
+app.use(express.static(path.join(__dirname, "frontend/build")));
+app.use(express.static(path.join(__dirname, "frontend/dist")));
+
+// Health check
+app.get("/api/health", (req, res) => {
+  res.json({ status: "online", version: "1.0.0", timestamp: new Date().toISOString(), uptime: process.uptime() });
 });
 
-process.on('SIGTERM', () => {
-  console.log('🛑 SIGTERM ricevuto, chiusura graceful...');
-  server.close(() => {
-    console.log('✅ Server chiuso');
-    process.exit(0);
-  });
+// ============ ROUTES ============
+
+// Robot Universal Integration
+try {
+  const robotIntegrationRoutes = require('./robot-integration/api/routes');
+  app.use('/api/robots', robotIntegrationRoutes);
+  console.log('✅ Robot Universal Integration loaded');
+} catch(e) {
+  console.log('⚠️ Robot Universal Integration not available:', e.message);
+}
+
+// NFT Routes
+try {
+  const routes = require("./routes/nftRoutes");
+  app.use("/api/nft", routes);
+  console.log("✅ NFT routes loaded");
+} catch(e) {
+  console.log("⚠️ NFT routes not available:", e.message);
+}
+
+// DeepSeek Routes
+try {
+  const deepseekRoutes = require("./routes/deepseekRoutes");
+  app.use("/api/deepseek", deepseekRoutes);
+  console.log("✅ DeepSeek routes loaded");
+} catch(e) {
+  console.log("⚠️ DeepSeek routes not available:", e.message);
+}
+
+// Notifications
+try { const routes = require("./routes/notificationRoutes"); app.use("/api/notifications", routes); } catch(e) {}
+
+// Messages
+try { const routes = require("./routes/messageRoutes"); app.use("/api/messages", routes); } catch(e) {}
+
+// IoT Sensors
+try { const routes = require("./routes/sensorRoutes"); app.use("/api/sensors", routes); } catch(e) {}
+
+// Fiat Payments
+try { const routes = require("./routes/fiatRoutes"); app.use("/api/payments/fiat", routes); } catch(e) {}
+
+// Crypto
+try { const routes = require("./routes/cryptoRoutes"); app.use("/api/crypto", routes); } catch(e) {}
+
+// EVA IONI Arm
+try { const routes = require("./routes/armRoutes"); app.use("/api/arm", routes); } catch(e) {}
+
+// Mobile App
+try { const routes = require("./routes/mobileRoutes"); app.use("/api/mobile", routes); } catch(e) {}
+
+// Webhook
+try { const routes = require("./routes/webhookRoutes"); app.use("/webhook", routes); } catch(e) {}
+
+// Benzina XMR
+try { const routes = require("./routes/benzinaXmr"); app.use("/api/benzina-xmr", routes); } catch(e) {}
+
+// Mass Bounty 990-999
+try { const routes = require("./routes/massBounty990"); app.use("/api/bounty-990", routes); } catch(e) {}
+try { const routes = require("./routes/massBounty991"); app.use("/api/bounty-991", routes); } catch(e) {}
+try { const routes = require("./routes/massBounty992"); app.use("/api/bounty-992", routes); } catch(e) {}
+try { const routes = require("./routes/massBounty993"); app.use("/api/bounty-993", routes); } catch(e) {}
+try { const routes = require("./routes/massBounty994"); app.use("/api/bounty-994", routes); } catch(e) {}
+try { const routes = require("./routes/massBounty995"); app.use("/api/bounty-995", routes); } catch(e) {}
+try { const routes = require("./routes/massBounty996"); app.use("/api/bounty-996", routes); } catch(e) {}
+try { const routes = require("./routes/massBounty997"); app.use("/api/bounty-997", routes); } catch(e) {}
+try { const routes = require("./routes/massBounty998"); app.use("/api/bounty-998", routes); } catch(e) {}
+try { const routes = require("./routes/massBounty999"); app.use("/api/bounty-999", routes); } catch(e) {}
+
+// Anthea modules
+try { const routes = require("./core-backend/routes/antheaPayroll"); app.use("/api/anthea/payroll", routes); } catch(e) {}
+try { const routes = require("./core-backend/routes/antheaCompliance"); app.use("/api/anthea/compliance", routes); } catch(e) {}
+try { const routes = require("./core-backend/routes/antheaWelfare"); app.use("/api/anthea/welfare", routes); } catch(e) {}
+
+// Swagger UI
+try {
+  const swaggerUi = require('swagger-ui-express');
+  const YAML = require('yamljs');
+  const swaggerDocument = YAML.load('./docs/swagger.yaml');
+  app.use('/api/docs', swaggerUi.serve, swaggerUi.setup(swaggerDocument));
+  console.log('📚 Swagger UI available at /api/docs');
+} catch(err) { console.log('⚠️ Swagger not available'); }
+
+// Sentry error handler
+if (Sentry.Handlers && Sentry.Handlers.errorHandler) {
+  app.use(Sentry.Handlers.errorHandler());
+}
+
+// Error handler
+app.use((err, req, res, next) => {
+  console.error("Error:", err.stack || err.message);
+  res.status(err.status || 500).json({ error: err.message || "Internal Server Error", status: err.status || 500 });
 });
+
+// Serve React app
+app.get("*", (req, res) => {
+  res.sendFile(path.join(__dirname, "frontend/build", "index.html"));
+});
+
+// Start server
+app.listen(PORT, '0.0.0.0', () => {
+  console.log(`🚪 MyZubster Gateway avviato sulla porta ${PORT}`);
+  console.log(`🔍 Health: /api/health`);
+  console.log(`📚 Swagger: /api/docs`);
+  console.log(`🤖 Robot Universal: /api/robots`);
+  console.log(`🌌 NFT: /api/nft`);
+  console.log(`🧠 DeepSeek: /api/deepseek`);
+});
+
+module.exports = app;
