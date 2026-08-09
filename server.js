@@ -69,6 +69,7 @@ app.use('/api/arm', require('./routes/arm'));
 
 console.log('✅ Caricamento routes Multi-Currency...');
 app.use('/api/payments/multi-currency', require('./routes/multiCurrency'));
+app.use('/api/crypto', require('./routes/crypto'));
 
 console.log('✅ Caricamento routes Fiat Payments...');
 app.use('/api/payments/fiat', require('./routes/fiatPayments'));
