@@ -140,3 +140,47 @@ app.listen(PORT, () => {
 // Seed & Cutting Routes
 const seedRoutes = require("./routes/seedRoutes");
 app.use("/api/seeds", seedRoutes);
+
+// Land Token Routes
+const landRoutes = require("./routes/landRoutes");
+app.use("/api/land", landRoutes);
+
+// Moon Token Routes
+const moonRoutes = require("./routes/moonRoutes");
+app.use("/api/moon", moonRoutes);
+
+// Mars Token Routes
+
+// Mars Token Routes
+
+// Mars Token Routes
+const marsRoutes = require("./routes/marsRoutes");
+app.use("/api/mars", marsRoutes);
+
+// Ceres Token Routes
+const ceresRoutes = require("./routes/ceresRoutes");
+app.use("/api/ceres", ceresRoutes);
+
+// Europa Token Routes
+const europaRoutes = require("./routes/europaRoutes");
+app.use("/api/europa", europaRoutes);
+
+// Titan Token Routes
+const titanRoutes = require("./routes/titanRoutes");
+app.use("/api/titan", titanRoutes);
+
+// Ganymede Token Routes
+const ganymedeRoutes = require("./routes/ganymedeRoutes");
+app.use("/api/ganymede", ganymedeRoutes);
+
+// Callisto Token Routes
+const callistoRoutes = require("./routes/callistoRoutes");
+app.use("/api/callisto", callistoRoutes);
+
+// Enceladus Token Routes
+const enceladusRoutes = require("./routes/enceladusRoutes");
+app.use("/api/enceladus", enceladusRoutes);
+
+// Pluto Token Routes
+const plutoRoutes = require("./routes/plutoRoutes");
+app.use("/api/pluto", plutoRoutes);
