@@ -1,0 +1,29 @@
+services:
+  mongodb:
+    image: mongo:7
+    container_name: myzubster-mongodb-new
+    restart: always
+    ports:
+      - "27018:27017"
+    volumes:
+      - mongodb_data:/data/db
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: admin
+      MONGO_INITDB_ROOT_PASSWORD: password
+      MONGO_INITDB_DATABASE: myzubster
+
+  gateway:
+    build: .
+    container_name: myzubster-gateway-new
+    restart: always
+    ports:
+      - "10000:10000"
+    depends_on:
+      - mongodb
+    environment:
+      - NODE_ENV=production
+      - PORT=10000
+      - MONGODB_URI=mongodb://admin:password@mongodb:27017/myzubster?authSource=admin
+
+volumes:
+  mongodb_data:
