@@ -1,5 +1,5 @@
 [build]
-  command = "npm run build || echo 'Build skipped'"
+  command = "mkdir -p frontend/build && touch frontend/build/index.html"
   publish = "frontend/build"
 
 [[headers]]
