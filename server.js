@@ -193,6 +193,9 @@ app.use('/api/churches', churchesRoutes);
 const natureRoutes = require('./routes/natureRoutes');
 app.use('/api/nature', natureRoutes);
 
+const musicRoutesRoutes = require('./routes/musicRoutesRoutes');
+app.use('/api/music', musicRoutesRoutes);
+
 // 💎 Route Tokenizzazione Minerali
 const mineralsRoutes = require('./routes/mineralsRoutes');
 app.use('/api/minerals', mineralsRoutes);
