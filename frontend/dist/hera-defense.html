@@ -1,0 +1,145 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>🛡️ Difesa Spaziale - MyZubster</title>
+  <style>
+    :root {
+      --bg: #0a0a1a;
+      --surface: #12122a;
+      --surface-2: #1a1a3a;
+      --text: #e8e6f0;
+      --text-soft: #9898b8;
+      --border: #2a2a4a;
+      --shadow: 0 8px 32px rgba(200, 40, 40, 0.2);
+      --radius: 12px;
+      --status-active: #22c55e;
+      --status-warning: #eab308;
+      --status-critical: #ef4444;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      min-height: 100vh;
+      overflow-x: hidden;
+    }
+    .stars { position: fixed; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none; z-index: 0; }
+    .header {
+      position: relative; z-index: 1;
+      background: linear-gradient(135deg, #991b1b, #dc2626);
+      padding: 24px 32px;
+      display: flex; justify-content: space-between; align-items: center;
+      flex-wrap: wrap; gap: 16px;
+      border-bottom: 2px solid #f87171;
+    }
+    .header h1 { font-size: 1.8rem; color: #fff; }
+    .header p { color: rgba(255,255,255,0.8); font-size: 0.9rem; margin-top: 4px; }
+    .badge {
+      background: rgba(255,255,255,0.15); padding: 6px 14px;
+      border-radius: 20px; font-size: 0.8rem; color: rgba(255,255,255,0.9);
+    }
+    .content { position: relative; z-index: 1; max-width: 1300px; margin: 0 auto; padding: 32px 24px; }
+    .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(340px, 1fr)); gap: 24px; margin-bottom: 32px; }
+    .card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 24px;
+      box-shadow: var(--shadow);
+      transition: transform 0.2s;
+    }
+    .card:hover { transform: translateY(-2px); }
+    .card h3 { font-size: 1.15rem; margin-bottom: 16px; color: #f87171; }
+    .card p { color: var(--text-soft); font-size: 0.85rem; line-height: 1.6; }
+    .stat-row { display: flex; justify-content: space-between; padding: 8px 0; border-bottom: 1px solid var(--border); font-size: 0.9rem; }
+    .stat-row:last-child { border-bottom: none; }
+    .stat-label { color: var(--text-soft); }
+    .stat-value { color: #f87171; font-weight: 600; font-family: monospace; }
+    .sd { display: inline-block; width: 10px; height: 10px; border-radius: 50%; margin-right: 6px; }
+    .sd.active { background: var(--status-active); box-shadow: 0 0 8px var(--status-active); }
+    .sd.warning { background: var(--status-warning); box-shadow: 0 0 8px var(--status-warning); }
+    .sd.critical { background: var(--status-critical); box-shadow: 0 0 8px var(--status-critical); }
+    .progress-bar { height: 8px; background: var(--surface-2); border-radius: 4px; overflow: hidden; margin-top: 8px; }
+    .progress-fill { height: 100%; border-radius: 4px; background: linear-gradient(90deg, #dc2626, #f87171); }
+    .footer { text-align: center; padding: 24px; color: var(--text-soft); font-size: 0.8rem; position: relative; z-index: 1; }
+    @media (max-width: 768px) { .header { padding: 16px; } .content { padding: 16px; } .grid { grid-template-columns: 1fr; } }
+  </style>
+</head>
+<body>
+  <canvas class="stars" id="stars"></canvas>
+  <header class="header">
+    <div>
+      <h1>🛡️ Sistema di Difesa Spaziale</h1>
+      <p>Difesa Quantistica + Energetica &bull; MyZubster Space Division</p>
+    </div>
+    <div style="display:flex;gap:8px;flex-wrap:wrap;"><span class="badge">Livello: DEFCON 5</span><span class="badge">Scudi: Attivi</span><span class="badge">Settori: 47</span></div>
+  </header>
+  <div class="content">
+    <div class="grid">
+      <div class="card">
+        <h3>🔭 Rilevamento Minacce</h3>
+        <div class="stat-row"><span class="stat-label">Sensori attivi</span><span class="stat-value">1,240</span></div><div class="stat-row"><span class="stat-label">Raggio scansione</span><span class="stat-value">12.4 AU</span></div><div class="stat-row"><span class="stat-label">Precisione</span><span class="stat-value">99.997%</span></div><div class="stat-row"><span class="stat-label">False positives</span><span class="stat-value">0.001%</span></div>
+        <div class="progress-bar"><div class="progress-fill" style="width:99.9%"></div></div>
+        <p style="margin-top:12px;">Rete di sensori quantistici e radar a lungo raggio per rilevamento precoce di minacce spaziali.</p>
+      </div>
+      <div class="card">
+        <h3>🛡️ Scudo Energetico</h3>
+        <div class="stat-row"><span class="stat-label">Potenza scudo</span><span class="stat-value">847 PW</span></div><div class="stat-row"><span class="stat-label">Copertura</span><span class="stat-value">100%</span></div><div class="stat-row"><span class="stat-label">Assorbimento max</span><span class="stat-value">42 EJ</span></div><div class="stat-row"><span class="stat-label">Stato</span><span class="stat-value"><span class="sd active"></span>Pienamente operativo</span></div>
+        <div class="progress-bar"><div class="progress-fill" style="width:100%"></div></div>
+        <p style="margin-top:12px;">Scudo energetico a multifrequenza con modulazione adattiva contro radiazioni, impatti cinetici ed EMP.</p>
+      </div>
+      <div class="card">
+        <h3>🚨 Sistema di Allarme</h3>
+        <div class="stat-row"><span class="stat-label">Livelli allarme</span><span class="stat-value">5</span></div><div class="stat-row"><span class="stat-label">Tempo reazione</span><span class="stat-value">0.003 ms</span></div><div class="stat-row"><span class="stat-label">Canali notifica</span><span class="stat-value">12</span></div><div class="stat-row"><span class="stat-label">Stato attuale</span><span class="stat-value"><span class="sd active"></span>Normale</span></div>
+        <div class="progress-bar"><div class="progress-fill" style="width:100%"></div></div>
+        <p style="margin-top:12px;">Sistema di allarme multilivello con notifica istantanea via quantum entanglement a tutte le colonie.</p>
+      </div>
+      <div class="card">
+        <h3>⚔️ Contromisure</h3>
+        <div class="stat-row"><span class="stat-label">Laser difensivi</span><span class="stat-value">480</span></div><div class="stat-row"><span class="stat-label">Missili intercettori</span><span class="stat-value">12,400</span></div><div class="stat-row"><span class="stat-label">Droni da combattimento</span><span class="stat-value">2,800</span></div><div class="stat-row"><span class="stat-label">Pronti al lancio</span><span class="stat-value"><span class="sd active"></span>100%</span></div>
+        <div class="progress-bar"><div class="progress-fill" style="width:100%"></div></div>
+        <p style="margin-top:12px;">Arsenale difensivo con laser ad alta energia, missili a guida quantistica e droni autonomi IA.</p>
+      </div>
+      <div class="card">
+        <h3>🤖 Pattugliamento Automatico</h3>
+        <div class="stat-row"><span class="stat-label">Pattuglie attive</span><span class="stat-value">340</span></div><div class="stat-row"><span class="stat-label">Droni per pattuglia</span><span class="stat-value">24</span></div><div class="stat-row"><span class="stat-label">Copertura settori</span><span class="stat-value">47/47</span></div><div class="stat-row"><span class="stat-label">Autonomia</span><span class="stat-value">72 ore</span></div>
+        <div class="progress-bar"><div class="progress-fill" style="width:100%"></div></div>
+        <p style="margin-top:12px;">Flotta di droni autonomi con IA predittiva per pattugliamento continuo dei settori coloniali.</p>
+      </div>
+      <div class="card">
+        <h3>🔒 Sicurezza Coloniale</h3>
+        <div class="stat-row"><span class="stat-label">Colonie protette</span><span class="stat-value">47</span></div><div class="stat-row"><span class="stat-label">Agenti sicurezza</span><span class="stat-value">24,000 IA</span></div><div class="stat-row"><span class="stat-label">Biometria</span><span class="stat-value">DNA+Retina+Quantistico</span></div><div class="stat-row"><span class="stat-label">Stato</span><span class="stat-value"><span class="sd active"></span>Sicuro</span></div>
+        <div class="progress-bar"><div class="progress-fill" style="width:100%"></div></div>
+        <p style="margin-top:12px;">Sicurezza perimetrale con autenticazione biometrica quantistica e monitoraggio blockchain distribuito.</p>
+      </div>
+    </div>
+  </div>
+  <footer class="footer">MyZubster Difesa Spaziale &bull; Sicurezza Coloniale &bull; v1.0</footer>
+  <script>
+    const canvas = document.getElementById('stars');
+    const ctx = canvas.getContext('2d');
+    let stars = [];
+    function resize() { canvas.width = window.innerWidth; canvas.height = window.innerHeight; }
+    resize();
+    window.addEventListener('resize', resize);
+    for (let i = 0; i < 150; i++) {
+      stars.push({ x: Math.random() * canvas.width, y: Math.random() * canvas.height, r: Math.random() * 1.2 + 0.3, speed: Math.random() * 0.2 + 0.05 });
+    }
+    function animate() {
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+      stars.forEach(s => {
+        ctx.beginPath(); ctx.arc(s.x, s.y, s.r, 0, Math.PI * 2);
+        ctx.fillStyle = 'rgba(248,113,113,' + (0.4 + Math.random() * 0.4) + ')';
+        ctx.fill();
+        s.y += s.speed;
+        if (s.y > canvas.height) { s.y = 0; s.x = Math.random() * canvas.width; }
+      });
+      requestAnimationFrame(animate);
+    }
+    animate();
+  </script>
+</body>
+</html>
