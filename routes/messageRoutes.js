@@ -1,5 +1,6 @@
 const express = require('express');
 const router = express.Router();
+<<<<<<< HEAD
 const {
   sendMessage,
   getMessages,
@@ -23,4 +24,9 @@ router.put('/read', markAsRead);
 // DELETE /api/messages/:messageId - Elimina un messaggio
 router.delete('/:messageId', deleteMessage);
 
+=======
+router.get('/', (req, res) => {
+  res.json({ messages: [{ id: 1, from: 'system', subject: 'Benvenuto', body: 'Grazie per esserti unito!', timestamp: new Date().toISOString() }], total: 1, unread: 1 });
+});
+>>>>>>> origin/main
 module.exports = router;

@@ -1,159 +1,3 @@
-<<<<<<< HEAD
-require('dotenv').config();
-const express = require('express');
-const mongoose = require('mongoose');
-const cors = require('cors');
-const helmet = require('helmet');
-const morgan = require('morgan');
-const rateLimit = require('express-rate-limit');
-const mongoSanitize = require('express-mongo-sanitize');
-const xss = require('xss-clean');
-const compression = require('compression');
-const hpp = require('hpp');
-
-const app = express();
-
-// ============ SECURITY MIDDLEWARE ============
-
-// Helmet - header di sicurezza HTTP
-app.use(helmet({
-  contentSecurityPolicy: {
-    directives: {
-      defaultSrc: ["'self'"],
-      scriptSrc: ["'self'", "'unsafe-inline'"],
-      styleSrc: ["'self'", "'unsafe-inline'"],
-      imgSrc: ["'self'", "data:", "https:"],
-      connectSrc: ["'self'", "https://api.myzubster.com"]
-    }
-  },
-  hsts: {
-    maxAge: 31536000,
-    includeSubDomains: true,
-    preload: true
-  }
-}));
-
-// Rate Limiting - protezione DDoS
-const limiter = rateLimit({
-  windowMs: 15 * 60 * 1000, // 15 minuti
-  max: 100, // max 100 richieste per IP
-  message: 'Troppe richieste da questo IP, riprova tra 15 minuti'
-});
-app.use('/api', limiter);
-
-// CORS - limitato ai domini autorizzati
-const allowedOrigins = process.env.CORS_ORIGIN ? process.env.CORS_ORIGIN.split(',') : ['http://localhost:3000'];
-app.use(cors({
-  origin: function(origin, callback) {
-    // Permetti richieste senza origin (come da Postman)
-    if (!origin) return callback(null, true);
-    if (allowedOrigins.indexOf(origin) !== -1) {
-      callback(null, true);
-    } else {
-      callback(new Error('CORS not allowed'));
-    }
-  },
-  credentials: true
-}));
-
-// Body parser - limita dimensione per prevenire DoS
-app.use(express.json({ limit: '10kb' }));
-app.use(express.urlencoded({ extended: true, limit: '10kb' }));
-
-// Sanitizzazione - protezione NoSQL injection
-app.use(mongoSanitize());
-
-// XSS protection
-app.use(xss());
-
-// Compressione
-app.use(compression());
-
-// HPP - protezione parameter pollution
-app.use(hpp());
-
-// Logging
-app.use(morgan('combined'));
-
-// ============ DATABASE ============
-mongoose.connect(process.env.MONGODB_URI, {
-  useNewUrlParser: true,
-  useUnifiedTopology: true
-})
-.then(() => console.log('✅ Connected to MongoDB'))
-.catch(err => console.error('❌ MongoDB connection error:', err));
-
-// ============ ROUTES ============
-
-// Health check con info sicurezza
-app.get('/health', (req, res) => {
-  res.json({
-    success: true,
-    status: 'ok',
-    timestamp: new Date().toISOString(),
-    security: {
-      rateLimit: 'active',
-      helmet: 'active',
-      cors: 'restricted',
-      sanitize: 'active',
-      xss: 'active',
-      hpp: 'active'
-    }
-  });
-});
-
-// Token Balance Routes
-const tokenBalanceRoutes = require("./routes/tokenBalanceRoutes");
-app.use("/api/tokens/balance", tokenBalanceRoutes);
-
-// Notification Routes
-const notificationRoutes = require("./routes/notificationRoutes");
-app.use("/api/notifications", notificationRoutes);
-
-// Message Routes
-const messageRoutes = require("./routes/messageRoutes");
-app.use("/api/messages", messageRoutes);
-
-// Wallet Routes
-const walletRoutes = require("./routes/walletRoutes");
-app.use("/api/wallet", walletRoutes);
-
-// Swap Routes
-const swapRoutes = require("./routes/swapRoutes");
-app.use("/api/swap", swapRoutes);
-
-// Token Routes
-const tokenRoutes = require("./routes/tokenRoutes");
-app.use("/api/tokens", tokenRoutes);
-
-// Distribution Routes
-const distributionRoutes = require("./routes/distributionRoutes");
-app.use("/api/distributions", distributionRoutes);
-
-// ============ ERROR HANDLER ============
-app.use((err, req, res, next) => {
-  console.error('Error:', err);
-  res.status(err.status || 500).json({
-    success: false,
-    error: process.env.NODE_ENV === 'production' ? 'Internal server error' : err.message
-  });
-});
-
-// ============ START SERVER ============
-const PORT = process.env.PORT || 10000;
-app.listen(PORT, () => {
-  console.log(`🚀 Server running on port ${PORT}`);
-  console.log(`📊 Health check: http://localhost:${PORT}/health`);
-  console.log(`🔒 Security: Rate Limiting, Helmet, CORS, Sanitization, XSS, HPP`);
-});
-
-// Status Routes
-const statusRoutes = require("./routes/statusRoutes");
-app.use("/api/status", statusRoutes);
-
-// Serve static files (HTML, CSS, JS)
-app.use(express.static('public'));
-=======
 #!/usr/bin/env node
 
 const express = require("express");
@@ -169,7 +13,7 @@ try {
   Sentry = require('./config/sentry');
   console.log('✅ Sentry monitoring attivo');
 } catch (err) {
-  console.log('⚠️ Sentry non configurato - continuo senza monitoring');
+  console.log('⚠️ Sentry non configurato');
   Sentry = {
     init: () => {},
     captureException: (err) => console.error('Sentry error:', err),
@@ -187,49 +31,108 @@ const PORT = process.env.PORT || 5002;
 app.use(Sentry.Handlers.requestHandler());
 
 // Middleware
-app.use(helmet({
-  crossOriginResourcePolicy: { policy: "cross-origin" }
-}));
-app.use(cors({
-  origin: process.env.CORS_ORIGIN || "*",
-  credentials: true
-}));
+app.use(helmet({ crossOriginResourcePolicy: { policy: "cross-origin" } }));
+app.use(cors({ origin: "*", credentials: true }));
 app.use(morgan("combined"));
 app.use(bodyParser.json({ limit: "10mb" }));
 app.use(bodyParser.urlencoded({ extended: true, limit: "10mb" }));
 
+// Static files
+app.use(express.static(path.join(__dirname, "frontend/build")));
+app.use(express.static(path.join(__dirname, "frontend/dist")));
+
 // Health check
 app.get("/api/health", (req, res) => {
-  res.json({
-    status: "online",
-    version: "1.0.0",
-    timestamp: new Date().toISOString(),
-    uptime: process.uptime()
-  });
+  res.json({ status: "online", version: "1.0.0", timestamp: new Date().toISOString(), uptime: process.uptime() });
 });
 
-// API Routes
+// Robot assign
 app.get("/api/robot/assign", (req, res) => {
-  try {
-    res.json({ message: "Robot assign endpoint", status: "ok" });
-  } catch (error) {
-    Sentry.captureException(error);
-    res.status(500).json({ error: error.message });
-  }
+  try { res.json({ message: "Robot assign endpoint", status: "ok" }); }
+  catch (error) { Sentry.captureException(error); res.status(500).json({ error: error.message }); }
 });
 
-// Test error endpoint (per verificare Sentry)
-app.get("/api/test-error", (req, res) => {
+// Token balance
+app.get("/api/tokens/balance/:userId", (req, res) => {
   try {
-    throw new Error('Test error for Sentry monitoring');
-  } catch (error) {
-    Sentry.captureException(error);
-    res.status(500).json({ 
-      error: 'Test error captured by Sentry',
-      message: error.message 
-    });
-  }
+    const { userId } = req.params;
+    res.json({ userId, balances: { MYZ: 1250.50, XMR: 0.75, BTC: 0.012, ETH: 0.45, ADA: 125.00 }, totalUSD: 1450.75, totalSGD: 1950.50, timestamp: new Date().toISOString() });
+  } catch (error) { Sentry.captureException(error); res.status(500).json({ error: error.message }); }
 });
+
+// Test error
+app.get("/api/test-error", (req, res) => {
+  try { throw new Error('Test error for Sentry'); }
+  catch (error) { Sentry.captureException(error); res.status(500).json({ error: 'Test error captured by Sentry', message: error.message }); }
+});
+
+// ============ ROUTES ============
+
+// Notifications
+try { const routes = require("./routes/notificationRoutes"); app.use("/api/notifications", routes); } catch(e) {}
+
+// Messages
+try { const routes = require("./routes/messageRoutes"); app.use("/api/messages", routes); } catch(e) {}
+
+// IoT Sensors
+try { const routes = require("./routes/sensorRoutes"); app.use("/api/sensors", routes); } catch(e) {}
+
+// Fiat Payments
+try { const routes = require("./routes/fiatRoutes"); app.use("/api/payments/fiat", routes); } catch(e) {}
+
+// Crypto
+try { const routes = require("./routes/cryptoRoutes"); app.use("/api/crypto", routes); } catch(e) {}
+
+// EVA IONI Arm
+try { const routes = require("./routes/armRoutes"); app.use("/api/arm", routes); } catch(e) {}
+
+// Mobile App
+try { const routes = require("./routes/mobileRoutes"); app.use("/api/mobile", routes); } catch(e) {}
+
+// Webhook
+try { const routes = require("./routes/webhookRoutes"); app.use("/webhook", routes); } catch(e) {}
+
+// Benzina XMR
+try { const routes = require("./routes/benzinaXmr"); app.use("/api/benzina-xmr", routes); } catch(e) {}
+
+// Mass Bounty 990
+try { const routes = require("./routes/massBounty990"); app.use("/api/bounty-990", routes); } catch(e) {}
+
+// Mass Bounty 991
+try { const routes = require("./routes/massBounty991"); app.use("/api/bounty-991", routes); } catch(e) {}
+
+// Mass Bounty 992
+try { const routes = require("./routes/massBounty992"); app.use("/api/bounty-992", routes); } catch(e) {}
+
+// Mass Bounty 993
+try { const routes = require("./routes/massBounty993"); app.use("/api/bounty-993", routes); } catch(e) {}
+
+// Mass Bounty 994
+try { const routes = require("./routes/massBounty994"); app.use("/api/bounty-994", routes); } catch(e) {}
+
+// Mass Bounty 995
+try { const routes = require("./routes/massBounty995"); app.use("/api/bounty-995", routes); } catch(e) {}
+
+// Mass Bounty 996
+try { const routes = require("./routes/massBounty996"); app.use("/api/bounty-996", routes); } catch(e) {}
+
+// Mass Bounty 997
+try { const routes = require("./routes/massBounty997"); app.use("/api/bounty-997", routes); } catch(e) {}
+
+// Mass Bounty 998
+try { const routes = require("./routes/massBounty998"); app.use("/api/bounty-998", routes); } catch(e) {}
+
+// Mass Bounty 999
+try { const routes = require("./routes/massBounty999"); app.use("/api/bounty-999", routes); } catch(e) {}
+
+// Swagger UI
+try {
+  const swaggerUi = require('swagger-ui-express');
+  const YAML = require('yamljs');
+  const swaggerDocument = YAML.load('./docs/swagger.yaml');
+  app.use('/api/docs', swaggerUi.serve, swaggerUi.setup(swaggerDocument));
+  console.log('📚 Swagger UI available at /api/docs');
+} catch(err) { console.log('⚠️ Swagger not available'); }
 
 // Sentry error handler
 app.use(Sentry.Handlers.errorHandler());
@@ -237,20 +140,22 @@ app.use(Sentry.Handlers.errorHandler());
 // Error handler
 app.use((err, req, res, next) => {
   console.error("Error:", err.stack);
-  res.status(err.status || 500).json({
-    error: err.message || "Internal Server Error",
-    status: err.status || 500
-  });
+  res.status(err.status || 500).json({ error: err.message || "Internal Server Error", status: err.status || 500 });
 });
+
+// Serve React app
+app.get("*", (req, res) => {
+  res.sendFile(path.join(__dirname, "frontend/build", "index.html"));
+});
+
+  try { const routes = require('./routes/analyticsRoutes'); app.use('/api/analytics', routes); } catch(e) { console.log('Analytics:', e.message); }
 
 // Start server
 app.listen(PORT, () => {
   console.log(`🚪 MyZubster Gateway avviato sulla porta ${PORT}`);
-  console.log(`📡 Endpoint: /api/robot/assign`);
   console.log(`🔍 Health: /api/health`);
-  console.log(`🧪 Test error: /api/test-error`);
-  console.log(`🔒 Sentry monitoring: ${Sentry.captureException ? '✅' : '❌'}`);
+  console.log(`📚 Swagger: /api/docs`);
+  console.log(`🔒 Sentry: ${Sentry.captureException ? '✅' : '❌'}`);
 });
 
 module.exports = app;
->>>>>>> main
