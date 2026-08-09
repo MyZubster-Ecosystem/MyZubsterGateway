@@ -1,209 +1,50 @@
 openapi: 3.0.0
 info:
   title: MyZubster Gateway API
-  description: API Gateway per MyZubster - MCP Server per AI Agents
+  description: API Gateway per MyZubster - MCP Server
   version: 1.0.0
-  contact:
-    name: MyZubster Team
-    url: https://myzubster.com
-    email: support@myzubster.com
-  license:
-    name: MIT
-    url: https://opensource.org/licenses/MIT
-
 servers:
   - url: https://api.myzubster.com
-    description: Production Server
-  - url: http://localhost:5002
-    description: Development Server
-
-tags:
-  - name: Health
-    description: Health check endpoints
-  - name: Robot
-    description: Robot control endpoints
-  - name: Wallet
-    description: Wallet and token endpoints
-  - name: IoT
-    description: IoT sensor endpoints
-  - name: Payments
-    description: Fiat payment endpoints
-  - name: Crypto
-    description: Cryptocurrency endpoints
-  - name: Arm
-    description: EVA IONI Arm control
-  - name: Mobile
-    description: Mobile app endpoints
-  - name: Notifications
-    description: Notification endpoints
-  - name: Messages
-    description: Message endpoints
-  - name: Monitoring
-    description: Monitoring and testing endpoints
-
 paths:
   /api/health:
     get:
       summary: Health check
-      description: Verifica lo stato del gateway
-      tags:
-        - Health
       responses:
         '200':
-          description: Gateway online
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  status:
-                    type: string
-                    example: online
-                  version:
-                    type: string
-                    example: 1.0.0
-                  timestamp:
-                    type: string
-                    format: date-time
-                  uptime:
-                    type: number
-                    example: 16.47
-
+          description: OK
   /api/robot/assign:
     get:
       summary: Assegna robot
-      description: Assegna un robot a un task
-      tags:
-        - Robot
       responses:
         '200':
-          description: Robot assegnato
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  message:
-                    type: string
-                    example: Robot assign endpoint
-                  status:
-                    type: string
-                    example: ok
-
+          description: OK
   /api/tokens/balance/{userId}:
     get:
       summary: Saldo token
-      description: Ottieni il saldo dei token per un utente
-      tags:
-        - Wallet
       parameters:
         - name: userId
           in: path
           required: true
           schema:
             type: string
-          description: ID dell'utente
       responses:
         '200':
-          description: Saldo token
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  userId:
-                    type: string
-                  balances:
-                    type: object
-                    properties:
-                      MYZ:
-                        type: number
-                      XMR:
-                        type: number
-                      BTC:
-                        type: number
-                      ETH:
-                        type: number
-                      ADA:
-                        type: number
-                  totalUSD:
-                    type: number
-                  totalSGD:
-                    type: number
-                  timestamp:
-                    type: string
-                    format: date-time
-
+          description: OK
   /api/sensors/{gardenId}:
     get:
       summary: Leggi sensori
-      description: Ottieni tutti i dati dei sensori per un giardino
-      tags:
-        - IoT
       parameters:
         - name: gardenId
           in: path
           required: true
           schema:
             type: string
-          description: ID del giardino
       responses:
         '200':
-          description: Dati sensori
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  gardenId:
-                    type: string
-                  temperature:
-                    type: number
-                  humidity:
-                    type: number
-                  pH:
-                    type: number
-                  light:
-                    type: number
-                  timestamp:
-                    type: string
-                    format: date-time
-    post:
-      summary: Aggiorna sensori
-      description: Aggiorna i dati dei sensori per un giardino
-      tags:
-        - IoT
-      parameters:
-        - name: gardenId
-          in: path
-          required: true
-          schema:
-            type: string
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              type: object
-              properties:
-                temperature:
-                  type: number
-                humidity:
-                  type: number
-                pH:
-                  type: number
-                light:
-                  type: number
-      responses:
-        '200':
-          description: Dati aggiornati
-
+          description: OK
   /api/payments/fiat/create:
     post:
       summary: Crea pagamento fiat
-      description: Crea un nuovo pagamento in valuta fiat
-      tags:
-        - Payments
       requestBody:
         required: true
         content:
@@ -215,175 +56,26 @@ paths:
                   type: number
                 currency:
                   type: string
-                  enum: [USD, EUR, GBP]
                 userId:
                   type: string
       responses:
         '200':
-          description: Pagamento creato
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  paymentId:
-                    type: string
-                  status:
-                    type: string
-                    example: pending
-                  amount:
-                    type: number
-                  currency:
-                    type: string
-
+          description: OK
   /api/crypto/rates:
     get:
       summary: Tassi di cambio
-      description: Ottieni i tassi di cambio per le criptovalute
-      tags:
-        - Crypto
       responses:
         '200':
-          description: Tassi di cambio
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  rates:
-                    type: object
-                    properties:
-                      BTC:
-                        type: number
-                      ETH:
-                        type: number
-                      ADA:
-                        type: number
-                      MYZ:
-                        type: number
-                      XMR:
-                        type: number
-                  timestamp:
-                    type: string
-                    format: date-time
-
+          description: OK
   /api/arm/status:
     get:
       summary: Stato braccio
-      description: Ottieni lo stato del braccio robotico EVA IONI
-      tags:
-        - Arm
       responses:
         '200':
-          description: Stato braccio
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  position:
-                    type: object
-                    properties:
-                      x:
-                        type: number
-                      y:
-                        type: number
-                      z:
-                        type: number
-                  grip:
-                    type: string
-                    enum: [open, closed]
-                  status:
-                    type: string
-                    example: idle
-                  timestamp:
-                    type: string
-                    format: date-time
-
+          description: OK
   /api/mobile/config:
     get:
       summary: Configurazione app
-      description: Ottieni la configurazione per l'app mobile
-      tags:
-        - Mobile
       responses:
         '200':
-          description: Configurazione app
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  appVersion:
-                    type: string
-                    example: 1.0.0
-                  apiVersion:
-                    type: string
-                    example: 1.0.0
-                  features:
-                    type: array
-                    items:
-                      type: string
-                  maintenance:
-                    type: boolean
-
-  /api/test-error:
-    get:
-      summary: Test error
-      description: Endpoint per testare il monitoring Sentry
-      tags:
-        - Monitoring
-      responses:
-        '500':
-          description: Errore catturato da Sentry
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  error:
-                    type: string
-                  message:
-                    type: string
-
-components:
-  schemas:
-    Error:
-      type: object
-      properties:
-        error:
-          type: string
-        status:
-          type: integer
-    SensorData:
-      type: object
-      properties:
-        temperature:
-          type: number
-        humidity:
-          type: number
-        pH:
-          type: number
-        light:
-          type: number
-    PaymentRequest:
-      type: object
-      properties:
-        amount:
-          type: number
-        currency:
-          type: string
-          enum: [USD, EUR, GBP]
-        userId:
-          type: string
-    SwapRequest:
-      type: object
-      properties:
-        from:
-          type: string
-          enum: [MYZ, XMR, BTC, ETH, ADA]
-        to:
-          type: string
-          enum: [MYZ, XMR, BTC, ETH, ADA]
-        amount:
-          type: number
+          description: OK

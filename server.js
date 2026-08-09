@@ -145,3 +145,15 @@ const swaggerUi = require('swagger-ui-express');
 const YAML = require('yamljs');
 const swaggerDocument = YAML.load('./docs/swagger.yaml');
 app.use('/api/docs', swaggerUi.serve, swaggerUi.setup(swaggerDocument));
+
+// Swagger UI
+const swaggerUi = require('swagger-ui-express');
+const YAML = require('yamljs');
+try {
+  const swaggerDocument = YAML.load('./docs/swagger.yaml');
+  app.use('/api/docs', swaggerUi.serve, swaggerUi.setup(swaggerDocument));
+  console.log('📚 Swagger UI su /api/docs');
+} catch (err) {
+  console.log('⚠️ Swagger not found');
+}
+app.use("/docs/guides", express.static(path.join(__dirname, "docs/guides")));
