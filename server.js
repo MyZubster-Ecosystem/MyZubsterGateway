@@ -29,6 +29,8 @@ app.get('/api/test-error', (req, res) => {
   res.status(500).json({ error: 'Test error captured by Sentry', message: 'Test error for Sentry monitoring' });
 });
 
+app.use('/api/bounty-994', require('./routes/massBounty994.js'));
+
 app.listen(PORT, '0.0.0.0', () => {
   console.log(`✅ Gateway running on port ${PORT}`);
 });
