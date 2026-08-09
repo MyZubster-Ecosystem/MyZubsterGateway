@@ -71,6 +71,9 @@ app.use('/api/payments/fiat', require('./routes/fiatPayments'));
 console.log('✅ Caricamento routes Smart Contract...');
 app.use('/api/blockchain/smart-contract', require('./routes/smartContract'));
 
+console.log('✅ Caricamento routes API Gateway...');
+app.use('/api/gateway', require('./routes/apiGateway'));
+
 app.use('/api/backup', require('./routes/backup'));
 
 app.get('/health', (req, res) => {
