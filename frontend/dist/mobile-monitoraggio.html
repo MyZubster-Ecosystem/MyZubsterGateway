@@ -1,0 +1,737 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>📱 Monitoraggio Ambientale - MyZubster</title>
+
+  <!-- Leaflet (interactive map) -->
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+
+  <!-- Chart.js -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.7/dist/chart.umd.min.js"></script>
+
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    :root {
+      --bg: #0f1117;
+      --surface: #1a1d28;
+      --surface-2: #22263a;
+      --text: #e8ecf4;
+      --text-soft: #8b95a8;
+      --accent: #34d399;
+      --accent-blue: #60a5fa;
+      --accent-red: #f87171;
+      --accent-yellow: #fbbf24;
+      --accent-purple: #a78bfa;
+      --border: #2a2e3f;
+      --radius: 14px;
+      --shadow: 0 4px 20px rgba(0,0,0,0.4);
+      --safe-bottom: env(safe-area-inset-bottom, 0px);
+    }
+    html, body { height: 100%; overflow: hidden; }
+    body {
+      font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      -webkit-font-smoothing: antialiased;
+    }
+
+    /* App Shell */
+    .app { display: flex; flex-direction: column; height: 100vh; max-width: 480px; margin: 0 auto; }
+
+    /* Header */
+    .app-header {
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 12px 16px; flex-shrink: 0;
+      background: var(--surface); border-bottom: 1px solid var(--border);
+    }
+    .app-header h1 { font-size: 1.1rem; font-weight: 700; display: flex; align-items: center; gap: 8px; }
+    .app-header h1 span { color: var(--accent); }
+    .status-dot { display: inline-block; width: 8px; height: 8px; border-radius: 50%; background: var(--accent); animation: pulse 2s infinite; }
+    @keyframes pulse { 0%,100%{opacity:0.5} 50%{opacity:1} }
+    .header-actions { display: flex; gap: 8px; }
+    .header-btn {
+      background: var(--surface-2); border: 1px solid var(--border); color: var(--text);
+      width: 36px; height: 36px; border-radius: 10px; cursor: pointer;
+      display: flex; align-items: center; justify-content: center; font-size: 1.2rem;
+    }
+    .header-btn:active { transform: scale(0.92); }
+
+    /* Content Area (scrollable) */
+    .app-content {
+      flex: 1; overflow-y: auto; padding: 12px 16px 0; -webkit-overflow-scrolling: touch;
+    }
+    .app-content::-webkit-scrollbar { width: 4px; }
+    .app-content::-webkit-scrollbar-thumb { background: var(--border); border-radius: 4px; }
+
+    /* Tab Navigation */
+    .tab-bar {
+      display: flex; flex-shrink: 0; background: var(--surface);
+      border-top: 1px solid var(--border); padding: 6px 0 calc(6px + var(--safe-bottom));
+    }
+    .tab-btn {
+      flex: 1; display: flex; flex-direction: column; align-items: center; gap: 2px;
+      background: none; border: none; color: var(--text-soft); font-size: 0.65rem; padding: 6px 0; cursor: pointer;
+      transition: color 0.2s; -webkit-tap-highlight-color: transparent;
+    }
+    .tab-btn .tab-icon { font-size: 1.3rem; }
+    .tab-btn.active { color: var(--accent); }
+    .tab-btn:active { transform: scale(0.92); }
+
+    .tab-panel { display: none; }
+    .tab-panel.active { display: block; }
+
+    /* ---- Dashboard Tab ---- */
+    .aqi-card {
+      background: linear-gradient(135deg, #1a2332, #0f1923); border-radius: var(--radius);
+      padding: 20px; margin-bottom: 16px; border: 1px solid var(--border); position: relative; overflow: hidden;
+    }
+    .aqi-card::before {
+      content: ''; position: absolute; top: -50%; left: -50%; width: 200%; height: 200%;
+      background: radial-gradient(circle, rgba(52,211,153,0.06) 0%, transparent 60%);
+    }
+    .aqi-header { display: flex; justify-content: space-between; align-items: flex-start; position: relative; }
+    .aqi-location { font-size: 0.8rem; color: var(--text-soft); }
+    .aqi-value { font-size: 3rem; font-weight: 800; line-height: 1; margin: 8px 0 0; }
+    .aqi-value.good { color: var(--accent); }
+    .aqi-value.moderate { color: var(--accent-yellow); }
+    .aqi-value.unhealthy { color: var(--accent-red); }
+    .aqi-label { font-size: 0.8rem; color: var(--text-soft); }
+    .aqi-updated { font-size: 0.7rem; color: var(--text-soft); margin-top: 8px; }
+
+    .metric-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 16px; }
+    .metric-card {
+      background: var(--surface); border: 1px solid var(--border); border-radius: 12px;
+      padding: 14px; transition: transform 0.15s; cursor: default;
+    }
+    .metric-card:active { transform: scale(0.97); }
+    .metric-label { font-size: 0.7rem; color: var(--text-soft); text-transform: uppercase; letter-spacing: 0.5px; }
+    .metric-value { font-size: 1.5rem; font-weight: 700; margin: 4px 0; }
+    .metric-value.good { color: var(--accent); }
+    .metric-value.warning { color: var(--accent-yellow); }
+    .metric-value.danger { color: var(--accent-red); }
+    .metric-sub { font-size: 0.7rem; color: var(--text-soft); }
+    .metric-chart { height: 40px; margin-top: 6px; }
+
+    /* Real-time data */
+    .realtime-section { margin-bottom: 16px; }
+    .section-title { font-size: 0.85rem; font-weight: 600; margin-bottom: 10px; display: flex; align-items: center; gap: 8px; }
+    .realtime-list { display: flex; flex-direction: column; gap: 8px; }
+    .realtime-item {
+      display: flex; align-items: center; justify-content: space-between;
+      background: var(--surface); border: 1px solid var(--border); border-radius: 10px;
+      padding: 12px 14px; animation: slideIn 0.3s ease-out;
+    }
+    @keyframes slideIn { from { opacity: 0; transform: translateX(-8px); } to { opacity: 1; transform: translateX(0); } }
+    .realtime-left { display: flex; align-items: center; gap: 10px; }
+    .realtime-icon { font-size: 1.4rem; width: 32px; text-align: center; }
+    .realtime-name { font-size: 0.85rem; font-weight: 500; }
+    .realtime-detail { font-size: 0.7rem; color: var(--text-soft); }
+    .realtime-value { font-size: 1.1rem; font-weight: 700; }
+    .realtime-value.good { color: var(--accent); }
+    .realtime-value.warning { color: var(--accent-yellow); }
+    .realtime-value.danger { color: var(--accent-red); }
+    .realtime-trend { font-size: 0.8rem; margin-left: 4px; }
+
+    /* ---- Map Tab ---- */
+    #map { height: calc(100vh - 180px); border-radius: var(--radius); z-index: 1; }
+    .map-overlay {
+      position: absolute; top: 24px; left: 16px; right: 16px; z-index: 1000;
+      display: flex; gap: 8px; flex-wrap: wrap;
+    }
+    .map-btn {
+      background: var(--surface); border: 1px solid var(--border); color: var(--text);
+      padding: 8px 14px; border-radius: 10px; font-size: 0.8rem; cursor: pointer;
+      backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px);
+      box-shadow: var(--shadow); display: flex; align-items: center; gap: 6px;
+    }
+    .map-btn:active { transform: scale(0.95); }
+    .map-btn:disabled { opacity: 0.5; }
+    .station-popup {
+      font-family: 'Segoe UI', sans-serif; min-width: 180px;
+    }
+    .station-popup h3 { font-size: 0.95rem; margin-bottom: 4px; }
+    .station-popup p { font-size: 0.8rem; margin: 2px 0; }
+    .station-popup .badge { display: inline-block; padding: 2px 8px; border-radius: 10px; font-size: 0.7rem; font-weight: 600; }
+    .badge.good { background: rgba(52,211,153,0.2); color: var(--accent); }
+    .badge.moderate { background: rgba(251,191,36,0.2); color: var(--accent-yellow); }
+    .badge.unhealthy { background: rgba(248,113,113,0.2); color: var(--accent-red); }
+
+    .map-container { position: relative; margin-bottom: 16px; }
+    .map-geo-error {
+      position: absolute; bottom: 70px; left: 16px; right: 16px; z-index: 1000;
+      background: var(--surface); border: 1px solid var(--accent-red); border-radius: 10px;
+      padding: 10px 14px; font-size: 0.8rem; color: var(--accent-red); display: none;
+    }
+    .stations-list { margin-bottom: 16px; }
+    .station-card {
+      display: flex; align-items: center; gap: 12px;
+      background: var(--surface); border: 1px solid var(--border); border-radius: 10px;
+      padding: 12px; margin-bottom: 8px; cursor: pointer;
+    }
+    .station-card:active { transform: scale(0.98); }
+    .station-dot { width: 10px; height: 10px; border-radius: 50%; flex-shrink: 0; }
+    .station-dot.good { background: var(--accent); }
+    .station-dot.moderate { background: var(--accent-yellow); }
+    .station-dot.unhealthy { background: var(--accent-red); }
+    .station-info { flex: 1; }
+    .station-name { font-size: 0.85rem; font-weight: 500; }
+    .station-detail { font-size: 0.7rem; color: var(--text-soft); }
+    .station-dist { font-size: 0.7rem; color: var(--accent-blue); }
+
+    /* ---- Reports Tab ---- */
+    .report-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; }
+    .report-date { font-size: 0.8rem; color: var(--text-soft); }
+    .report-nav { display: flex; gap: 4px; }
+    .report-nav-btn {
+      background: var(--surface-2); border: 1px solid var(--border); color: var(--text);
+      width: 32px; height: 32px; border-radius: 8px; cursor: pointer; font-size: 0.9rem;
+    }
+    .report-nav-btn:active { transform: scale(0.9); }
+
+    .report-summary {
+      background: var(--surface); border: 1px solid var(--border); border-radius: 12px;
+      padding: 16px; margin-bottom: 12px;
+    }
+    .report-summary h3 { font-size: 0.9rem; margin-bottom: 8px; display: flex; align-items: center; gap: 6px; }
+    .report-metrics { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+    .report-metric { text-align: center; padding: 8px; background: var(--surface-2); border-radius: 8px; }
+    .report-metric .val { font-size: 1.3rem; font-weight: 700; }
+    .report-metric .lbl { font-size: 0.65rem; color: var(--text-soft); }
+
+    .report-chart-container { height: 180px; margin-bottom: 12px; }
+    .report-actions { display: flex; gap: 8px; margin-bottom: 12px; }
+    .report-btn {
+      flex: 1; display: flex; align-items: center; justify-content: center; gap: 6px;
+      background: var(--surface); border: 1px solid var(--border); color: var(--text);
+      padding: 10px; border-radius: 10px; cursor: pointer; font-size: 0.8rem;
+    }
+    .report-btn.primary { background: var(--accent); color: #0f1117; border-color: var(--accent); font-weight: 600; }
+    .report-btn:active { transform: scale(0.95); }
+
+    /* Toast */
+    .toast {
+      position: fixed; bottom: 100px; left: 50%; transform: translateX(-50%);
+      background: var(--surface); border: 1px solid var(--accent); border-radius: 10px;
+      padding: 10px 20px; font-size: 0.8rem; color: var(--accent);
+      box-shadow: var(--shadow); z-index: 9999; display: none;
+      animation: toastIn 0.3s ease-out;
+    }
+    @keyframes toastIn { from { opacity: 0; transform: translateX(-50%) translateY(20px); } to { opacity: 1; transform: translateX(-50%) translateY(0); } }
+
+    /* Loading skeleton */
+    .skeleton { background: linear-gradient(90deg, var(--surface) 25%, var(--surface-2) 50%, var(--surface) 75%); background-size: 200% 100%; animation: shimmer 1.5s infinite; border-radius: 8px; }
+    @keyframes shimmer { 0% { background-position: 200% 0; } 100% { background-position: -200% 0; } }
+  </style>
+</head>
+<body>
+  <div class="app">
+    <!-- Header -->
+    <header class="app-header">
+      <h1><span>🌱</span> Futura <span class="status-dot"></span></h1>
+      <div class="header-actions">
+        <button class="header-btn" onclick="location.reload()" title="Aggiorna">↻</button>
+      </div>
+    </header>
+
+    <!-- Content -->
+    <main class="app-content" id="appContent">
+      <!-- Dashboard Tab -->
+      <div class="tab-panel active" id="tabDashboard">
+        <!-- AQI Overview -->
+        <div class="aqi-card" id="aqiCard">
+          <div class="aqi-header">
+            <div>
+              <div class="aqi-location" id="aqiLocation">📍 Rilevamento in corso...</div>
+              <div class="aqi-value" id="aqiValue">--</div>
+              <div class="aqi-label" id="aqiLabel">Indice Qualità Aria</div>
+            </div>
+            <div style="text-align:right">
+              <div class="aqi-location">🌡️ <span id="tempDisplay">--</span>°C</div>
+              <div class="aqi-location" style="margin-top:4px">💧 <span id="humidDisplay">--</span>%</div>
+            </div>
+          </div>
+          <div class="aqi-updated" id="aqiUpdated">Ultimo aggiornamento: --</div>
+        </div>
+
+        <!-- Metrics Grid -->
+        <div class="metric-grid" id="metricGrid">
+          <div class="metric-card"><div class="metric-label">Qualità Aria</div><div class="metric-value" id="airQuality">--</div><div class="metric-sub">PM2.5</div></div>
+          <div class="metric-card"><div class="metric-label">Qualità Acque</div><div class="metric-value" id="waterQuality">--</div><div class="metric-sub">pH / TDS</div></div>
+          <div class="metric-card"><div class="metric-label">UV Index</div><div class="metric-value" id="uvIndex">--</div><div class="metric-sub">Radiazione</div></div>
+          <div class="metric-card"><div class="metric-label">Rumore</div><div class="metric-value" id="noiseLevel">--</div><div class="metric-sub">dB</div></div>
+        </div>
+
+        <!-- Real-time Data -->
+        <div class="realtime-section">
+          <div class="section-title">⚡ Dati in Tempo Reale</div>
+          <div class="realtime-list" id="realtimeList"></div>
+        </div>
+      </div>
+
+      <!-- Map Tab -->
+      <div class="tab-panel" id="tabMap">
+        <div class="map-container">
+          <div class="map-overlay">
+            <button class="map-btn" id="locateBtn">📍 Trova stazioni vicine</button>
+            <button class="map-btn" id="listBtn">☰ Elenco</button>
+          </div>
+          <div id="map"></div>
+          <div class="map-geo-error" id="geoError"></div>
+        </div>
+        <div class="stations-list" id="stationsList" style="display:none;">
+          <div class="section-title">📍 Stazioni nelle vicinanze</div>
+          <div id="stationsContainer"></div>
+        </div>
+      </div>
+
+      <!-- Reports Tab -->
+      <div class="tab-panel" id="tabReports">
+        <div class="report-header">
+          <div>
+            <div class="section-title">📊 Report Giornalieri</div>
+            <div class="report-date" id="reportDate">--</div>
+          </div>
+          <div class="report-nav">
+            <button class="report-nav-btn" id="prevReport">‹</button>
+            <button class="report-nav-btn" id="nextReport">›</button>
+          </div>
+        </div>
+
+        <div class="report-summary">
+          <h3>📈 Riepilogo</h3>
+          <div class="report-metrics">
+            <div class="report-metric"><div class="val" id="repAQI">--</div><div class="lbl">AQI Medio</div></div>
+            <div class="report-metric"><div class="val" id="repTemp">--</div><div class="lbl">Temperatura Media</div></div>
+            <div class="report-metric"><div class="val" id="repHum">--</div><div class="lbl">Umidità Media</div></div>
+            <div class="report-metric"><div class="val" id="repPM">--</div><div class="lbl">PM2.5 Medio</div></div>
+          </div>
+        </div>
+
+        <div class="report-chart-container">
+          <canvas id="reportChart"></canvas>
+        </div>
+
+        <div class="report-actions">
+          <button class="report-btn primary" id="exportBtn">📤 Condividi Report</button>
+          <button class="report-btn" id="csvBtn">📥 Esporta CSV</button>
+        </div>
+
+        <div class="report-summary" id="dailyNotes" style="display:none">
+          <h3>📝 Note del Giorno</h3>
+          <div id="notesContent" style="font-size:0.8rem;color:var(--text-soft);"></div>
+        </div>
+      </div>
+    </main>
+
+    <!-- Tab Bar -->
+    <nav class="tab-bar">
+      <button class="tab-btn active" data-tab="tabDashboard">
+        <span class="tab-icon">📊</span> Dashboard
+      </button>
+      <button class="tab-btn" data-tab="tabMap">
+        <span class="tab-icon">🗺️</span> Mappa
+      </button>
+      <button class="tab-btn" data-tab="tabReports">
+        <span class="tab-icon">📋</span> Report
+      </button>
+    </nav>
+  </div>
+
+  <!-- Toast -->
+  <div class="toast" id="toast"></div>
+
+  <script>
+    /* =====================================================================
+     * Futura Mobile Monitoraggio — Environmental Monitoring App
+     * ===================================================================== */
+
+    // ---- State ----
+    const state = {
+      stations: [],
+      userPosition: null,
+      reportDay: 0, // 0 = today, -1 = yesterday, etc.
+      charts: { report: null },
+      map: null,
+      userLayer: null,
+      markers: [],
+      mapInitialized: false,
+    };
+
+    const STATIONS = [
+      { id: 'S01', name: 'Stazione Centrale', lat: 41.9028, lng: 12.4964, aqi: 42, pm25: 12, pm10: 28, no2: 18, o3: 35, status: 'good' },
+      { id: 'S02', name: 'Zona Industriale', lat: 41.9100, lng: 12.5100, aqi: 78, pm25: 22, pm10: 45, no2: 35, o3: 20, status: 'moderate' },
+      { id: 'S03', name: 'Parco Urbano', lat: 41.8950, lng: 12.4850, aqi: 25, pm25: 8, pm10: 15, no2: 10, o3: 45, status: 'good' },
+      { id: 'S04', name: 'Stazione Marittima', lat: 41.9150, lng: 12.4700, aqi: 55, pm25: 15, pm10: 30, no2: 22, o3: 28, status: 'moderate' },
+      { id: 'S05', name: 'Area Periferica Sud', lat: 41.8800, lng: 12.5050, aqi: 35, pm25: 10, pm10: 20, no2: 14, o3: 40, status: 'good' },
+      { id: 'S06', name: 'Fiume Tevere - Nord', lat: 41.9200, lng: 12.4750, aqi: 48, pm25: 13, pm10: 25, no2: 20, o3: 32, status: 'good' },
+      { id: 'S07', name: 'Porto Fluviale', lat: 41.9080, lng: 12.4650, aqi: 62, pm25: 18, pm10: 35, no2: 28, o3: 22, status: 'moderate' },
+      { id: 'S08', name: 'Stazione Aeroporto', lat: 41.8000, lng: 12.2500, aqi: 30, pm25: 9, pm10: 18, no2: 12, o3: 42, status: 'good' },
+    ];
+
+    const WATER_QUALITY = [
+      { name: 'pH', value: 7.2, status: 'good' },
+      { name: 'TDS', value: 185, unit: 'ppm', status: 'good' },
+      { name: 'Ossigeno Disciolto', value: 8.3, unit: 'mg/L', status: 'good' },
+      { name: 'Torbidità', value: 2.1, unit: 'NTU', status: 'good' },
+    ];
+
+    function haversine(lat1, lon1, lat2, lon2) {
+      const R = 6371;
+      const dLat = (lat2 - lat1) * Math.PI / 180;
+      const dLon = (lon2 - lon1) * Math.PI / 180;
+      const a = Math.sin(dLat/2)**2 + Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) * Math.sin(dLon/2)**2;
+      return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+    }
+
+    function getStatusClass(value) {
+      if (value <= 50) return 'good';
+      if (value <= 100) return 'warning';
+      return 'danger';
+    }
+
+    function getAQILabel(value) {
+      if (value <= 50) return 'Buona';
+      if (value <= 100) return 'Moderata';
+      if (value <= 150) return 'Insalubre';
+      return 'Pericolosa';
+    }
+
+    function getAQIColor(value) {
+      if (value <= 50) return '#34d399';
+      if (value <= 100) return '#fbbf24';
+      if (value <= 150) return '#f87171';
+      return '#ef4444';
+    }
+
+    // ---- Simulated real-time data ----
+    function generateRealtimeData() {
+      const now = new Date();
+      const h = now.getHours();
+      const baseAQI = 42 + Math.sin(h / 24 * 2 * Math.PI) * 15 + (Math.random() - 0.5) * 10;
+      const baseTemp = 22 + Math.sin(h / 24 * 2 * Math.PI) * 6 + (Math.random() - 0.5) * 2;
+      const baseHumidity = 55 + Math.cos(h / 24 * 2 * Math.PI) * 12 + (Math.random() - 0.5) * 5;
+      const basePM25 = 12 + Math.sin(h / 24 * 2 * Math.PI) * 5 + (Math.random() - 0.5) * 3;
+      const baseUV = Math.max(0, 8 * Math.sin((h - 6) / 12 * Math.PI) + (Math.random() - 0.5) * 1);
+      const baseNoise = 45 + Math.sin(h / 24 * 2 * Math.PI) * 15 + (Math.random() - 0.5) * 5;
+
+      return {
+        aqi: Math.round(Math.max(0, baseAQI)),
+        temp: Math.round(baseTemp * 10) / 10,
+        humidity: Math.round(baseHumidity),
+        pm25: Math.round(Math.max(0, basePM25) * 10) / 10,
+        pm10: Math.round(Math.max(0, basePM25 * 2.2) * 10) / 10,
+        no2: Math.round(Math.max(0, 15 + Math.sin(h / 24 * 2 * Math.PI) * 10 + (Math.random() - 0.5) * 5)),
+        co2: Math.round(Math.max(0, 400 + Math.sin(h / 24 * 2 * Math.PI) * 100 + (Math.random() - 0.5) * 50)),
+        uv: Math.round(Math.max(0, baseUV) * 10) / 10,
+        noise: Math.round(baseNoise),
+        pressure: Math.round(1013 + (Math.random() - 0.5) * 10),
+        updated: now.toLocaleString('it-IT'),
+      };
+    }
+
+    function updateDashboard() {
+      const data = generateRealtimeData();
+      const aqiClass = getStatusClass(data.aqi);
+
+      document.getElementById('aqiValue').textContent = data.aqi;
+      document.getElementById('aqiValue').className = 'aqi-value ' + aqiClass;
+      document.getElementById('aqiLabel').textContent = getAQILabel(data.aqi);
+      document.getElementById('aqiUpdated').textContent = 'Ultimo aggiornamento: ' + data.updated;
+      document.getElementById('tempDisplay').textContent = data.temp;
+      document.getElementById('humidDisplay').textContent = data.humidity;
+
+      // Location
+      if (state.userPosition) {
+        document.getElementById('aqiLocation').textContent = '📍 ' + state.userPosition[0].toFixed(4) + ', ' + state.userPosition[1].toFixed(4);
+      }
+
+      // Metrics
+      document.getElementById('airQuality').textContent = data.pm25 + ' µg';
+      document.getElementById('airQuality').className = 'metric-value ' + getStatusClass(data.pm25 * 3);
+      document.getElementById('waterQuality').textContent = WATER_QUALITY[1].value + ' ppm';
+      document.getElementById('waterQuality').className = 'metric-value ' + WATER_QUALITY[1].status;
+      document.getElementById('uvIndex').textContent = data.uv;
+      document.getElementById('uvIndex').className = 'metric-value ' + (data.uv > 5 ? 'warning' : 'good');
+      document.getElementById('noiseLevel').textContent = data.noise + ' dB';
+      document.getElementById('noiseLevel').className = 'metric-value ' + (data.noise > 65 ? 'warning' : 'good');
+
+      // Real-time list
+      const items = [
+        { icon: '🌬️', name: 'PM2.5', detail: 'Particolato fine', value: data.pm25 + ' µg/m³', cls: getStatusClass(data.pm25 * 3), trend: data.pm25 > 12 ? '↑' : '↓' },
+        { icon: '🏭', name: 'PM10', detail: 'Particolato respirabile', value: data.pm10 + ' µg/m³', cls: getStatusClass(data.pm10 / 2), trend: data.pm10 > 30 ? '↑' : '↓' },
+        { icon: '🧪', name: 'NO₂', detail: 'Biossido di azoto', value: data.no2 + ' ppb', cls: getStatusClass(data.no2 * 2), trend: data.no2 > 20 ? '↑' : '↓' },
+        { icon: '☁️', name: 'CO₂', detail: 'Anidride carbonica', value: data.co2 + ' ppm', cls: 'good', trend: data.co2 > 500 ? '↑' : '↓' },
+        { icon: '☀️', name: 'UV Index', detail: 'Radiazione solare', value: data.uv, cls: data.uv > 5 ? 'warning' : 'good', trend: data.uv > 3 ? '↑' : '↓' },
+        { icon: '🔊', name: 'Rumore', detail: 'Inquinamento acustico', value: data.noise + ' dB', cls: data.noise > 65 ? 'warning' : 'good', trend: data.noise > 50 ? '↑' : '↓' },
+        { icon: '💨', name: 'Pressione', detail: 'Pressione atmosferica', value: data.pressure + ' hPa', cls: 'good', trend: '' },
+        { icon: '💧', name: 'Umidità', detail: 'Umidità relativa', value: data.humidity + '%', cls: 'good', trend: data.humidity > 60 ? '↑' : '↓' },
+      ];
+
+      document.getElementById('realtimeList').innerHTML = items.map(function(item) {
+        return '<div class="realtime-item"><div class="realtime-left"><span class="realtime-icon">' + item.icon + '</span><div><div class="realtime-name">' + item.name + '</div><div class="realtime-detail">' + item.detail + '</div></div></div><div><span class="realtime-value ' + item.cls + '">' + item.value + '</span><span class="realtime-trend">' + item.trend + '</span></div></div>';
+      }).join('');
+    }
+
+    // ---- Map ----
+    function initMap() {
+      if (state.mapInitialized) return;
+      state.map = L.map('map', {
+        zoomControl: false,
+        attributionControl: true,
+      }).setView([41.9028, 12.4964], 11);
+
+      L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+        maxZoom: 19,
+        attribution: '© OpenStreetMap',
+      }).addTo(state.map);
+
+      L.control.zoom({ position: 'bottomright' }).addTo(state.map);
+      state.mapInitialized = true;
+
+      // Add station markers
+      STATIONS.forEach(function(s) {
+        var color = getAQIColor(s.aqi);
+        var marker = L.circleMarker([s.lat, s.lng], {
+          radius: 10, color: color, fillColor: color, fillOpacity: 0.7, weight: 2,
+        }).addTo(state.map);
+
+        marker.bindPopup(
+          '<div class="station-popup"><h3>' + s.name + '</h3>' +
+          '<p>AQI: <strong>' + s.aqi + '</strong> <span class="badge ' + s.status + '">' + getAQILabel(s.aqi) + '</span></p>' +
+          '<p>PM2.5: ' + s.pm25 + ' µg/m³ | PM10: ' + s.pm10 + ' µg/m³</p>' +
+          '<p>NO₂: ' + s.no2 + ' ppb | O₃: ' + s.o3 + ' ppb</p></div>'
+        );
+
+        state.markers.push(marker);
+      });
+
+      // Event: map click to show nearby
+      state.map.on('click', function(e) {
+        showNearbyStations(e.latlng.lat, e.latlng.lng);
+      });
+    }
+
+    function showNearbyStations(lat, lng) {
+      var sorted = STATIONS.map(function(s) { return Object.assign({}, s, { dist: haversine(lat, lng, s.lat, s.lng) }); })
+        .sort(function(a, b) { return a.dist - b.dist; })
+        .slice(0, 5);
+
+      var container = document.getElementById('stationsContainer');
+      container.innerHTML = sorted.map(function(s) {
+        var cls = s.status;
+        return '<div class="station-card" onclick="map.flyTo([' + s.lat + ',' + s.lng + '],15,{duration:0.6})">' +
+          '<div class="station-dot ' + cls + '"></div>' +
+          '<div class="station-info"><div class="station-name">' + s.name + '</div>' +
+          '<div class="station-detail">AQI: ' + s.aqi + ' — ' + getAQILabel(s.aqi) + '</div></div>' +
+          '<div class="station-dist">' + s.dist.toFixed(1) + ' km</div></div>';
+      }).join('');
+      document.getElementById('stationsList').style.display = 'block';
+    }
+
+    // ---- Reports ----
+    function generateReportData(dayOffset) {
+      var d = new Date();
+      d.setDate(d.getDate() + dayOffset);
+      var dateStr = d.toLocaleDateString('it-IT', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' });
+      var baseAQI = 42 + Math.sin(dayOffset * 0.7) * 15 + (Math.random() - 0.5) * 8;
+      var baseTemp = 22 + Math.sin(dayOffset * 0.5) * 5 + (Math.random() - 0.5) * 2;
+      var baseHum = 55 + Math.cos(dayOffset * 0.5) * 10 + (Math.random() - 0.5) * 5;
+
+      // Hourly data for chart
+      var hourlyData = [];
+      for (var h = 0; h < 24; h++) {
+        hourlyData.push({
+          hour: h,
+          temp: Math.round((baseTemp + Math.sin(h / 24 * 2 * Math.PI) * 6 + (Math.random() - 0.5) * 1.5) * 10) / 10,
+          aqi: Math.round(Math.max(0, baseAQI + Math.sin(h / 24 * 2 * Math.PI) * 12 + (Math.random() - 0.5) * 5)),
+          humidity: Math.round(Math.max(0, baseHum + Math.cos(h / 24 * 2 * Math.PI) * 8 + (Math.random() - 0.5) * 4)),
+        });
+      }
+
+      return {
+        date: dateStr,
+        aqi: Math.round(baseAQI),
+        temp: Math.round(baseTemp * 10) / 10,
+        humidity: Math.round(baseHum),
+        pm25: Math.round((baseAQI * 0.3 + 5) * 10) / 10,
+        hourlyData: hourlyData,
+        note: 'Giornata ' + (baseAQI < 50 ? 'con buona qualità dell\'aria.' : 'con qualità dell\'aria moderata.') + ' Si consiglia di ' + (baseAQI < 50 ? 'trascorrere tempo all\'aperto.' : 'limitare le attività all\'aperto durante le ore più calde.'),
+      };
+    }
+
+    function updateReport() {
+      var data = generateReportData(state.reportDay);
+      document.getElementById('reportDate').textContent = data.date;
+      document.getElementById('repAQI').textContent = data.aqi;
+      document.getElementById('repAQI').style.color = getAQIColor(data.aqi);
+      document.getElementById('repTemp').textContent = data.temp + '°C';
+      document.getElementById('repHum').textContent = data.humidity + '%';
+      document.getElementById('repPM').textContent = data.pm25 + ' µg';
+
+      document.getElementById('notesContent').textContent = data.note;
+      document.getElementById('dailyNotes').style.display = 'block';
+
+      // Chart
+      var ctx = document.getElementById('reportChart').getContext('2d');
+      if (state.charts.report) {
+        state.charts.report.destroy();
+      }
+      state.charts.report = new Chart(ctx, {
+        type: 'line',
+        data: {
+          labels: data.hourlyData.map(function(d) { return d.hour + ':00'; }),
+          datasets: [
+            { label: 'AQI', data: data.hourlyData.map(function(d) { return d.aqi; }), borderColor: '#34d399', backgroundColor: 'rgba(52,211,153,0.1)', fill: true, tension: 0.3, pointRadius: 2, yAxisID: 'y' },
+            { label: 'Temperatura (°C)', data: data.hourlyData.map(function(d) { return d.temp; }), borderColor: '#fbbf24', backgroundColor: 'rgba(251,191,36,0.1)', fill: true, tension: 0.3, pointRadius: 2, yAxisID: 'y1' },
+          ],
+        },
+        options: {
+          responsive: true, maintainAspectRatio: false,
+          interaction: { mode: 'index', intersect: false },
+          plugins: {
+            legend: { display: true, labels: { color: '#8b95a8', font: { size: 10 }, boxWidth: 12, padding: 8 } },
+          },
+          scales: {
+            x: { ticks: { color: '#8b95a8', font: { size: 9 }, maxTicksLimit: 8 }, grid: { color: 'rgba(42,46,63,0.5)' } },
+            y: { position: 'left', ticks: { color: '#8b95a8', font: { size: 9 } }, grid: { color: 'rgba(42,46,63,0.5)' }, title: { display: true, text: 'AQI', color: '#8b95a8' } },
+            y1: { position: 'right', ticks: { color: '#8b95a8', font: { size: 9 } }, grid: { display: false }, title: { display: true, text: '°C', color: '#8b95a8' } },
+          },
+        },
+      });
+    }
+
+    // ---- Export / Share ----
+    function showToast(msg) {
+      var el = document.getElementById('toast');
+      el.textContent = msg;
+      el.style.display = 'block';
+      setTimeout(function() { el.style.display = 'none'; }, 2500);
+    }
+
+    function exportCSV() {
+      var data = generateReportData(state.reportDay);
+      var rows = [['Ora', 'AQI', 'Temperatura', 'Umidità']];
+      data.hourlyData.forEach(function(d) {
+        rows.push([d.hour + ':00', d.aqi, d.temp, d.humidity]);
+      });
+      var csv = rows.map(function(r) { return r.join(','); }).join('\n');
+      var blob = new Blob([csv], { type: 'text/csv;charset=utf-8' });
+      var url = URL.createObjectURL(blob);
+      var a = document.createElement('a');
+      a.href = url; a.download = 'report-ambientale-' + new Date().toISOString().slice(0,10) + '.csv';
+      a.click();
+      URL.revokeObjectURL(url);
+      showToast('✅ CSV esportato con successo');
+    }
+
+    function shareReport() {
+      var data = generateReportData(state.reportDay);
+      var text = '🌱 Monitoraggio Ambientale Futura\n' + data.date + '\n\n' +
+        'AQI: ' + data.aqi + ' (' + getAQILabel(data.aqi) + ')\n' +
+        'Temperatura: ' + data.temp + '°C\n' +
+        'Umidità: ' + data.humidity + '%\n' +
+        'PM2.5: ' + data.pm25 + ' µg/m³\n\n' +
+        data.note;
+
+      if (navigator.share) {
+        navigator.share({ title: 'Report Ambientale Futura', text: text }).catch(function() {});
+      } else {
+        navigator.clipboard.writeText(text).then(function() {
+          showToast('📋 Report copiato negli appunti');
+        }).catch(function() {
+          showToast('📋 ' + text.slice(0, 100) + '...');
+        });
+      }
+    }
+
+    // ---- Geolocation ----
+    function locateMe() {
+      var btn = document.getElementById('locateBtn');
+      var geoErr = document.getElementById('geoError');
+      geoErr.style.display = 'none';
+
+      if (!navigator.geolocation) {
+        geoErr.textContent = 'Geolocalizzazione non supportata.';
+        geoErr.style.display = 'block';
+        return;
+      }
+
+      btn.disabled = true;
+      btn.textContent = '⏳ Ricerca...';
+
+      navigator.geolocation.getCurrentPosition(function(pos) {
+        var point = [pos.coords.latitude, pos.coords.longitude];
+        state.userPosition = point;
+
+        if (state.userLayer) state.map.removeLayer(state.userLayer);
+        state.userLayer = L.layerGroup([
+          L.circle(point, { radius: 500, color: '#3b82f6', weight: 1, fillColor: '#3b82f6', fillOpacity: 0.1 }),
+          L.marker(point, { icon: L.divIcon({ className: '', html: '📍', iconSize: [24, 24], iconAnchor: [12, 12] }) }),
+        ]).addTo(state.map);
+
+        state.map.flyTo(point, 12, { duration: 0.8 });
+        btn.disabled = false;
+        btn.textContent = '📍 Trova stazioni vicine';
+        showNearbyStations(point[0], point[1]);
+        document.getElementById('aqiLocation').textContent = '📍 ' + point[0].toFixed(4) + ', ' + point[1].toFixed(4);
+      }, function(err) {
+        var msgs = {
+          1: 'Permesso negato. Abilita la geolocalizzazione nel browser.',
+          2: 'Posizione non disponibile.',
+          3: 'Richiesta scaduta. Riprova.',
+        };
+        geoErr.textContent = msgs[err.code] || 'Errore di geolocalizzazione.';
+        geoErr.style.display = 'block';
+        btn.disabled = false;
+        btn.textContent = '📍 Trova stazioni vicine';
+      }, { enableHighAccuracy: true, timeout: 10000, maximumAge: 60000 });
+    }
+
+    // ---- Tab Switching ----
+    document.querySelectorAll('.tab-btn').forEach(function(btn) {
+      btn.addEventListener('click', function() {
+        document.querySelectorAll('.tab-btn').forEach(function(b) { b.classList.remove('active'); });
+        document.querySelectorAll('.tab-panel').forEach(function(p) { p.classList.remove('active'); });
+        btn.classList.add('active');
+        document.getElementById(btn.dataset.tab).classList.add('active');
+
+        if (btn.dataset.tab === 'tabMap') {
+          setTimeout(function() {
+            if (state.map) state.map.invalidateSize();
+            else initMap();
+          }, 100);
+        }
+        if (btn.dataset.tab === 'tabReports') {
+          updateReport();
+        }
+      });
+    });
+
+    // ---- Init ----
+    document.getElementById('locateBtn').addEventListener('click', locateMe);
+    document.getElementById('listBtn').addEventListener('click', function() {
+      showNearbyStations(41.9028, 12.4964);
+      document.getElementById('stationsList').style.display = 'block';
+    });
+    document.getElementById('prevReport').addEventListener('click', function() { state.reportDay--; updateReport(); });
+    document.getElementById('nextReport').addEventListener('click', function() { state.reportDay++; updateReport(); });
+    document.getElementById('exportBtn').addEventListener('click', shareReport);
+    document.getElementById('csvBtn').addEventListener('click', exportCSV);
+
+    // Initial load
+    updateDashboard();
+    setInterval(updateDashboard, 5000);
+
+    // Init map on first map tab click
+    document.querySelector('[data-tab=\"tabMap\"]').addEventListener('click', function() {
+      setTimeout(function() {
+        if (!state.mapInitialized) initMap();
+        else if (state.map) state.map.invalidateSize();
+      }, 100);
+    }, { once: true });
+  </script>
+</body>
+</html>
