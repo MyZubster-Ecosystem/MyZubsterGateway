@@ -3,6 +3,7 @@ const mongoose = require('mongoose');
 const cors = require('cors');
 const rateLimit = require('express-rate-limit');
 const express = require('express');
+const i18nMiddleware = require('./middleware/i18n');
 const app = express();
 const PORT = process.env.PORT || 10000;
 
@@ -32,6 +33,7 @@ app.use((req, res, next) => {
 });
 
 app.use(express.json());
+app.use(i18nMiddleware);
 app.use(limiter);
 
 // Import routes
@@ -70,6 +72,7 @@ const seedExchangeRoutes = require('./routes/seedExchange');
 app.get('/api/health', (req, res) => {
   res.json({
     status: 'ok',
+    message: req.t('health.message', { service: 'MyZubster' }),
     timestamp: new Date().toISOString(),
     uptime: process.uptime(),
     memory: process.memoryUsage(),
@@ -161,43 +164,35 @@ app.use((req, res) => {
   res.status(404).json({ error: 'Not found' });
 });
 
-// MongoDB connection
-mongoose.connect(process.env.MONGODB_URI || 'mongodb://localhost:27017/myzubster')
-  .then(() => console.log('✅ Connected to MongoDB'))
-  .catch(err => console.error('❌ MongoDB connection error:', err));
+if (require.main === module) {
+  mongoose
+    .connect(process.env.MONGODB_URI || 'mongodb://localhost:27017/myzubster')
+    .then(() => console.log('✅ Connected to MongoDB'))
+    .catch((err) => console.error('❌ MongoDB connection error:', err));
 
-const server = app.listen(PORT, () => {
-  console.log(`🚀 Gateway running on http://localhost:${PORT}`);
-  console.log(`🔒 Security: Rate limiting (100 req/15min), Headers active`);
-});
-
-// Graceful shutdown
-process.on('SIGTERM', () => {
-  console.log('🛑 SIGTERM ricevuto, chiusura graceful...');
-  server.close(() => {
-    mongoose.connection.close()
-      .then(() => {
-        console.log('✅ Server chiuso');
-        process.exit(0);
-      })
-      .catch(err => {
-        console.error('❌ Errore chiusura MongoDB:', err);
-        process.exit(1);
-      });
+  const server = app.listen(PORT, () => {
+    console.log(`🚀 Gateway running on http://localhost:${PORT}`);
+    console.log(`🔒 Security: Rate limiting (100 req/15min), Headers active`);
   });
-});
 
-process.on('SIGINT', () => {
-  console.log('🛑 SIGINT ricevuto, chiusura graceful...');
-  server.close(() => {
-    mongoose.connection.close()
-      .then(() => {
-        console.log('✅ Server chiuso');
-        process.exit(0);
-      })
-      .catch(err => {
-        console.error('❌ Errore chiusura MongoDB:', err);
-        process.exit(1);
-      });
-  });
-});
+  const shutdown = () => {
+    console.log('🛑 SIGTERM ricevuto, chiusura graceful...');
+    server.close(() => {
+      mongoose.connection
+        .close()
+        .then(() => {
+          console.log('✅ Server chiuso');
+          process.exit(0);
+        })
+        .catch((err) => {
+          console.error('❌ Errore chiusura MongoDB:', err);
+          process.exit(1);
+        });
+    });
+  };
+
+  process.on('SIGTERM', shutdown);
+  process.on('SIGINT', shutdown);
+}
+
+module.exports = app;

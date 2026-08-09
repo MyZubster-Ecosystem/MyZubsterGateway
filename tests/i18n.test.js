@@ -15,6 +15,7 @@ const i18nMiddleware = require('../middleware/i18n');
 const authRouter = require('../src/routes/auth');
 const webhookRouter = require('../routes/webhook');
 const WebhookService = require('../services/webhookService');
+const productionApp = require('../server');
 
 function flattenCatalog(value, prefix = '', result = {}) {
   for (const [key, entry] of Object.entries(value)) {
@@ -278,6 +279,36 @@ describe('i18n middleware', () => {
     });
     expect(fallbackResponse.headers['content-language']).toBe('zh');
     expect(specificResponse.headers['content-language']).toBeUndefined();
+  });
+});
+
+describe('production localization', () => {
+  test('installs localization and uses it for the health response', () => {
+    expect(
+      productionApp._router.stack.some(
+        (layer) => layer.handle.name === 'i18nMiddleware'
+      )
+    ).toBe(true);
+
+    const healthLayer = productionApp._router.stack.find(
+      (layer) => layer.route?.path === '/api/health'
+    );
+    const req = {
+      t: jest.fn(() => 'MyZubster Gateway está en funcionamiento!'),
+    };
+    const res = { json: jest.fn() };
+
+    healthLayer.route.stack[0].handle(req, res);
+
+    expect(req.t).toHaveBeenCalledWith('health.message', {
+      service: 'MyZubster',
+    });
+    expect(res.json).toHaveBeenCalledWith(
+      expect.objectContaining({
+        status: 'ok',
+        message: 'MyZubster Gateway está en funcionamiento!',
+      })
+    );
   });
 });
 
