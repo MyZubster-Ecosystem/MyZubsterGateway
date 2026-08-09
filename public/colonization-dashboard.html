@@ -1,0 +1,297 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>🚀 Colonizzazione Spaziale - MyZubster</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            background: #0a0a1a;
+            color: #00ffaa;
+            font-family: 'Courier New', monospace;
+            min-height: 100vh;
+            padding: 20px;
+        }
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+        h1 {
+            color: #ff6bff;
+            text-shadow: 0 0 30px #ff6bff;
+            text-align: center;
+            font-size: 3em;
+            margin-bottom: 20px;
+        }
+        .grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 20px;
+            margin: 20px 0;
+        }
+        .card {
+            background: rgba(0, 255, 170, 0.05);
+            padding: 20px;
+            border-radius: 15px;
+            border: 1px solid rgba(0, 255, 170, 0.3);
+            transition: all 0.3s;
+        }
+        .card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 40px rgba(0, 255, 170, 0.2);
+        }
+        .card-title {
+            color: #ff6bff;
+            font-size: 1.2em;
+            margin-bottom: 10px;
+        }
+        .card-value {
+            font-size: 2em;
+            font-weight: bold;
+        }
+        .colony-list {
+            margin-top: 20px;
+        }
+        .colony-item {
+            display: flex;
+            justify-content: space-between;
+            padding: 15px;
+            background: rgba(0, 255, 170, 0.05);
+            border-radius: 10px;
+            margin: 10px 0;
+            border-left: 4px solid #ff6bff;
+        }
+        .btn {
+            padding: 10px 20px;
+            background: linear-gradient(135deg, #ff6bff, #00ffaa);
+            border: none;
+            border-radius: 10px;
+            color: #0a0a1a;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.3s;
+            margin: 5px;
+        }
+        .btn:hover {
+            transform: scale(1.05);
+            box-shadow: 0 0 30px rgba(255, 107, 255, 0.3);
+        }
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.8);
+            justify-content: center;
+            align-items: center;
+        }
+        .modal-content {
+            background: #1a1a2e;
+            padding: 30px;
+            border-radius: 20px;
+            border: 2px solid #00ffaa;
+            max-width: 500px;
+            width: 90%;
+        }
+        .modal input, .modal select {
+            width: 100%;
+            padding: 10px;
+            margin: 10px 0;
+            background: rgba(0, 255, 170, 0.05);
+            border: 1px solid #00ffaa;
+            border-radius: 10px;
+            color: #00ffaa;
+        }
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.5; }
+        }
+        .loading {
+            animation: pulse 1s infinite;
+        }
+        @media (max-width: 600px) {
+            h1 { font-size: 2em; }
+            .grid { grid-template-columns: 1fr; }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🚀 Colonizzazione Spaziale</h1>
+        <p style="text-align: center; color: #ff6bff; margin-bottom: 20px;">
+            🌍 L'umanità si espande nell'universo
+        </p>
+        
+        <div class="grid" id="stats-grid">
+            <div class="card">
+                <div class="card-title">🌍 Colonie</div>
+                <div class="card-value" id="colonies">0</div>
+            </div>
+            <div class="card">
+                <div class="card-title">👨‍👩‍👧‍👦 Popolazione</div>
+                <div class="card-value" id="population">0</div>
+            </div>
+            <div class="card">
+                <div class="card-title">🪐 Pianeti</div>
+                <div class="card-value" id="planets">0</div>
+            </div>
+            <div class="card">
+                <div class="card-title">🔧 Infrastrutture</div>
+                <div class="card-value" id="infrastructure">0</div>
+            </div>
+        </div>
+        
+        <div style="text-align: center; margin: 20px 0;">
+            <button class="btn" onclick="showAddColony()">🆕 Nuova Colonia</button>
+            <button class="btn" onclick="loadData()">🔄 Aggiorna</button>
+            <button class="btn" onclick="showPlanMission()">🚀 Pianifica Missione</button>
+        </div>
+        
+        <div class="colony-list" id="colony-list">
+            <h2 style="color: #ff6bff; margin: 20px 0;">📋 Colonie</h2>
+            <div id="colonies-list"></div>
+        </div>
+    </div>
+    
+    <!-- Modal Nuova Colonia -->
+    <div class="modal" id="add-colony-modal">
+        <div class="modal-content">
+            <h2 style="color: #ff6bff;">🆕 Nuova Colonia</h2>
+            <input type="text" id="colony-name" placeholder="Nome Colonia" />
+            <input type="text" id="colony-planet" placeholder="Pianeta" />
+            <input type="number" id="colony-population" placeholder="Popolazione" value="1000" />
+            <input type="text" id="colony-infrastructure" placeholder="Infrastrutture (separate da virgola)" />
+            <button class="btn" onclick="createColony()">Crea Colonia 🚀</button>
+            <button class="btn" onclick="closeModal('add-colony-modal')" style="background: #ff6b6b;">Annulla</button>
+        </div>
+    </div>
+    
+    <!-- Modal Pianifica Missione -->
+    <div class="modal" id="plan-mission-modal">
+        <div class="modal-content">
+            <h2 style="color: #ff6bff;">🚀 Pianifica Missione</h2>
+            <input type="text" id="mission-destination" placeholder="Destinazione" />
+            <input type="text" id="mission-objective" placeholder="Obiettivo" />
+            <button class="btn" onclick="planMission()">Pianifica Missione</button>
+            <button class="btn" onclick="closeModal('plan-mission-modal')" style="background: #ff6b6b;">Annulla</button>
+        </div>
+    </div>
+    
+    <script>
+        // Carica i dati
+        async function loadData() {
+            try {
+                const response = await fetch('/api/colonization/stats');
+                const data = await response.json();
+                
+                if (data.success) {
+                    document.getElementById('colonies').textContent = data.stats.colonies;
+                    document.getElementById('population').textContent = data.stats.population.toLocaleString();
+                    document.getElementById('planets').textContent = data.stats.planets.length;
+                    document.getElementById('infrastructure').textContent = data.stats.infrastructure;
+                }
+                
+                // Carica colonie
+                const coloniesResponse = await fetch('/api/colonization/colonies');
+                const coloniesData = await coloniesResponse.json();
+                
+                if (coloniesData.success) {
+                    const list = document.getElementById('colonies-list');
+                    list.innerHTML = coloniesData.colonies.map(c => `
+                        <div class="colony-item">
+                            <div>
+                                <strong>${c.name}</strong><br>
+                                🪐 ${c.planet} | 👨‍👩‍👧‍👦 ${c.population.toLocaleString()} 
+                            </div>
+                            <div>
+                                🔧 ${c.infrastructure.length} infrastrutture
+                            </div>
+                        </div>
+                    `).join('');
+                }
+            } catch (error) {
+                console.error('Errore:', error);
+            }
+        }
+        
+        // Mostra modale
+        function showAddColony() {
+            document.getElementById('add-colony-modal').style.display = 'flex';
+        }
+        
+        function showPlanMission() {
+            document.getElementById('plan-mission-modal').style.display = 'flex';
+        }
+        
+        function closeModal(id) {
+            document.getElementById(id).style.display = 'none';
+        }
+        
+        // Crea colonia
+        async function createColony() {
+            const name = document.getElementById('colony-name').value;
+            const planet = document.getElementById('colony-planet').value;
+            const population = parseInt(document.getElementById('colony-population').value) || 1000;
+            const infrastructure = document.getElementById('colony-infrastructure').value.split(',').map(s => s.trim()).filter(s => s);
+            
+            if (!name || !planet) {
+                alert('Nome e pianeta sono obbligatori!');
+                return;
+            }
+            
+            try {
+                const response = await fetch('/api/colonization/colonies', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ name, planet, population, infrastructure })
+                });
+                
+                const data = await response.json();
+                if (data.success) {
+                    alert(`✅ Colonia ${name} creata su ${planet}!`);
+                    closeModal('add-colony-modal');
+                    loadData();
+                }
+            } catch (error) {
+                alert('Errore: ' + error.message);
+            }
+        }
+        
+        // Pianifica missione
+        async function planMission() {
+            const destination = document.getElementById('mission-destination').value;
+            const objective = document.getElementById('mission-objective').value;
+            
+            if (!destination || !objective) {
+                alert('Destinazione e obiettivo sono obbligatori!');
+                return;
+            }
+            
+            try {
+                const response = await fetch('/api/colonization/missions', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ destination, objective })
+                });
+                
+                const data = await response.json();
+                if (data.success) {
+                    alert(`🚀 Missione pianificata verso ${destination}!`);
+                    closeModal('plan-mission-modal');
+                }
+            } catch (error) {
+                alert('Errore: ' + error.message);
+            }
+        }
+        
+        // Carica all'avvio
+        loadData();
+        
+        // Aggiornamento automatico ogni 10 secondi
+        setInterval(loadData, 10000);
+    </script>
+</body>
+</html>

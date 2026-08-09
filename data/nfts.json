@@ -842,6 +842,328 @@
       "owner": "cosmic-explorer",
       "mintedAt": "2026-08-09T17:36:49.832Z",
       "blockchain": "MyZubster Chain"
+    },
+    {
+      "tokenId": "NFT-000048",
+      "type": "universe_galaxy",
+      "name": "🌌 Galassia Andromeda",
+      "metadata": {
+        "category": "galaxy",
+        "tokenized": true,
+        "date": "2026-08-09",
+        "blockchain": "MyZubster Chain"
+      },
+      "owner": "cosmic-explorer",
+      "mintedAt": "2026-08-09T17:58:42.230Z",
+      "blockchain": "MyZubster Chain"
+    },
+    {
+      "tokenId": "NFT-000049",
+      "type": "universe_galaxy",
+      "name": "🌌 Galassia Via Lattea",
+      "metadata": {
+        "category": "galaxy",
+        "tokenized": true,
+        "date": "2026-08-09",
+        "blockchain": "MyZubster Chain"
+      },
+      "owner": "cosmic-explorer",
+      "mintedAt": "2026-08-09T17:58:42.230Z",
+      "blockchain": "MyZubster Chain"
+    },
+    {
+      "tokenId": "NFT-000050",
+      "type": "universe_galaxy",
+      "name": "🌌 Galassia Triangolo",
+      "metadata": {
+        "category": "galaxy",
+        "tokenized": true,
+        "date": "2026-08-09",
+        "blockchain": "MyZubster Chain"
+      },
+      "owner": "cosmic-explorer",
+      "mintedAt": "2026-08-09T17:58:42.230Z",
+      "blockchain": "MyZubster Chain"
+    },
+    {
+      "tokenId": "NFT-000051",
+      "type": "universe_galaxy",
+      "name": "🌌 Galassia Sombrero",
+      "metadata": {
+        "category": "galaxy",
+        "tokenized": true,
+        "date": "2026-08-09",
+        "blockchain": "MyZubster Chain"
+      },
+      "owner": "cosmic-explorer",
+      "mintedAt": "2026-08-09T17:58:42.230Z",
+      "blockchain": "MyZubster Chain"
+    },
+    {
+      "tokenId": "NFT-000052",
+      "type": "universe_galaxy",
+      "name": "🌌 Galassia Whirlpool",
+      "metadata": {
+        "category": "galaxy",
+        "tokenized": true,
+        "date": "2026-08-09",
+        "blockchain": "MyZubster Chain"
+      },
+      "owner": "cosmic-explorer",
+      "mintedAt": "2026-08-09T17:58:42.230Z",
+      "blockchain": "MyZubster Chain"
+    },
+    {
+      "tokenId": "NFT-000053",
+      "type": "universe_star",
+      "name": "⭐ Stella Sole",
+      "metadata": {
+        "category": "star",
+        "tokenized": true,
+        "date": "2026-08-09",
+        "blockchain": "MyZubster Chain"
+      },
+      "owner": "cosmic-explorer",
+      "mintedAt": "2026-08-09T17:58:42.230Z",
+      "blockchain": "MyZubster Chain"
+    },
+    {
+      "tokenId": "NFT-000054",
+      "type": "universe_star",
+      "name": "⭐ Stella Sirio",
+      "metadata": {
+        "category": "star",
+        "tokenized": true,
+        "date": "2026-08-09",
+        "blockchain": "MyZubster Chain"
+      },
+      "owner": "cosmic-explorer",
+      "mintedAt": "2026-08-09T17:58:42.230Z",
+      "blockchain": "MyZubster Chain"
+    },
+    {
+      "tokenId": "NFT-000055",
+      "type": "universe_star",
+      "name": "⭐ Stella Betelgeuse",
+      "metadata": {
+        "category": "star",
+        "tokenized": true,
+        "date": "2026-08-09",
+        "blockchain": "MyZubster Chain"
+      },
+      "owner": "cosmic-explorer",
+      "mintedAt": "2026-08-09T17:58:42.230Z",
+      "blockchain": "MyZubster Chain"
+    },
+    {
+      "tokenId": "NFT-000056",
+      "type": "universe_star",
+      "name": "⭐ Stella Polaris",
+      "metadata": {
+        "category": "star",
+        "tokenized": true,
+        "date": "2026-08-09",
+        "blockchain": "MyZubster Chain"
+      },
+      "owner": "cosmic-explorer",
+      "mintedAt": "2026-08-09T17:58:42.230Z",
+      "blockchain": "MyZubster Chain"
+    },
+    {
+      "tokenId": "NFT-000057",
+      "type": "universe_star",
+      "name": "⭐ Stella Alpha Centauri",
+      "metadata": {
+        "category": "star",
+        "tokenized": true,
+        "date": "2026-08-09",
+        "blockchain": "MyZubster Chain"
+      },
+      "owner": "cosmic-explorer",
+      "mintedAt": "2026-08-09T17:58:42.230Z",
+      "blockchain": "MyZubster Chain"
+    },
+    {
+      "tokenId": "NFT-000058",
+      "type": "universe_planet",
+      "name": "🌍 Pianeta Terra",
+      "metadata": {
+        "category": "planet",
+        "tokenized": true,
+        "date": "2026-08-09",
+        "blockchain": "MyZubster Chain"
+      },
+      "owner": "cosmic-explorer",
+      "mintedAt": "2026-08-09T17:58:42.230Z",
+      "blockchain": "MyZubster Chain"
+    },
+    {
+      "tokenId": "NFT-000059",
+      "type": "universe_planet",
+      "name": "🌍 Pianeta Marte",
+      "metadata": {
+        "category": "planet",
+        "tokenized": true,
+        "date": "2026-08-09",
+        "blockchain": "MyZubster Chain"
+      },
+      "owner": "cosmic-explorer",
+      "mintedAt": "2026-08-09T17:58:42.230Z",
+      "blockchain": "MyZubster Chain"
+    },
+    {
+      "tokenId": "NFT-000060",
+      "type": "universe_planet",
+      "name": "🌍 Pianeta Giove",
+      "metadata": {
+        "category": "planet",
+        "tokenized": true,
+        "date": "2026-08-09",
+        "blockchain": "MyZubster Chain"
+      },
+      "owner": "cosmic-explorer",
+      "mintedAt": "2026-08-09T17:58:42.230Z",
+      "blockchain": "MyZubster Chain"
+    },
+    {
+      "tokenId": "NFT-000061",
+      "type": "universe_planet",
+      "name": "🌍 Pianeta Saturno",
+      "metadata": {
+        "category": "planet",
+        "tokenized": true,
+        "date": "2026-08-09",
+        "blockchain": "MyZubster Chain"
+      },
+      "owner": "cosmic-explorer",
+      "mintedAt": "2026-08-09T17:58:42.230Z",
+      "blockchain": "MyZubster Chain"
+    },
+    {
+      "tokenId": "NFT-000062",
+      "type": "universe_planet",
+      "name": "🌍 Pianeta Kepler-452b",
+      "metadata": {
+        "category": "planet",
+        "tokenized": true,
+        "date": "2026-08-09",
+        "blockchain": "MyZubster Chain"
+      },
+      "owner": "cosmic-explorer",
+      "mintedAt": "2026-08-09T17:58:42.230Z",
+      "blockchain": "MyZubster Chain"
+    },
+    {
+      "tokenId": "NFT-000063",
+      "type": "universe_nebula",
+      "name": "🌌 Nebulosa Orione",
+      "metadata": {
+        "category": "nebula",
+        "tokenized": true,
+        "date": "2026-08-09",
+        "blockchain": "MyZubster Chain"
+      },
+      "owner": "cosmic-explorer",
+      "mintedAt": "2026-08-09T17:58:42.230Z",
+      "blockchain": "MyZubster Chain"
+    },
+    {
+      "tokenId": "NFT-000064",
+      "type": "universe_nebula",
+      "name": "🌌 Nebulosa Granchio",
+      "metadata": {
+        "category": "nebula",
+        "tokenized": true,
+        "date": "2026-08-09",
+        "blockchain": "MyZubster Chain"
+      },
+      "owner": "cosmic-explorer",
+      "mintedAt": "2026-08-09T17:58:42.230Z",
+      "blockchain": "MyZubster Chain"
+    },
+    {
+      "tokenId": "NFT-000065",
+      "type": "universe_nebula",
+      "name": "🌌 Nebulosa Laguna",
+      "metadata": {
+        "category": "nebula",
+        "tokenized": true,
+        "date": "2026-08-09",
+        "blockchain": "MyZubster Chain"
+      },
+      "owner": "cosmic-explorer",
+      "mintedAt": "2026-08-09T17:58:42.230Z",
+      "blockchain": "MyZubster Chain"
+    },
+    {
+      "tokenId": "NFT-000066",
+      "type": "universe_blackhole",
+      "name": "🌀 Buco Nero Sagittarius A*",
+      "metadata": {
+        "category": "blackhole",
+        "tokenized": true,
+        "date": "2026-08-09",
+        "blockchain": "MyZubster Chain"
+      },
+      "owner": "cosmic-explorer",
+      "mintedAt": "2026-08-09T17:58:42.230Z",
+      "blockchain": "MyZubster Chain"
+    },
+    {
+      "tokenId": "NFT-000067",
+      "type": "universe_blackhole",
+      "name": "🌀 Buco Nero M87*",
+      "metadata": {
+        "category": "blackhole",
+        "tokenized": true,
+        "date": "2026-08-09",
+        "blockchain": "MyZubster Chain"
+      },
+      "owner": "cosmic-explorer",
+      "mintedAt": "2026-08-09T17:58:42.230Z",
+      "blockchain": "MyZubster Chain"
+    },
+    {
+      "tokenId": "NFT-000068",
+      "type": "universe_constellation",
+      "name": "⭐ Costellazione Orsa Maggiore",
+      "metadata": {
+        "category": "constellation",
+        "tokenized": true,
+        "date": "2026-08-09",
+        "blockchain": "MyZubster Chain"
+      },
+      "owner": "cosmic-explorer",
+      "mintedAt": "2026-08-09T17:58:42.230Z",
+      "blockchain": "MyZubster Chain"
+    },
+    {
+      "tokenId": "NFT-000069",
+      "type": "universe_constellation",
+      "name": "⭐ Costellazione Orione",
+      "metadata": {
+        "category": "constellation",
+        "tokenized": true,
+        "date": "2026-08-09",
+        "blockchain": "MyZubster Chain"
+      },
+      "owner": "cosmic-explorer",
+      "mintedAt": "2026-08-09T17:58:42.230Z",
+      "blockchain": "MyZubster Chain"
+    },
+    {
+      "tokenId": "NFT-000070",
+      "type": "universe_constellation",
+      "name": "⭐ Costellazione Cassiopeia",
+      "metadata": {
+        "category": "constellation",
+        "tokenized": true,
+        "date": "2026-08-09",
+        "blockchain": "MyZubster Chain"
+      },
+      "owner": "cosmic-explorer",
+      "mintedAt": "2026-08-09T17:58:42.230Z",
+      "blockchain": "MyZubster Chain"
     }
   ],
   "counters": {}

@@ -168,3 +168,41 @@ app.get('/alien', (req, res) => {
 // 👽 Route Connessione ZORGAX-Terra
 const alienConnectionRoutes = require('./routes/alienConnectionRoutes');
 app.use('/api/alien', alienConnectionRoutes);
+
+// 🚀 Route Colonizzazione Spaziale
+const colonizationRoutes = require('./routes/colonizationRoutes');
+app.use('/api/colonization', colonizationRoutes);
+
+// 🌌 Route Tokenizzazione Universo
+const universeRoutes = require('./routes/universeRoutes');
+app.use('/api/universe', universeRoutes);
+
+// 📺 Route Tokenizzazione TV
+const tvRoutes = require('./routes/tvRoutes');
+app.use('/api/tv', tvRoutes);
+
+// 🏛️ Route Tokenizzazione Politica
+const politicsRoutes = require('./routes/politicsRoutes');
+app.use('/api/politics', politicsRoutes);
+
+// ⛪ Route Tokenizzazione Chiese
+const churchesRoutes = require('./routes/churchesRoutes');
+app.use('/api/churches', churchesRoutes);
+
+// 🌿 Route Tokenizzazione Natura
+const natureRoutes = require('./routes/natureRoutes');
+app.use('/api/nature', natureRoutes);
+
+// 💎 Route Tokenizzazione Minerali
+const mineralsRoutes = require('./routes/mineralsRoutes');
+app.use('/api/minerals', mineralsRoutes);
+
+
+// 🧪 Route Tokenizzazione Chimica
+const chemistryRoutes = require('./routes/chemistryRoutes');
+app.use('/api/chemistry', chemistryRoutes);
+
+
+// 📜 Route Tokenizzazione Storia
+const historyRoutes = require('./routes/historyRoutes');
+app.use('/api/history', historyRoutes);
