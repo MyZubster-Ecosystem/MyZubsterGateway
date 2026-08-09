@@ -1,4 +1,5 @@
 node_modules
+<<<<<<< HEAD
 npm-debug.log
 .git
 .env
@@ -7,3 +8,24 @@ coverage
 frontend/node_modules
 frontend/dist
 
+=======
+.git
+*.log
+*.md
+docs/
+tests/
+*.test.js
+.env
+.venv
+venv
+__pycache__
+*.pyc
+*.pyo
+*.pyd
+biodiversity-ml/
+*.zip
+*.tar.gz
+Dockerfile
+.dockerignore
+.gitignore
+>>>>>>> origin/main
