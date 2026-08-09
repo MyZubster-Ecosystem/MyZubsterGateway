@@ -148,6 +148,9 @@ app.get("*", (req, res) => {
   res.sendFile(path.join(__dirname, "frontend/build", "index.html"));
 });
 
+
+// Dashboard routes
+app.use('/api', require('./routes/dashboard'));
 // Start server
 app.listen(PORT, '0.0.0.0', () => {
   console.log(`🚪 MyZubster Gateway avviato sulla porta ${PORT}`);
