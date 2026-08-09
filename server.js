@@ -50,6 +50,7 @@ app.use('/api/robot/code', require('./routes/robotCode'));
 console.log('✅ Caricamento routes robotAnimal...');
 app.use('/api/robot/animal', require('./routes/robotAnimal'));
 
+app.use('/api/payments', require('./routes/payments'));
 app.use('/api/backup', require('./routes/backup'));
 
 app.get('/health', (req, res) => {
