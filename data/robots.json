@@ -1,0 +1,35 @@
+{
+  "robots": [
+    {
+      "id": "eva-ioni-001",
+      "name": "EVA IONI - Robot Agricolo",
+      "brand": "MyZubster",
+      "model": "EVA IONI v1.0",
+      "type": "agricultural",
+      "walletAddress": "45M4DW1ug8bdQowWpxucTpgsfjLbVxbYaAra79VewmBobuuhgqTjyD4R3DzpqLM2veiphcB16n24qN1QbLg3y2PYGK3Qkoe",
+      "owner": "45M4DW1ug8bdQowWpxucTpgsfjLbVxbYaAra79VewmBobuuhgqTjyD4R3DzpqLM2veiphcB16n24qN1QbLg3y2PYGK3Qkoe",
+      "capabilities": [
+        "irrigazione",
+        "monitoraggio_suolo"
+      ],
+      "metadata": {
+        "batteryLife": 120,
+        "sensors": [
+          "ph",
+          "temperature",
+          "moisture"
+        ]
+      },
+      "status": "registered",
+      "balance": 0,
+      "registeredAt": "2026-08-09T14:30:23.491Z",
+      "lastActive": "2026-08-09T14:30:23.491Z",
+      "clones": [],
+      "parentId": null,
+      "referralEarnings": 0,
+      "totalEarnings": 0
+    }
+  ],
+  "jobs": [],
+  "payments": []
+}

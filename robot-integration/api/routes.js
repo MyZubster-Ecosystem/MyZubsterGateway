@@ -2,8 +2,18 @@ const express = require('express');
 const router = express.Router();
 const RobotService = require('../services/RobotService');
 
-// Registra un robot
-router.post('/register', async (req, res) => {
+// Middleware di autenticazione
+const authMiddleware = (req, res, next) => {
+  const authHeader = req.headers.authorization;
+  if (!authHeader) {
+    return res.status(401).json({ error: 'Authorization header required' });
+  }
+  req.user = { id: 'robot-user' };
+  next();
+};
+
+// ============ REGISTRAZIONE ============
+router.post('/register', authMiddleware, async (req, res) => {
   try {
     const robot = await RobotService.register(req.body);
     res.status(201).json({
@@ -16,7 +26,7 @@ router.post('/register', async (req, res) => {
   }
 });
 
-// Ottieni tutti i robot
+// ============ LISTA ROBOT ============
 router.get('/all', (req, res) => {
   const robots = RobotService.getAllRobots();
   res.json({
@@ -26,7 +36,7 @@ router.get('/all', (req, res) => {
   });
 });
 
-// Ottieni un robot
+// ============ DETTAGLIO ROBOT ============
 router.get('/:robotId', (req, res) => {
   try {
     const robot = RobotService.getRobot(req.params.robotId);
@@ -36,7 +46,48 @@ router.get('/:robotId', (req, res) => {
   }
 });
 
-// Richiedi pagamento (x402)
+// ============ STATO ROBOT ============
+router.get('/status', (req, res) => {
+  try {
+    const robotId = req.query.robotId;
+    if (!robotId) {
+      return res.status(400).json({ error: 'robotId required' });
+    }
+    const robot = RobotService.getRobot(robotId);
+    res.json({
+      success: true,
+      status: robot.status,
+      balance: robot.balance,
+      robotId: robot.id,
+      name: robot.name,
+      registeredAt: robot.registeredAt
+    });
+  } catch (error) {
+    res.status(404).json({ error: error.message });
+  }
+});
+
+// ============ SALDO ROBOT ============
+router.get('/balance', (req, res) => {
+  try {
+    const robotId = req.query.robotId;
+    if (!robotId) {
+      return res.status(400).json({ error: 'robotId required' });
+    }
+    const robot = RobotService.getRobot(robotId);
+    res.json({
+      success: true,
+      robotId: robot.id,
+      name: robot.name,
+      balance: robot.balance || 0,
+      currency: 'XMR'
+    });
+  } catch (error) {
+    res.status(404).json({ error: error.message });
+  }
+});
+
+// ============ RICHIESTA PAGAMENTO (x402) ============
 router.get('/:robotId/payment', async (req, res) => {
   try {
     const { amount, currency = 'XMR' } = req.query;
@@ -59,7 +110,7 @@ router.get('/:robotId/payment', async (req, res) => {
   }
 });
 
-// Verifica pagamento
+// ============ VERIFICA PAGAMENTO ============
 router.get('/payment/:paymentId', async (req, res) => {
   try {
     const payment = await RobotService.checkPayment(req.params.paymentId);
@@ -69,38 +120,90 @@ router.get('/payment/:paymentId', async (req, res) => {
   }
 });
 
-// Assegna lavoro
-router.post('/:robotId/job', async (req, res) => {
+// ============ ASSEGNA LAVORO ============
+router.post('/:robotId/job', authMiddleware, async (req, res) => {
   try {
     const job = await RobotService.assignJob(req.params.robotId, req.body);
-    res.status(201).json({ success: true, job });
+    res.status(201).json({
+      success: true,
+      job: {
+        id: job.id,
+        type: job.type,
+        status: job.status,
+        amount: job.amount,
+        currency: job.currency,
+        description: job.description,
+        createdAt: job.createdAt
+      }
+    });
   } catch (error) {
     res.status(400).json({ error: error.message });
   }
 });
 
-// Accetta lavoro
-router.post('/job/:jobId/accept', async (req, res) => {
+// ============ ACCETTA LAVORO ============
+router.post('/job/:jobId/accept', authMiddleware, async (req, res) => {
   try {
     const job = await RobotService.acceptJob(req.params.jobId);
-    res.json({ success: true, job });
+    res.json({
+      success: true,
+      job: {
+        id: job.id,
+        status: job.status,
+        acceptedAt: job.acceptedAt
+      }
+    });
   } catch (error) {
     res.status(404).json({ error: error.message });
   }
 });
 
-// Completa lavoro
-router.post('/job/:jobId/complete', async (req, res) => {
+// ============ COMPLETA LAVORO ============
+router.post('/job/:jobId/complete', authMiddleware, async (req, res) => {
   try {
     const job = await RobotService.completeJob(req.params.jobId, req.body.result);
-    res.json({ success: true, job });
+    res.json({
+      success: true,
+      job: {
+        id: job.id,
+        status: job.status,
+        completedAt: job.completedAt,
+        result: job.result
+      }
+    });
   } catch (error) {
     res.status(404).json({ error: error.message });
   }
 });
 
-// Clona robot
-router.post('/:parentId/clone', async (req, res) => {
+// ============ LISTA LAVORI ============
+router.get('/:robotId/jobs', (req, res) => {
+  try {
+    const robot = RobotService.getRobot(req.params.robotId);
+    // Filtra i lavori per questo robot
+    const jobs = Array.from(RobotService.jobs.values())
+      .filter(j => j.robotId === robot.id);
+    res.json({
+      success: true,
+      jobs: jobs.map(j => ({
+        id: j.id,
+        type: j.type,
+        status: j.status,
+        amount: j.amount,
+        currency: j.currency,
+        description: j.description,
+        createdAt: j.createdAt,
+        acceptedAt: j.acceptedAt,
+        completedAt: j.completedAt
+      }))
+    });
+  } catch (error) {
+    res.status(404).json({ error: error.message });
+  }
+});
+
+// ============ CLONA ROBOT ============
+router.post('/:parentId/clone', authMiddleware, async (req, res) => {
   try {
     const clone = await RobotService.cloneRobot(req.params.parentId, req.body);
     res.status(201).json({
@@ -110,19 +213,6 @@ router.post('/:parentId/clone', async (req, res) => {
     });
   } catch (error) {
     res.status(400).json({ error: error.message });
-  }
-});
-
-// Ottieni lavori di un robot
-router.get('/:robotId/jobs', (req, res) => {
-  try {
-    const robot = RobotService.getRobot(req.params.robotId);
-    // Filtra i lavori per questo robot
-    const jobs = Array.from(RobotService.jobs.values())
-      .filter(j => j.robotId === robot.id);
-    res.json({ success: true, jobs });
-  } catch (error) {
-    res.status(404).json({ error: error.message });
   }
 });
 
