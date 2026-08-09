@@ -13,6 +13,7 @@ const Navbar = () => {
           <Link to="/offers" className="hover:text-gray-300">Offerte</Link>
           <Link to="/skills" className="hover:text-gray-300">Competenze</Link>
           <Link to="/tokens" className="hover:text-gray-300">💎 Token</Link>
+          <Link to="/faq" className="hover:text-gray-300">FAQ</Link>
           {user && (
             <Link to="/reputation" className="hover:text-gray-300">🏆 NFT</Link>
           )}
