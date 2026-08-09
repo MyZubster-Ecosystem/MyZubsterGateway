@@ -1,64 +1,48 @@
-version: '3.8'
+version: "3.8"
 
 services:
-  mongodb:
+  gateway:
+    build: .
+    ports:
+      - "3000:3000"
+    environment:
+      - NODE_ENV=development
+      - PORT=3000
+      - RPC_URL=https://api.myzubster.com/rpc
+      - CHAIN_ID=8888
+      - MONGO_URI=mongodb://mongo:27017/myzubster
+      - REDIS_URL=redis://redis:6379
+    volumes:
+      - .:/app
+      - /app/node_modules
+    depends_on:
+      mongo:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    command: npm run dev
+
+  mongo:
     image: mongo:7
-    container_name: myzubster-mongodb
-    restart: unless-stopped
     ports:
       - "27017:27017"
     volumes:
-      - mongodb_data:/data/db
-    environment:
-      MONGO_INITDB_ROOT_USERNAME: ${MONGO_USER:-admin}
-      MONGO_INITDB_ROOT_PASSWORD: ${MONGO_PASSWORD:-password}
-      MONGO_INITDB_DATABASE: myzubster
-    networks:
-      - myzubster-network
+      - mongo_data:/data/db
     healthcheck:
-      test: ["CMD", "mongosh", "--eval", "db.adminCommand('ping')"]
+      test: echo db.runCommand("ping").ok | mongosh --quiet
       interval: 10s
       timeout: 5s
       retries: 5
-      start_period: 20s
 
-  gateway:
-    build:
-      context: .
-      dockerfile: Dockerfile
-    container_name: myzubster-gateway
-    restart: unless-stopped
+  redis:
+    image: redis:7-alpine
     ports:
-      - "${GATEWAY_PORT:-10000}:10000"
-    depends_on:
-      mongodb:
-        condition: service_healthy
-    environment:
-      NODE_ENV: ${NODE_ENV:-production}
-      PORT: 10000
-      MONGODB_URI: mongodb://${MONGO_USER:-admin}:${MONGO_PASSWORD:-password}@mongodb:27017/myzubster?authSource=admin
-      JWT_SECRET: ${JWT_SECRET:-change-me-in-production}
-      GATEWAY_PORT: ${GATEWAY_PORT:-10000}
-      CORS_ORIGIN: ${CORS_ORIGIN:-http://localhost:3000}
-    networks:
-      - myzubster-network
+      - "6379:6379"
     healthcheck:
-      test: ["CMD", "wget", "--quiet", "--tries=1", "--spider", "http://localhost:10000/health"]
-      interval: 30s
-      timeout: 10s
-      retries: 3
-      start_period: 10s
-    env_file:
-      - .env
-    # Uncomment for development with volume mount
-    # volumes:
-    #   - ./:/app
-    #   - /app/node_modules
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
 
 volumes:
-  mongodb_data:
-    driver: local
-
-networks:
-  myzubster-network:
-    driver: bridge
+  mongo_data:
