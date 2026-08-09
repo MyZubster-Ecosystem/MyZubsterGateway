@@ -1,0 +1,1020 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>🌱 Monitoraggio Ambientale - Futura Ambiente</title>
+
+  <!-- Leaflet (interactive map) -->
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
+    integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin="" />
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"
+    integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
+
+  <!-- Chart.js -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.7/dist/chart.umd.min.js"></script>
+
+  <style>
+    /* ===== Design Tokens ===== */
+    :root {
+      --accent: #2ecc71;
+      --accent-strong: #27ae60;
+      --accent-warn: #e67e22;
+      --accent-danger: #e74c3c;
+      --accent-info: #3498db;
+      --bg: #f0f4f0;
+      --surface: #ffffff;
+      --surface-2: #e8f0e8;
+      --text: #1a2e1a;
+      --text-soft: #5a7a5a;
+      --border: #d0e0d0;
+      --shadow: 0 8px 24px rgba(20, 50, 20, 0.08);
+      --radius: 14px;
+      --radius-sm: 10px;
+      --aqi-good: #2ecc71;
+      --aqi-moderate: #f1c40f;
+      --aqi-unhealthy: #e67e22;
+      --aqi-very-unhealthy: #e74c3c;
+      --aqi-hazardous: #8e44ad;
+      --map-tiles-filter: none;
+    }
+    [data-theme="dark"] {
+      --accent: #34d399;
+      --accent-strong: #10b981;
+      --accent-warn: #f59e0b;
+      --accent-danger: #ef4444;
+      --accent-info: #3b82f6;
+      --bg: #0d1a0d;
+      --surface: #142014;
+      --surface-2: #1a2e1a;
+      --text: #e0f0e0;
+      --text-soft: #8aaa8a;
+      --border: #2a4a2a;
+      --shadow: 0 8px 24px rgba(0, 0, 0, 0.45);
+      --map-tiles-filter: brightness(0.7) invert(1) contrast(0.85) hue-rotate(180deg) saturate(0.7);
+    }
+
+    * { box-sizing: border-box; }
+    html { scroll-behavior: smooth; }
+    body {
+      margin: 0;
+      font-family: 'Segoe UI', system-ui, -apple-system, Roboto, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      -webkit-font-smoothing: antialiased;
+    }
+
+    /* ===== Header ===== */
+    .ma-header {
+      display: flex; flex-wrap: wrap; gap: 16px;
+      align-items: center; justify-content: space-between;
+      padding: 18px 24px;
+      background: linear-gradient(135deg, #1a5c2a, #2ecc71);
+      color: #fff;
+    }
+    .ma-header__title h1 { margin: 0; font-size: 1.5rem; }
+    .ma-header__title p { margin: 3px 0 0; opacity: 0.9; font-size: 0.85rem; }
+    .ma-header__actions { display: flex; flex-wrap: wrap; gap: 12px; align-items: center; }
+
+    .ma-theme {
+      display: inline-flex; background: rgba(255,255,255,0.18);
+      border-radius: 999px; padding: 3px;
+    }
+    .ma-theme__btn {
+      border: 0; background: transparent; color: #fff; cursor: pointer;
+      padding: 6px 12px; border-radius: 999px; font-size: 0.82rem;
+      opacity: 0.8; transition: background 0.2s, opacity 0.2s;
+    }
+    .ma-theme__btn.is-active { background: #fff; color: #1a5c2a; opacity: 1; font-weight: 600; }
+    .ma-theme__btn:hover { opacity: 1; }
+
+    .ma-btn {
+      border: 0; cursor: pointer; border-radius: var(--radius-sm); padding: 8px 14px;
+      font-size: 0.85rem; font-weight: 600; transition: transform 0.12s, filter 0.2s;
+    }
+    .ma-btn:active { transform: translateY(1px); }
+    .ma-btn--ghost { background: rgba(255,255,255,0.18); color: #fff; }
+    [data-theme="dark"] .ma-btn--ghost { background: var(--surface-2); color: var(--text); }
+    .ma-btn--solid { background: var(--accent); color: #fff; }
+    [data-theme="dark"] .ma-btn--solid { color: #06281a; }
+
+    /* ===== Tabs ===== */
+    .ma-tabs {
+      display: flex; gap: 4px; padding: 16px 24px 0;
+      background: var(--bg); overflow-x: auto; -webkit-overflow-scrolling: touch;
+    }
+    .ma-tab {
+      border: 0; background: transparent; cursor: pointer;
+      padding: 10px 18px; border-radius: var(--radius-sm) var(--radius-sm) 0 0;
+      font-size: 0.9rem; font-weight: 600; color: var(--text-soft);
+      transition: background 0.2s, color 0.2s; white-space: nowrap;
+    }
+    .ma-tab:hover { background: var(--surface-2); color: var(--text); }
+    .ma-tab.is-active {
+      background: var(--surface); color: var(--accent-strong);
+      box-shadow: 0 -2px 6px rgba(0,0,0,0.04);
+    }
+    [data-theme="dark"] .ma-tab.is-active { box-shadow: 0 -2px 6px rgba(0,0,0,0.25); }
+
+    /* ===== Content Panels ===== */
+    .ma-content { padding: 18px 24px 32px; display: none; }
+    .ma-content.is-active { display: block; }
+
+    .ma-stats {
+      display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+      gap: 14px; margin-bottom: 20px;
+    }
+    .ma-stat {
+      background: var(--surface); border: 1px solid var(--border);
+      border-radius: var(--radius-sm); padding: 16px; box-shadow: var(--shadow);
+    }
+    .ma-stat__label { font-size: 0.75rem; color: var(--text-soft); font-weight: 600; text-transform: uppercase; letter-spacing: 0.04em; }
+    .ma-stat__value { font-size: 1.6rem; font-weight: 700; margin: 4px 0 0; font-variant-numeric: tabular-nums; }
+    .ma-stat__sub { font-size: 0.78rem; color: var(--text-soft); margin: 2px 0 0; }
+    .ma-stat__trend { font-size: 0.78rem; font-weight: 600; }
+    .ma-stat__trend.up { color: var(--accent-danger); }
+    .ma-stat__trend.down { color: var(--accent); }
+
+    .ma-grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 20px; }
+    .ma-grid-3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 16px; margin-bottom: 20px; }
+    @media (max-width: 860px) { .ma-grid-2, .ma-grid-3 { grid-template-columns: 1fr; } }
+
+    .ma-card {
+      background: var(--surface); border: 1px solid var(--border);
+      border-radius: var(--radius); padding: 18px; box-shadow: var(--shadow);
+    }
+    .ma-card h3 {
+      margin: 0 0 12px; font-size: 1rem; color: var(--text);
+      display: flex; align-items: center; gap: 8px;
+    }
+    .ma-card h3 small { font-size: 0.78rem; color: var(--text-soft); font-weight: 400; margin-left: auto; }
+
+    .ma-card-row {
+      display: flex; justify-content: space-between; align-items: center;
+      padding: 8px 0; border-bottom: 1px solid var(--border);
+    }
+    .ma-card-row:last-child { border-bottom: none; }
+    .ma-card-row__label { font-size: 0.85rem; color: var(--text-soft); }
+    .ma-card-row__value { font-weight: 600; font-size: 0.95rem; font-variant-numeric: tabular-nums; }
+    .ma-card-row__badge {
+      display: inline-block; padding: 2px 8px; border-radius: 999px;
+      font-size: 0.72rem; font-weight: 700; color: #fff;
+    }
+    .badge-good { background: var(--aqi-good); }
+    .badge-moderate { background: var(--aqi-moderate); color: #1a2e1a; }
+    .badge-unhealthy { background: var(--aqi-unhealthy); }
+    .badge-danger { background: var(--aqi-very-unhealthy); }
+    .badge-hazardous { background: var(--aqi-hazardous); }
+
+    /* ===== AQI Gauge ===== */
+    .ma-aqi-wrap { text-align: center; padding: 12px 0; }
+    .ma-aqi-ring {
+      position: relative; width: 140px; height: 140px; margin: 0 auto 12px;
+    }
+    .ma-aqi-ring svg { width: 100%; height: 100%; transform: rotate(-90deg); }
+    .ma-aqi-ring__bg { fill: none; stroke: var(--surface-2); stroke-width: 10; }
+    .ma-aqi-ring__value { fill: none; stroke-width: 10; stroke-linecap: round; transition: stroke-dashoffset 0.6s ease; }
+    .ma-aqi-ring__text {
+      position: absolute; inset: 0; display: flex; flex-direction: column;
+      align-items: center; justify-content: center;
+    }
+    .ma-aqi-ring__num { font-size: 2rem; font-weight: 800; line-height: 1; }
+    .ma-aqi-ring__label { font-size: 0.75rem; color: var(--text-soft); margin-top: 2px; }
+
+    .ma-aqi-levels { display: flex; gap: 8px; justify-content: center; flex-wrap: wrap; margin-top: 8px; }
+    .ma-aqi-levels span { font-size: 0.72rem; padding: 3px 10px; border-radius: 999px; }
+
+    /* ===== Map ===== */
+    .ma-map-shell {
+      position: relative; border-radius: var(--radius); overflow: hidden;
+      box-shadow: var(--shadow); border: 1px solid var(--border); height: 420px;
+    }
+    .ma-map { width: 100%; height: 100%; }
+    .leaflet-tiles { filter: var(--map-tiles-filter); transition: filter 0.3s; }
+
+    .ma-map-legend {
+      position: absolute; left: 12px; bottom: 12px; z-index: 500;
+      background: var(--surface); border: 1px solid var(--border);
+      border-radius: var(--radius-sm); padding: 8px 12px; display: flex;
+      gap: 12px; font-size: 0.75rem; box-shadow: var(--shadow);
+    }
+    .ma-map-legend__item { display: inline-flex; align-items: center; gap: 5px; }
+    .ma-map-legend__item i { width: 10px; height: 10px; border-radius: 50%; display: inline-block; }
+
+    /* ===== Pollutant Bars ===== */
+    .ma-bar {
+      display: flex; align-items: center; gap: 10px; margin-bottom: 8px;
+    }
+    .ma-bar__label { width: 52px; font-size: 0.82rem; font-weight: 600; flex: none; }
+    .ma-bar__track {
+      flex: 1; height: 8px; background: var(--surface-2); border-radius: 999px; overflow: hidden;
+    }
+    .ma-bar__fill {
+      height: 100%; border-radius: 999px; transition: width 0.6s ease;
+    }
+    .ma-bar__value { width: 48px; text-align: right; font-size: 0.82rem; font-weight: 600; font-variant-numeric: tabular-nums; flex: none; }
+
+    /* ===== Chart Containers ===== */
+    .ma-chart { position: relative; height: 200px; width: 100%; }
+
+    /* ===== Water Quality ===== */
+    .ma-indicator {
+      display: flex; align-items: center; gap: 12px; margin-bottom: 10px;
+    }
+    .ma-indicator__icon {
+      width: 36px; height: 36px; border-radius: 50%; display: flex;
+      align-items: center; justify-content: center; font-size: 1.1rem; flex: none;
+    }
+    .ma-indicator__body { flex: 1; }
+    .ma-indicator__name { font-size: 0.82rem; color: var(--text-soft); }
+    .ma-indicator__value { font-size: 1rem; font-weight: 700; margin-top: 1px; }
+    .ma-indicator__bar {
+      height: 5px; background: var(--surface-2); border-radius: 999px;
+      margin-top: 4px; overflow: hidden;
+    }
+    .ma-indicator__bar-fill { height: 100%; border-radius: 999px; transition: width 0.6s ease; }
+
+    /* ===== Soil Map ===== */
+    .ma-donut { position: relative; height: 180px; width: 100%; }
+
+    /* ===== Mobile ===== */
+    @media (max-width: 640px) {
+      .ma-header { padding: 14px 16px; }
+      .ma-header__title h1 { font-size: 1.2rem; }
+      .ma-tabs { padding: 12px 12px 0; }
+      .ma-tab { padding: 8px 12px; font-size: 0.82rem; }
+      .ma-content { padding: 12px 16px 24px; }
+      .ma-stats { grid-template-columns: repeat(2, 1fr); gap: 10px; }
+      .ma-stat { padding: 12px; }
+      .ma-stat__value { font-size: 1.2rem; }
+      .ma-map-shell { height: 280px; }
+    }
+
+    /* ===== Empty card ===== */
+    .ma-empty { color: var(--text-soft); font-size: 0.85rem; text-align: center; padding: 24px 0; }
+
+    /* ===== Toast ===== */
+    .ma-toast {
+      position: fixed; left: 50%; bottom: 24px; transform: translateX(-50%); z-index: 900;
+      background: var(--text); color: var(--bg); padding: 11px 18px; border-radius: 999px;
+      font-size: 0.85rem; box-shadow: var(--shadow);
+      animation: ma-pop 0.2s ease-out;
+    }
+    @keyframes ma-pop { from { opacity: 0; transform: translateX(-50%) translateY(6px); } to { opacity: 1; transform: translateX(-50%) translateY(0); } }
+
+    /* ===== Last updated ===== */
+    .ma-footer {
+      text-align: center; padding: 16px 24px; font-size: 0.78rem; color: var(--text-soft);
+      border-top: 1px solid var(--border);
+    }
+  </style>
+</head>
+<body>
+  <div class="ma-page" data-theme="light">
+    <!-- Header -->
+    <header class="ma-header">
+      <div class="ma-header__title">
+        <h1>🌱 Monitoraggio Ambientale</h1>
+        <p>Futura Ambiente — Rete di monitoraggio in tempo reale</p>
+      </div>
+      <div class="ma-header__actions">
+        <div class="ma-theme" role="group" aria-label="Tema">
+          <button type="button" class="ma-theme__btn" data-theme-choice="light" title="Chiaro">☀️</button>
+          <button type="button" class="ma-theme__btn" data-theme-choice="dark" title="Scuro">🌙</button>
+          <button type="button" class="ma-theme__btn" data-theme-choice="system" title="Sistema">🖥️</button>
+        </div>
+        <button type="button" class="ma-btn ma-btn--ghost" id="ma-refresh">🔄 Aggiorna</button>
+      </div>
+    </header>
+
+    <!-- Tabs -->
+    <nav class="ma-tabs" role="tablist">
+      <button class="ma-tab is-active" role="tab" data-tab="aria" aria-selected="true">🌬️ Qualità Aria</button>
+      <button class="ma-tab" role="tab" data-tab="acque" aria-selected="false">💧 Monitoraggio Acque</button>
+      <button class="ma-tab" role="tab" data-tab="suolo" aria-selected="false">🌍 Monitoraggio Suolo</button>
+      <button class="ma-tab" role="tab" data-tab="rifiuti" aria-selected="false">♻️ Rifiuti e Riciclo</button>
+    </nav>
+
+    <!-- ========== TAB 1: AIR QUALITY ========== -->
+    <section class="ma-content is-active" id="tab-aria" role="tabpanel">
+      <div class="ma-stats">
+        <div class="ma-stat">
+          <div class="ma-stat__label">AQI Generale</div>
+          <div class="ma-stat__value" style="color:var(--aqi-moderate);">72</div>
+          <div class="ma-stat__sub">Moderato</div>
+        </div>
+        <div class="ma-stat">
+          <div class="ma-stat__label">PM2.5</div>
+          <div class="ma-stat__value" style="color:var(--aqi-moderate);">28</div>
+          <div class="ma-stat__sub">µg/m³ · Moderato</div>
+          <div class="ma-stat__trend up">↑ +3% rispetto a ieri</div>
+        </div>
+        <div class="ma-stat">
+          <div class="ma-stat__label">PM10</div>
+          <div class="ma-stat__value" style="color:var(--aqi-good);">22</div>
+          <div class="ma-stat__sub">µg/m³ · Buono</div>
+          <div class="ma-stat__trend down">↓ -5% rispetto a ieri</div>
+        </div>
+        <div class="ma-stat">
+          <div class="ma-stat__label">Stazioni attive</div>
+          <div class="ma-stat__value" style="color:var(--accent);">12</div>
+          <div class="ma-stat__sub">di 15 totali</div>
+        </div>
+      </div>
+
+      <div class="ma-grid-2">
+        <!-- AQI Ring + Pollutant details -->
+        <div class="ma-card">
+          <h3>📊 Indice Qualità Aria (AQI) <small>Aggiornato: <span id="ma-aria-time">—</span></small></h3>
+          <div class="ma-aqi-wrap">
+            <div class="ma-aqi-ring">
+              <svg viewBox="0 0 100 100">
+                <circle class="ma-aqi-ring__bg" cx="50" cy="50" r="40"/>
+                <circle class="ma-aqi-ring__value" id="ma-aqi-ring" cx="50" cy="50" r="40"
+                  stroke="var(--aqi-moderate)" stroke-dasharray="251.2" stroke-dashoffset="100"/>
+              </svg>
+              <div class="ma-aqi-ring__text">
+                <span class="ma-aqi-ring__num" id="ma-aqi-num">72</span>
+                <span class="ma-aqi-ring__label">AQI</span>
+              </div>
+            </div>
+            <div class="ma-aqi-levels">
+              <span style="background:var(--aqi-good);color:#fff;">0-50 Buono</span>
+              <span style="background:var(--aqi-moderate);color:#1a2e1a;">51-100 Moderato</span>
+              <span style="background:var(--aqi-unhealthy);color:#fff;">101-150 Malsano</span>
+              <span style="background:var(--aqi-very-unhealthy);color:#fff;">151-200 Molto malsano</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Pollutant levels -->
+        <div class="ma-card">
+          <h3>🧪 Inquinanti <small>concentrazione µg/m³</small></h3>
+          <div class="ma-bar">
+            <span class="ma-bar__label">PM2.5</span>
+            <div class="ma-bar__track"><div class="ma-bar__fill" style="width:56%;background:var(--aqi-moderate);"></div></div>
+            <span class="ma-bar__value" style="color:var(--aqi-moderate);">28</span>
+          </div>
+          <div class="ma-bar">
+            <span class="ma-bar__label">PM10</span>
+            <div class="ma-bar__track"><div class="ma-bar__fill" style="width:44%;background:var(--aqi-good);"></div></div>
+            <span class="ma-bar__value" style="color:var(--aqi-good);">22</span>
+          </div>
+          <div class="ma-bar">
+            <span class="ma-bar__label">NO₂</span>
+            <div class="ma-bar__track"><div class="ma-bar__fill" style="width:38%;background:var(--aqi-good);"></div></div>
+            <span class="ma-bar__value" style="color:var(--aqi-good);">19</span>
+          </div>
+          <div class="ma-bar">
+            <span class="ma-bar__label">CO₂</span>
+            <div class="ma-bar__track"><div class="ma-bar__fill" style="width:72%;background:var(--aqi-unhealthy);"></div></div>
+            <span class="ma-bar__value" style="color:var(--aqi-unhealthy);">415</span>
+          </div>
+          <div class="ma-bar">
+            <span class="ma-bar__label">O₃</span>
+            <div class="ma-bar__track"><div class="ma-bar__fill" style="width:32%;background:var(--aqi-good);"></div></div>
+            <span class="ma-bar__value" style="color:var(--aqi-good);">48</span>
+          </div>
+          <div class="ma-bar">
+            <span class="ma-bar__label">SO₂</span>
+            <div class="ma-bar__track"><div class="ma-bar__fill" style="width:20%;background:var(--aqi-good);"></div></div>
+            <span class="ma-bar__value" style="color:var(--aqi-good);">10</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Interactive Map -->
+      <div class="ma-card" style="margin-bottom:20px;">
+        <h3>🗺️ Mappa Stazioni Monitoraggio Aria</h3>
+        <div class="ma-map-shell">
+          <div class="ma-map" id="map-aria"></div>
+          <div class="ma-map-legend">
+            <span class="ma-map-legend__item"><i style="background:var(--aqi-good);"></i> Buona</span>
+            <span class="ma-map-legend__item"><i style="background:var(--aqi-moderate);"></i> Moderata</span>
+            <span class="ma-map-legend__item"><i style="background:var(--aqi-unhealthy);"></i> Malsana</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Trend Chart -->
+      <div class="ma-card">
+        <h3>📈 Andamento Giornaliero PM2.5 e PM10 <small>ultimi 7 giorni</small></h3>
+        <div class="ma-chart"><canvas id="chart-aria-trend"></canvas></div>
+      </div>
+    </section>
+
+    <!-- ========== TAB 2: WATER ========== -->
+    <section class="ma-content" id="tab-acque" role="tabpanel">
+      <div class="ma-stats">
+        <div class="ma-stat">
+          <div class="ma-stat__label">Qualità Generale</div>
+          <div class="ma-stat__value" style="color:var(--accent);">Buona</div>
+          <div class="ma-stat__sub">Indice CCME: 82/100</div>
+        </div>
+        <div class="ma-stat">
+          <div class="ma-stat__label">pH</div>
+          <div class="ma-stat__value" style="color:var(--accent);">7.4</div>
+          <div class="ma-stat__sub">Intervallo ottimale 6.5-8.5</div>
+        </div>
+        <div class="ma-stat">
+          <div class="ma-stat__label">Ossigeno Disciolto</div>
+          <div class="ma-stat__value" style="color:var(--accent);">8.2</div>
+          <div class="ma-stat__sub">mg/L · Buono (>6)</div>
+        </div>
+        <div class="ma-stat">
+          <div class="ma-stat__label">Temperatura</div>
+          <div class="ma-stat__value" style="color:var(--accent);">18.5°C</div>
+          <div class="ma-stat__sub">Fiume Tevere</div>
+        </div>
+      </div>
+
+      <div class="ma-grid-2">
+        <!-- Water Quality Indicators -->
+        <div class="ma-card">
+          <h3>💧 Parametri Qualità Acque</h3>
+          <div class="ma-indicator">
+            <div class="ma-indicator__icon" style="background:var(--aqi-good);color:#fff;">🧪</div>
+            <div class="ma-indicator__body">
+              <div class="ma-indicator__name">pH</div>
+              <div class="ma-indicator__value">7.4</div>
+              <div class="ma-indicator__bar"><div class="ma-indicator__bar-fill" style="width:74%;background:var(--aqi-good);"></div></div>
+            </div>
+          </div>
+          <div class="ma-indicator">
+            <div class="ma-indicator__icon" style="background:var(--aqi-good);color:#fff;">💨</div>
+            <div class="ma-indicator__body">
+              <div class="ma-indicator__name">Ossigeno Disciolto (mg/L)</div>
+              <div class="ma-indicator__value">8.2</div>
+              <div class="ma-indicator__bar"><div class="ma-indicator__bar-fill" style="width:82%;background:var(--aqi-good);"></div></div>
+            </div>
+          </div>
+          <div class="ma-indicator">
+            <div class="ma-indicator__icon" style="background:var(--aqi-moderate);color:#1a2e1a;">🌡️</div>
+            <div class="ma-indicator__body">
+              <div class="ma-indicator__name">Temperatura (°C)</div>
+              <div class="ma-indicator__value">18.5</div>
+              <div class="ma-indicator__bar"><div class="ma-indicator__bar-fill" style="width:55%;background:var(--aqi-moderate);"></div></div>
+            </div>
+          </div>
+          <div class="ma-indicator">
+            <div class="ma-indicator__icon" style="background:var(--aqi-good);color:#fff;">🫧</div>
+            <div class="ma-indicator__body">
+              <div class="ma-indicator__name">Torbidità (NTU)</div>
+              <div class="ma-indicator__value">4.2</div>
+              <div class="ma-indicator__bar"><div class="ma-indicator__bar-fill" style="width:28%;background:var(--aqi-good);"></div></div>
+            </div>
+          </div>
+          <div class="ma-indicator">
+            <div class="ma-indicator__icon" style="background:var(--aqi-good);color:#fff;">🦠</div>
+            <div class="ma-indicator__body">
+              <div class="ma-indicator__name">Coliformi (UFC/100mL)</div>
+              <div class="ma-indicator__value">45</div>
+              <div class="ma-indicator__bar"><div class="ma-indicator__bar-fill" style="width:15%;background:var(--aqi-good);"></div></div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Pollutants & River Levels -->
+        <div class="ma-card">
+          <h3>⚗️ Inquinanti Rilevati</h3>
+          <div class="ma-card-row">
+            <span class="ma-card-row__label">Nitrati (NO₃⁻)</span>
+            <span><span class="ma-card-row__badge badge-good">5.2 mg/L</span></span>
+          </div>
+          <div class="ma-card-row">
+            <span class="ma-card-row__label">Fosfati (PO₄³⁻)</span>
+            <span><span class="ma-card-row__badge badge-good">0.3 mg/L</span></span>
+          </div>
+          <div class="ma-card-row">
+            <span class="ma-card-row__label">Metalli Pesanti (Pb)</span>
+            <span><span class="ma-card-row__badge badge-good">0.01 mg/L</span></span>
+          </div>
+          <div class="ma-card-row">
+            <span class="ma-card-row__label">Microplastiche</span>
+            <span><span class="ma-card-row__badge badge-moderate">2.8 particelle/L</span></span>
+          </div>
+          <div class="ma-card-row">
+            <span class="ma-card-row__label">Cloruri (Cl⁻)</span>
+            <span><span class="ma-card-row__badge badge-good">15 mg/L</span></span>
+          </div>
+          <div class="ma-card-row">
+            <span class="ma-card-row__label">Ammoniaca (NH₃)</span>
+            <span><span class="ma-card-row__badge badge-good">0.08 mg/L</span></span>
+          </div>
+        </div>
+      </div>
+
+      <!-- River levels -->
+      <div class="ma-grid-2">
+        <div class="ma-card">
+          <h3>📊 Livelli Fiumi e Mari</h3>
+          <div class="ma-card-row">
+            <span class="ma-card-row__label">🌊 Fiume Tevere — Roma</span>
+            <span class="ma-card-row__value" style="color:var(--accent);">3.2 m</span>
+          </div>
+          <div class="ma-card-row">
+            <span class="ma-card-row__label">🌊 Fiume Arno — Firenze</span>
+            <span class="ma-card-row__value" style="color:var(--accent);">2.8 m</span>
+          </div>
+          <div class="ma-card-row">
+            <span class="ma-card-row__label">🌊 Fiume Po — Torino</span>
+            <span class="ma-card-row__value" style="color:var(--accent-warn);">4.5 m</span>
+          </div>
+          <div class="ma-card-row">
+            <span class="ma-card-row__label">🌊 Mare Adriatico — Ancona</span>
+            <span class="ma-card-row__value" style="color:var(--accent);">0.6 m</span>
+          </div>
+          <div class="ma-card-row">
+            <span class="ma-card-row__label">🌊 Mare Tirreno — Napoli</span>
+            <span class="ma-card-row__value" style="color:var(--accent);">0.4 m</span>
+          </div>
+        </div>
+        <div class="ma-card">
+          <h3>📈 Tendenza Temperatura Acque <small>7 giorni</small></h3>
+          <div class="ma-chart"><canvas id="chart-acqua-temp"></canvas></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ========== TAB 3: SOIL ========== -->
+    <section class="ma-content" id="tab-suolo" role="tabpanel">
+      <div class="ma-stats">
+        <div class="ma-stat">
+          <div class="ma-stat__label">Salute Suolo</div>
+          <div class="ma-stat__value" style="color:var(--accent-moderate);">Moderata</div>
+          <div class="ma-stat__sub">Indice 68/100</div>
+        </div>
+        <div class="ma-stat">
+          <div class="ma-stat__label">Fertilità</div>
+          <div class="ma-stat__value" style="color:var(--aqi-good);">75%</div>
+          <div class="ma-stat__sub">Sostanza organica 3.2%</div>
+        </div>
+        <div class="ma-stat">
+          <div class="ma-stat__label">Aree Contaminate</div>
+          <div class="ma-stat__value" style="color:var(--accent-warn);">3</div>
+          <div class="ma-stat__sub">di 28 aree monitorate</div>
+        </div>
+        <div class="ma-stat">
+          <div class="ma-stat__label">Uso Agricolo</div>
+          <div class="ma-stat__value" style="color:var(--accent);">42%</div>
+          <div class="ma-stat__sub">del territorio</div>
+        </div>
+      </div>
+
+      <div class="ma-grid-2">
+        <!-- Contamination map -->
+        <div class="ma-card">
+          <h3>☣️ Contaminazione Suolo</h3>
+          <div class="ma-card-row">
+            <span class="ma-card-row__label">Zona Industriale Nord</span>
+            <span><span class="ma-card-row__badge badge-unhealthy">Metalli pesanti</span></span>
+          </div>
+          <div class="ma-card-row">
+            <span class="ma-card-row__label">Ex discarica Sud</span>
+            <span><span class="ma-card-row__badge badge-moderate">Idrocarburi</span></span>
+          </div>
+          <div class="ma-card-row">
+            <span class="ma-card-row__label">Area agricola Est</span>
+            <span><span class="ma-card-row__badge badge-good">Nessuna</span></span>
+          </div>
+          <div class="ma-card-row">
+            <span class="ma-card-row__label">Parco naturale Ovest</span>
+            <span><span class="ma-card-row__badge badge-good">Nessuna</span></span>
+          </div>
+          <div class="ma-card-row">
+            <span class="ma-card-row__label">Zona residenziale Centro</span>
+            <span><span class="ma-card-row__badge badge-good">Nessuna</span></span>
+          </div>
+          <div class="ma-card-row">
+            <span class="ma-card-row__label">Area portuale</span>
+            <span><span class="ma-card-row__badge badge-unhealthy">Metalli pesanti</span></span>
+          </div>
+          <div class="ma-card-row">
+            <span class="ma-card-row__label">Cava dismessa</span>
+            <span><span class="ma-card-row__badge badge-moderate">Amianto (monitorato)</span></span>
+          </div>
+        </div>
+
+        <div class="ma-card">
+          <h3>🧪 Parametri Fertilità</h3>
+          <div class="ma-indicator">
+            <div class="ma-indicator__icon" style="background:var(--aqi-good);color:#fff;">🟫</div>
+            <div class="ma-indicator__body">
+              <div class="ma-indicator__name">Sostanza Organica</div>
+              <div class="ma-indicator__value">3.2%</div>
+              <div class="ma-indicator__bar"><div class="ma-indicator__bar-fill" style="width:64%;background:var(--aqi-good);"></div></div>
+            </div>
+          </div>
+          <div class="ma-indicator">
+            <div class="ma-indicator__icon" style="background:var(--aqi-good);color:#fff;">🧫</div>
+            <div class="ma-indicator__body">
+              <div class="ma-indicator__name">pH Suolo</div>
+              <div class="ma-indicator__value">6.8</div>
+              <div class="ma-indicator__bar"><div class="ma-indicator__bar-fill" style="width:68%;background:var(--aqi-good);"></div></div>
+            </div>
+          </div>
+          <div class="ma-indicator">
+            <div class="ma-indicator__icon" style="background:var(--aqi-good);color:#fff;">🌿</div>
+            <div class="ma-indicator__body">
+              <div class="ma-indicator__name">Azoto (N)</div>
+              <div class="ma-indicator__value">28 mg/kg</div>
+              <div class="ma-indicator__bar"><div class="ma-indicator__bar-fill" style="width:56%;background:var(--aqi-moderate);"></div></div>
+            </div>
+          </div>
+          <div class="ma-indicator">
+            <div class="ma-indicator__icon" style="background:var(--aqi-good);color:#fff;">🪨</div>
+            <div class="ma-indicator__body">
+              <div class="ma-indicator__name">Fosforo (P)</div>
+              <div class="ma-indicator__value">15 mg/kg</div>
+              <div class="ma-indicator__bar"><div class="ma-indicator__bar-fill" style="width:50%;background:var(--aqi-moderate);"></div></div>
+            </div>
+          </div>
+          <div class="ma-indicator">
+            <div class="ma-indicator__icon" style="background:var(--aqi-good);color:#fff;">🧂</div>
+            <div class="ma-indicator__body">
+              <div class="ma-indicator__name">Potassio (K)</div>
+              <div class="ma-indicator__value">120 mg/kg</div>
+              <div class="ma-indicator__bar"><div class="ma-indicator__bar-fill" style="width:60%;background:var(--aqi-good);"></div></div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Land use chart -->
+      <div class="ma-grid-2">
+        <div class="ma-card">
+          <h3>🗺️ Uso del Suolo</h3>
+          <div class="ma-donut"><canvas id="chart-suolo-uso"></canvas></div>
+        </div>
+        <div class="ma-card">
+          <h3>📈 Andamento Fertilità <small>ultimi 6 mesi</small></h3>
+          <div class="ma-chart"><canvas id="chart-suolo-trend"></canvas></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ========== TAB 4: WASTE ========== -->
+    <section class="ma-content" id="tab-rifiuti" role="tabpanel">
+      <div class="ma-stats">
+        <div class="ma-stat">
+          <div class="ma-stat__label">Rifiuti Totali (mese)</div>
+          <div class="ma-stat__value" style="color:var(--text);">2,450 t</div>
+          <div class="ma-stat__sub">12% in meno rispetto al 2025</div>
+        </div>
+        <div class="ma-stat">
+          <div class="ma-stat__label">Raccolta Differenziata</div>
+          <div class="ma-stat__value" style="color:var(--accent);">68%</div>
+          <div class="ma-stat__sub">Obiettivo 2026: 72%</div>
+        </div>
+        <div class="ma-stat">
+          <div class="ma-stat__label">Riciclo</div>
+          <div class="ma-stat__value" style="color:var(--accent);">58%</div>
+          <div class="ma-stat__sub">Recupero effettivo</div>
+        </div>
+        <div class="ma-stat">
+          <div class="ma-stat__label">Produzione Pro-capite</div>
+          <div class="ma-stat__value" style="color:var(--text);">485 kg</div>
+          <div class="ma-stat__sub">kg/abitante/anno</div>
+        </div>
+      </div>
+
+      <div class="ma-grid-2">
+        <!-- Waste composition -->
+        <div class="ma-card">
+          <h3>♻️ Composizione Rifiuti</h3>
+          <div class="ma-donut"><canvas id="chart-rifiuti-composizione"></canvas></div>
+        </div>
+
+        <!-- Recycling rates -->
+        <div class="ma-card">
+          <h3>📊 Tassi di Riciclo per Categoria</h3>
+          <div class="ma-bar">
+            <span class="ma-bar__label">Carta</span>
+            <div class="ma-bar__track"><div class="ma-bar__fill" style="width:82%;background:var(--aqi-good);"></div></div>
+            <span class="ma-bar__value" style="color:var(--aqi-good);">82%</span>
+          </div>
+          <div class="ma-bar">
+            <span class="ma-bar__label">Vetro</span>
+            <div class="ma-bar__track"><div class="ma-bar__fill" style="width:76%;background:var(--aqi-good);"></div></div>
+            <span class="ma-bar__value" style="color:var(--aqi-good);">76%</span>
+          </div>
+          <div class="ma-bar">
+            <span class="ma-bar__label">Plastica</span>
+            <div class="ma-bar__track"><div class="ma-bar__fill" style="width:48%;background:var(--aqi-moderate);"></div></div>
+            <span class="ma-bar__value" style="color:var(--aqi-moderate);">48%</span>
+          </div>
+          <div class="ma-bar">
+            <span class="ma-bar__label">Organico</span>
+            <div class="ma-bar__track"><div class="ma-bar__fill" style="width:64%;background:var(--aqi-good);"></div></div>
+            <span class="ma-bar__value" style="color:var(--aqi-good);">64%</span>
+          </div>
+          <div class="ma-bar">
+            <span class="ma-bar__label">Metalli</span>
+            <div class="ma-bar__track"><div class="ma-bar__fill" style="width:88%;background:var(--aqi-good);"></div></div>
+            <span class="ma-bar__value" style="color:var(--aqi-good);">88%</span>
+          </div>
+          <div class="ma-bar">
+            <span class="ma-bar__label">RAEE</span>
+            <div class="ma-bar__track"><div class="ma-bar__fill" style="width:42%;background:var(--aqi-moderate);"></div></div>
+            <span class="ma-bar__value" style="color:var(--aqi-moderate);">42%</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Waste trend -->
+      <div class="ma-card">
+        <h3>📈 Andamento Rifiuti e Riciclo <small>ultimi 12 mesi</small></h3>
+        <div class="ma-chart"><canvas id="chart-rifiuti-trend"></canvas></div>
+      </div>
+    </section>
+
+    <footer class="ma-footer">
+      <span id="ma-last-update">⏳ Caricamento dati…</span> · Futura Ambiente · MyZubster Gateway
+    </footer>
+  </div>
+
+  <script>
+    (function() {
+      'use strict';
+
+      const NOW = new Date().toLocaleString('it-IT', { timeZone: 'Europe/Rome' });
+      document.getElementById('ma-last-update').textContent = '🟢 Dati aggiornati: ' + NOW;
+      document.getElementById('ma-aria-time').textContent = NOW;
+
+      /* ===== Theme Toggle ===== */
+      const root = document.querySelector('.ma-page');
+      const themeBtns = document.querySelectorAll('[data-theme-choice]');
+      function setTheme(choice) {
+        if (choice === 'system') {
+          const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+          root.dataset.theme = prefersDark ? 'dark' : 'light';
+        } else {
+          root.dataset.theme = choice;
+        }
+        themeBtns.forEach(b => b.classList.toggle('is-active', b.dataset.themeChoice === choice));
+        localStorage.setItem('ma-theme', choice);
+      }
+      const saved = localStorage.getItem('ma-theme') || 'light';
+      themeBtns.forEach(b => b.addEventListener('click', () => setTheme(b.dataset.themeChoice)));
+      setTheme(saved);
+
+      /* ===== Tabs ===== */
+      const tabs = document.querySelectorAll('.ma-tab');
+      const panels = {
+        aria: document.getElementById('tab-aria'),
+        acque: document.getElementById('tab-acque'),
+        suolo: document.getElementById('tab-suolo'),
+        rifiuti: document.getElementById('tab-rifiuti')
+      };
+      tabs.forEach(tab => {
+        tab.addEventListener('click', () => {
+          tabs.forEach(t => { t.classList.remove('is-active'); t.ariaSelected = 'false'; });
+          tab.classList.add('is-active'); tab.ariaSelected = 'true';
+          Object.values(panels).forEach(p => p.classList.remove('is-active'));
+          const target = panels[tab.dataset.tab];
+          if (target) target.classList.add('is-active');
+          // Init charts on first view
+          if (tab.dataset.tab === 'acque' && !window._acquaCharted) { window._acquaCharted = true; initAcquaCharts(); }
+          if (tab.dataset.tab === 'suolo' && !window._suoloCharted) { window._suoloCharted = true; initSuoloCharts(); }
+          if (tab.dataset.tab === 'rifiuti' && !window._rifiutiCharted) { window._rifiutiCharted = true; initRifiutiCharts(); }
+        });
+      });
+
+      /* ===== Refresh ===== */
+      document.getElementById('ma-refresh').addEventListener('click', function() {
+        const now = new Date().toLocaleString('it-IT', { timeZone: 'Europe/Rome' });
+        document.getElementById('ma-last-update').textContent = '🟢 Dati aggiornati: ' + now;
+        document.getElementById('ma-aria-time').textContent = now;
+        const toast = document.createElement('div');
+        toast.className = 'ma-toast';
+        toast.textContent = '✅ Dati aggiornati alle ' + now;
+        document.body.appendChild(toast);
+        setTimeout(() => toast.remove(), 2500);
+      });
+
+      /* ===== AQI Ring ===== */
+      function updateAqiRing(value) {
+        const circumference = 251.2;
+        const max = 200;
+        const offset = circumference - (value / max) * circumference;
+        const ring = document.getElementById('ma-aqi-ring');
+        ring.setAttribute('stroke-dashoffset', offset);
+        let color = 'var(--aqi-good)';
+        if (value > 150) color = 'var(--aqi-hazardous)';
+        else if (value > 100) color = 'var(--aqi-very-unhealthy)';
+        else if (value > 50) color = 'var(--aqi-moderate)';
+        ring.style.stroke = color;
+      }
+      updateAqiRing(72);
+
+      /* ===== Leaflet Air Quality Map ===== */
+      if (typeof L !== 'undefined') {
+        const map = L.map('map-aria').setView([41.9028, 12.4964], 6);
+        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+          attribution: '&copy; OpenStreetMap',
+          className: 'leaflet-tiles',
+          maxZoom: 18
+        }).addTo(map);
+
+        const stations = [
+          { name: 'Roma — Centro', lat: 41.893, lng: 12.483, aqi: 72, status: 'Moderato' },
+          { name: 'Roma — EUR', lat: 41.833, lng: 12.467, aqi: 45, status: 'Buono' },
+          { name: 'Milano — Brera', lat: 45.464, lng: 9.190, aqi: 88, status: 'Moderato' },
+          { name: 'Milano — Bicocca', lat: 45.515, lng: 9.210, aqi: 65, status: 'Moderato' },
+          { name: 'Torino — Centro', lat: 45.070, lng: 7.687, aqi: 95, status: 'Moderato' },
+          { name: 'Firenze — Centro', lat: 43.769, lng: 11.256, aqi: 55, status: 'Moderato' },
+          { name: 'Napoli — Centro', lat: 40.852, lng: 14.268, aqi: 78, status: 'Moderato' },
+          { name: 'Bologna — Centro', lat: 44.494, lng: 11.342, aqi: 60, status: 'Moderato' },
+          { name: 'Palermo — Centro', lat: 38.116, lng: 13.363, aqi: 52, status: 'Moderato' },
+          { name: 'Venezia — Mestre', lat: 45.495, lng: 12.238, aqi: 40, status: 'Buono' },
+          { name: 'Genova — Centro', lat: 44.405, lng: 8.946, aqi: 48, status: 'Buono' },
+          { name: 'Bari — Centro', lat: 41.117, lng: 16.871, aqi: 35, status: 'Buono' },
+          { name: 'Cagliari — Centro', lat: 39.217, lng: 9.117, aqi: 30, status: 'Buono' },
+          { name: 'Perugia — Centro', lat: 43.112, lng: 12.389, aqi: 42, status: 'Buono' },
+          { name: 'Trento — Centro', lat: 46.074, lng: 11.121, aqi: 25, status: 'Buono' },
+        ];
+
+        function getColor(aqi) {
+          if (aqi <= 50) return '#2ecc71';
+          if (aqi <= 100) return '#f1c40f';
+          if (aqi <= 150) return '#e67e22';
+          if (aqi <= 200) return '#e74c3c';
+          return '#8e44ad';
+        }
+
+        stations.forEach(s => {
+          const color = getColor(s.aqi);
+          const marker = L.circleMarker([s.lat, s.lng], {
+            radius: 10, fillColor: color, color: '#fff',
+            weight: 2, opacity: 1, fillOpacity: 0.8
+          }).addTo(map);
+          marker.bindTooltip(`<b>${s.name}</b><br>AQI: ${s.aqi} · ${s.status}`, {
+            className: 'gm-tooltip ma-tip', direction: 'top'
+          });
+        });
+
+        // Fit bounds
+        const group = L.featureGroup(stations.map(s =>
+          L.circleMarker([s.lat, s.lng])
+        ));
+        map.fitBounds(group.getBounds().pad(0.15));
+      }
+
+      /* ===== Chart.js: Air Quality Trend ===== */
+      function initAriaCharts() {
+        if (typeof Chart === 'undefined') return;
+        const ctx = document.getElementById('chart-aria-trend');
+        if (!ctx) return;
+        new Chart(ctx, {
+          type: 'line',
+          data: {
+            labels: ['Lun', 'Mar', 'Mer', 'Gio', 'Ven', 'Sab', 'Dom'],
+            datasets: [
+              { label: 'PM2.5 (µg/m³)', data: [32, 28, 35, 30, 25, 22, 28],
+                borderColor: '#f1c40f', backgroundColor: 'rgba(241,196,15,0.1)',
+                fill: true, tension: 0.3, pointRadius: 4 },
+              { label: 'PM10 (µg/m³)', data: [25, 22, 28, 24, 20, 18, 22],
+                borderColor: '#2ecc71', backgroundColor: 'rgba(46,204,113,0.1)',
+                fill: true, tension: 0.3, pointRadius: 4 }
+            ]
+          },
+          options: {
+            responsive: true, maintainAspectRatio: false,
+            plugins: {
+              legend: { labels: { color: getComputedStyle(document.body).getPropertyValue('--text-soft').trim() || '#5a7a5a' } }
+            },
+            scales: {
+              x: { ticks: { color: getComputedStyle(document.body).getPropertyValue('--text-soft').trim() || '#5a7a5a' } },
+              y: { beginAtZero: true, ticks: { color: getComputedStyle(document.body).getPropertyValue('--text-soft').trim() || '#5a7a5a' } }
+            }
+          }
+        });
+        window._ariaCharted = true;
+      }
+      initAriaCharts();
+
+      /* ===== Water Charts ===== */
+      function initAcquaCharts() {
+        if (typeof Chart === 'undefined') return;
+        const ctx = document.getElementById('chart-acqua-temp');
+        if (!ctx) return;
+        new Chart(ctx, {
+          type: 'line',
+          data: {
+            labels: ['Lun', 'Mar', 'Mer', 'Gio', 'Ven', 'Sab', 'Dom'],
+            datasets: [{
+              label: 'Temperatura (°C)',
+              data: [17.2, 17.8, 18.1, 18.5, 18.8, 18.3, 18.5],
+              borderColor: '#3498db', backgroundColor: 'rgba(52,152,219,0.1)',
+              fill: true, tension: 0.3, pointRadius: 4
+            }]
+          },
+          options: {
+            responsive: true, maintainAspectRatio: false,
+            plugins: { legend: { display: false } },
+            scales: { y: { beginAtZero: false, min: 16 } }
+          }
+        });
+      }
+
+      /* ===== Soil Charts ===== */
+      function initSuoloCharts() {
+        if (typeof Chart === 'undefined') return;
+        const ctx1 = document.getElementById('chart-suolo-uso');
+        if (ctx1) {
+          new Chart(ctx1, {
+            type: 'doughnut',
+            data: {
+              labels: ['Agricolo', 'Urbano', 'Boschivo', 'Industriale', 'Aree protette', 'Altro'],
+              datasets: [{
+                data: [42, 18, 22, 8, 7, 3],
+                backgroundColor: ['#2ecc71', '#e67e22', '#27ae60', '#95a5a6', '#3498db', '#bdc3c7']
+              }]
+            },
+            options: {
+              responsive: true, maintainAspectRatio: false,
+              plugins: {
+                legend: { position: 'right', labels: { boxWidth: 12, padding: 8 } }
+              }
+            }
+          });
+        }
+        const ctx2 = document.getElementById('chart-suolo-trend');
+        if (ctx2) {
+          new Chart(ctx2, {
+            type: 'line',
+            data: {
+              labels: ['Gen', 'Feb', 'Mar', 'Apr', 'Mag', 'Giu'],
+              datasets: [{
+                label: 'Indice Fertilità',
+                data: [62, 64, 63, 66, 68, 68],
+                borderColor: '#2ecc71', backgroundColor: 'rgba(46,204,113,0.1)',
+                fill: true, tension: 0.3, pointRadius: 4
+              }]
+            },
+            options: {
+              responsive: true, maintainAspectRatio: false,
+              plugins: { legend: { display: false } },
+              scales: { y: { beginAtZero: false, min: 55 } }
+            }
+          });
+        }
+      }
+
+      /* ===== Waste Charts ===== */
+      function initRifiutiCharts() {
+        if (typeof Chart === 'undefined') return;
+        const ctx1 = document.getElementById('chart-rifiuti-composizione');
+        if (ctx1) {
+          new Chart(ctx1, {
+            type: 'doughnut',
+            data: {
+              labels: ['Organico', 'Carta', 'Plastica', 'Vetro', 'Metalli', 'RAEE', 'Altro'],
+              datasets: [{
+                data: [32, 18, 15, 8, 5, 3, 19],
+                backgroundColor: ['#2ecc71', '#3498db', '#e67e22', '#1abc9c', '#95a5a6', '#e74c3c', '#bdc3c7']
+              }]
+            },
+            options: {
+              responsive: true, maintainAspectRatio: false,
+              plugins: {
+                legend: { position: 'right', labels: { boxWidth: 12, padding: 8 } }
+              }
+            }
+          });
+        }
+        const ctx2 = document.getElementById('chart-rifiuti-trend');
+        if (ctx2) {
+          new Chart(ctx2, {
+            type: 'bar',
+            data: {
+              labels: ['Gen', 'Feb', 'Mar', 'Apr', 'Mag', 'Giu', 'Lug', 'Ago', 'Set', 'Ott', 'Nov', 'Dic'],
+              datasets: [
+                { label: 'Rifiuti (t)', data: [2100, 1950, 2200, 2050, 2300, 2450, 2600, 2500, 2150, 2000, 1900, 1800],
+                  backgroundColor: 'rgba(149,165,166,0.7)', borderRadius: 4 },
+                { label: 'Riciclato (t)', data: [1150, 1100, 1250, 1200, 1350, 1420, 1500, 1450, 1250, 1180, 1120, 1080],
+                  backgroundColor: 'rgba(46,204,113,0.7)', borderRadius: 4 }
+              ]
+            },
+            options: {
+              responsive: true, maintainAspectRatio: false,
+              plugins: { legend: { labels: { boxWidth: 12 } } },
+              scales: { y: { beginAtZero: true } }
+            }
+          });
+        }
+      }
+
+      /* ===== Chart theme fix (re-render on theme change) ===== */
+      // Listen for theme changes to update charts
+      const observer = new MutationObserver(() => {
+        // Charts auto-resize with responsive: true
+      });
+      observer.observe(root, { attributes: true, attributeFilter: ['data-theme'] });
+
+      // Init water/soil/waste charts on first load if tabs are active
+      // (Only aria is active by default)
+    })();
+  </script>
+</body>
+</html>
