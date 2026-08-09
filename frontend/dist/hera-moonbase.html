@@ -1,0 +1,211 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>🌙 Hera-MoonBase - MyZubster</title>
+  <style>
+    :root {
+      --accent: #94a3b8;
+      --accent-strong: #64748b;
+      --bg: #0f1117;
+      --surface: #1a1d27;
+      --surface-2: #242836;
+      --text: #e2e8f0;
+      --text-soft: #94a3b8;
+      --border: #2d3340;
+      --shadow: 0 8px 32px rgba(100, 120, 150, 0.15);
+      --radius: 12px;
+      --status-active: #22c55e;
+      --status-warning: #eab308;
+      --status-critical: #ef4444;
+      --moon-gradient: linear-gradient(135deg, #1e293b, #334155, #475569);
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      min-height: 100vh;
+    }
+    .stars { position: fixed; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none; z-index: 0; }
+    .header {
+      position: relative; z-index: 1;
+      background: linear-gradient(135deg, #1e293b, #334155, #475569);
+      padding: 24px 32px;
+      display: flex; justify-content: space-between; align-items: center;
+      flex-wrap: wrap; gap: 16px;
+      border-bottom: 2px solid #64748b;
+    }
+    .header h1 { font-size: 1.8rem; color: #fff; }
+    .header p { color: #cbd5e1; font-size: 0.9rem; margin-top: 4px; }
+    .badge {
+      background: rgba(255,255,255,0.1); padding: 6px 14px;
+      border-radius: 20px; font-size: 0.8rem; color: #e2e8f0;
+    }
+    .content { position: relative; z-index: 1; max-width: 1300px; margin: 0 auto; padding: 32px 24px; }
+    .moon-hero {
+      background: linear-gradient(135deg, #1a1d27 0%, #272d3a 50%, #334155 100%);
+      border-radius: var(--radius); padding: 32px;
+      text-align: center; margin-bottom: 28px;
+      border: 1px solid var(--border);
+      position: relative; overflow: hidden;
+    }
+    .moon-hero::before {
+      content: '';
+      position: absolute;
+      top: -60px; right: -60px;
+      width: 200px; height: 200px;
+      border-radius: 50%;
+      background: radial-gradient(circle, rgba(148,163,184,0.15) 0%, transparent 70%);
+    }
+    .moon-hero h2 { font-size: 1.6rem; color: #e2e8f0; margin-bottom: 8px; }
+    .moon-hero p { color: var(--text-soft); font-size: 1rem; }
+    .moon-icon { font-size: 4rem; display: block; margin-bottom: 16px; }
+    .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(340px, 1fr)); gap: 24px; margin-bottom: 32px; }
+    .card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 24px;
+      box-shadow: var(--shadow);
+      transition: transform 0.2s;
+    }
+    .card:hover { transform: translateY(-2px); }
+    .card h3 { font-size: 1.15rem; margin-bottom: 16px; color: #cbd5e1; display: flex; align-items: center; gap: 8px; }
+    .card p { color: var(--text-soft); font-size: 0.85rem; line-height: 1.6; margin-top: 8px; }
+    .stat-row { display: flex; justify-content: space-between; padding: 8px 0; border-bottom: 1px solid var(--border); font-size: 0.9rem; }
+    .stat-row:last-child { border-bottom: none; }
+    .stat-label { color: var(--text-soft); }
+    .stat-value { color: #94a3b8; font-weight: 600; font-family: monospace; }
+    .status-dot { display: inline-block; width: 10px; height: 10px; border-radius: 50%; margin-right: 6px; }
+    .status-dot.active { background: var(--status-active); box-shadow: 0 0 8px var(--status-active); }
+    .status-dot.warning { background: var(--status-warning); }
+    .status-dot.critical { background: var(--status-critical); box-shadow: 0 0 8px var(--status-critical); }
+    .gauge {
+      width: 80px; height: 80px;
+      border-radius: 50%;
+      background: conic-gradient(#22c55e var(--pct), #334155 var(--pct));
+      display: flex; align-items: center; justify-content: center;
+      margin: 0 auto 12px;
+      position: relative;
+    }
+    .gauge::after {
+      content: '';
+      width: 60px; height: 60px;
+      border-radius: 50%;
+      background: var(--surface);
+      position: absolute;
+    }
+    .gauge span { position: relative; z-index: 1; font-size: 1.2rem; font-weight: 700; color: #22c55e; }
+    .progress-bar { height: 8px; background: var(--surface-2); border-radius: 4px; overflow: hidden; margin-top: 8px; }
+    .progress-fill { height: 100%; border-radius: 4px; background: linear-gradient(90deg, #64748b, #94a3b8); }
+    .footer { text-align: center; padding: 24px; color: var(--text-soft); font-size: 0.8rem; position: relative; z-index: 1; }
+    @media (max-width: 768px) { .header { padding: 16px; } .content { padding: 16px; } .grid { grid-template-columns: 1fr; } }
+  </style>
+</head>
+<body>
+  <canvas class="stars" id="stars"></canvas>
+  <header class="header">
+    <div>
+      <h1>🌙 Hera-MoonBase</h1>
+      <p>Base Lunare Permanente &bull; MyZubster Space Division</p>
+    </div>
+    <div style="display:flex;gap:8px;flex-wrap:wrap;">
+      <span class="badge">Posizione: Polo Sud Lunare</span>
+      <span class="badge">Capacit&agrave;: 50 persone</span>
+      <span class="badge">Autonomia: 180 giorni</span>
+    </div>
+  </header>
+  <div class="content">
+    <div class="moon-hero">
+      <span class="moon-icon">🌙</span>
+      <h2>Base Lunare Permanente Hera</h2>
+      <p>Polo Sud Lunare &bull; Coordinate: 89.9&deg;S 0.0&deg;E &bull; Crateri in ombra permanente con ghiaccio d&apos;acqua accessibile</p>
+    </div>
+    <div class="grid">
+      <div class="card">
+        <h3>🏠 Moduli Abitativi Pressurizzati</h3>
+        <div class="stat-row"><span class="stat-label">Moduli attivi</span><span class="stat-value">8/12</span></div>
+        <div class="stat-row"><span class="stat-label">Volume abitabile</span><span class="stat-value">2,400 m&sup3;</span></div>
+        <div class="stat-row"><span class="stat-label">Pressione interna</span><span class="stat-value">101.3 kPa <span class="status-dot active"></span></span></div>
+        <div class="progress-bar"><div class="progress-fill" style="width:67%"></div></div>
+        <p>Moduli gonfiabili multi-strato con schermatura anti-radiazioni in regolite lunare compressa e polietilene.</p>
+      </div>
+      <div class="card">
+        <h3>💨 Sistema di Supporto Vitale</h3>
+        <div class="stat-row"><span class="stat-label">Ossigeno</span><span class="stat-value">21.3% <span class="status-dot active"></span></span></div>
+        <div class="stat-row"><span class="stat-label">CO₂</span><span class="stat-value">0.04% <span class="status-dot active"></span></span></div>
+        <div class="stat-row"><span class="stat-label">Riciclo acqua</span><span class="stat-value">97.8%</span></div>
+        <div class="stat-row"><span class="stat-label">Temperatura</span><span class="stat-value">22.1&deg;C</span></div>
+        <p>Sistema a ciclo chiuso con bioreattori a microalghe per rigenerazione ossigeno e purificazione acqua.</p>
+      </div>
+      <div class="card">
+        <h3>🔬 Laboratorio di Ricerca</h3>
+        <div class="stat-row"><span class="stat-label">Esperimenti attivi</span><span class="stat-value">14</span></div>
+        <div class="stat-row"><span class="stat-label">Campioni analizzati</span><span class="stat-value">3,847</span></div>
+        <div class="stat-row"><span class="stat-label">Pubblicazioni</span><span class="stat-value">28</span></div>
+        <p>Laboratorio multidisciplinare per geologia lunare, astrobiologia, fisica delle basse gravit&agrave; e test materiali.</p>
+      </div>
+      <div class="card">
+        <h3>📦 Deposito Risorse</h3>
+        <div class="stat-row"><span class="stat-label">Acqua stoccata</span><span class="stat-value">45,200 L</span></div>
+        <div class="stat-row"><span class="stat-label">Cibo (autonomia)</span><span class="stat-value">165 giorni</span></div>
+        <div class="stat-row"><span class="stat-label">Pezzi di ricambio</span><span class="stat-value">2,340 unit&agrave;</span></div>
+        <div class="progress-bar"><div class="progress-fill" style="width:92%"></div></div>
+        <p>Magazzino pressurizzato con controllo climatico e inventario automatizzato tramite tag RFID.</p>
+      </div>
+      <div class="card">
+        <h3>💧 Estrazione Acqua/Ghiaccio</h3>
+        <div class="stat-row"><span class="stat-label">Produzione giornaliera</span><span class="stat-value">124 L</span></div>
+        <div class="stat-row"><span class="stat-label">Purezza</span><span class="stat-value">99.97%</span></div>
+        <div class="stat-row"><span class="stat-label">Estrattori attivi</span><span class="stat-value"><span class="status-dot active"></span>3/3</span></div>
+        <div class="progress-bar"><div class="progress-fill" style="width:100%"></div></div>
+        <p>Trivella termica a microonde per sublimazione ghiaccio nei crateri in ombra permanente del Polo Sud.</p>
+      </div>
+      <div class="card">
+        <h3>☀️ Pannelli Solari e Accumulo</h3>
+        <div style="text-align:center;">
+          <div class="gauge" style="--pct:87%"><span>87%</span></div>
+          <p style="font-weight:600;color:#22c55e;">Carica batterie</p>
+        </div>
+        <div class="stat-row"><span class="stat-label">Potenza generata</span><span class="stat-value">342 kW</span></div>
+        <div class="stat-row"><span class="stat-label">Capacit&agrave; accumulo</span><span class="stat-value">12.8 MWh</span></div>
+        <div class="stat-row"><span class="stat-label">Pannelli attivi</span><span class="stat-value">480/500</span></div>
+        <p>Array solare verticale al bordo cratere con inseguitore solare e batterie a stato solido per i periodi di oscurit&agrave;.</p>
+      </div>
+      <div class="card">
+        <h3>📡 Comunicazione Profonda</h3>
+        <div class="stat-row"><span class="stat-label">Latenza Terra-Luna</span><span class="stat-value">1.28s</span></div>
+        <div class="stat-row"><span class="stat-label">Banda disponibile</span><span class="stat-value">2.4 Gbps</span></div>
+        <div class="stat-row"><span class="stat-label">Ridondanza</span><span class="stat-value"><span class="status-dot active"></span>3 canali</span></div>
+        <p>Antenna parabolica da 5m con link laser ottico e backup radio in banda X. Relay con orbiter lunare.</p>
+      </div>
+    </div>
+  </div>
+  <footer class="footer">MyZubster Hera-MoonBase &bull; Base Lunare Permanente &bull; Polo Sud Lunare &bull; v1.0</footer>
+  <script>
+    const canvas = document.getElementById('stars');
+    const ctx = canvas.getContext('2d');
+    let stars = [];
+    function resize() { canvas.width = window.innerWidth; canvas.height = window.innerHeight; }
+    resize();
+    window.addEventListener('resize', resize);
+    for (let i = 0; i < 150; i++) {
+      stars.push({ x: Math.random() * canvas.width, y: Math.random() * canvas.height, r: Math.random() * 1.2 + 0.3, speed: Math.random() * 0.2 + 0.05 });
+    }
+    function animate() {
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+      stars.forEach(s => {
+        ctx.beginPath(); ctx.arc(s.x, s.y, s.r, 0, Math.PI * 2);
+        ctx.fillStyle = 'rgba(180,190,210,' + (0.4 + Math.random() * 0.4) + ')';
+        ctx.fill();
+        s.y += s.speed;
+        if (s.y > canvas.height) { s.y = 0; s.x = Math.random() * canvas.width; }
+      });
+      requestAnimationFrame(animate);
+    }
+    animate();
+  </script>
+</body>
+</html>
