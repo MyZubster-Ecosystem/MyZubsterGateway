@@ -29,3 +29,5 @@ temp/
 .idea/
 *.swp
 *.swo
+.env.backup*
+*.env.backup*
