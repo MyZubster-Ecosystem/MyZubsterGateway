@@ -1,6 +1,7 @@
 version: '3.8'
 
 services:
+  # ── MongoDB ──────────────────────────────────────────
   mongodb:
     image: mongo:7
     container_name: myzubster-mongodb
@@ -22,6 +23,75 @@ services:
       retries: 5
       start_period: 20s
 
+  # ── Redis (cache & session store) ────────────────────
+  redis:
+    image: redis:7-alpine
+    container_name: myzubster-redis
+    restart: unless-stopped
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+    networks:
+      - myzubster-network
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    command: redis-server --appendonly yes
+
+  # ── Tari Wallet (stub for MYZ) ───────────────────────
+  tari-wallet:
+    image: alpine:3.19
+    container_name: myzubster-tari-wallet
+    restart: unless-stopped
+    ports:
+      - "${TARI_WALLET_PORT:-12000}:12000"
+    volumes:
+      - tari_wallet_data:/data
+      - ./stubs/tari-wallet-stub.js:/app/server.js:ro
+    networks:
+      - myzubster-network
+    environment:
+      PORT: "12000"
+      WALLET_DATA_DIR: /data
+    command: >
+      sh -c "apk add --no-cache nodejs &&
+             node /app/server.js"
+    healthcheck:
+      test: ["CMD", "wget", "--quiet", "--tries=1", "--spider", "http://localhost:12000/health"]
+      interval: 20s
+      timeout: 5s
+      retries: 3
+      start_period: 5s
+
+  # ── Monero Wallet (stub for XMR) ─────────────────────
+  monero-wallet:
+    image: alpine:3.19
+    container_name: myzubster-monero-wallet
+    restart: unless-stopped
+    ports:
+      - "${MONERO_WALLET_PORT:-13000}:13000"
+    volumes:
+      - monero_wallet_data:/data
+      - ./stubs/monero-wallet-stub.js:/app/server.js:ro
+    networks:
+      - myzubster-network
+    environment:
+      PORT: "13000"
+      WALLET_DATA_DIR: /data
+    command: >
+      sh -c "apk add --no-cache nodejs &&
+             node /app/server.js"
+    healthcheck:
+      test: ["CMD", "wget", "--quiet", "--tries=1", "--spider", "http://localhost:13000/health"]
+      interval: 20s
+      timeout: 5s
+      retries: 3
+      start_period: 5s
+
+  # ── Gateway (Node.js Express) ────────────────────────
   gateway:
     build:
       context: .
@@ -29,34 +99,40 @@ services:
     container_name: myzubster-gateway
     restart: unless-stopped
     ports:
-      - "${GATEWAY_PORT:-10000}:10000"
+      - "${GATEWAY_PORT:-3000}:3000"
     depends_on:
       mongodb:
         condition: service_healthy
+      redis:
+        condition: service_healthy
     environment:
       NODE_ENV: ${NODE_ENV:-production}
-      PORT: 10000
-      MONGODB_URI: mongodb://${MONGO_USER:-admin}:${MONGO_PASSWORD:-password}@mongodb:27017/myzubster?authSource=admin
+      PORT: ${GATEWAY_PORT:-3000}
+      MONGODB_URI: ${MONGODB_URI:-mongodb://admin:password@mongodb:27017/myzubster?authSource=admin}
+      REDIS_URL: ${REDIS_URL:-redis://redis:6379}
       JWT_SECRET: ${JWT_SECRET:-change-me-in-production}
-      GATEWAY_PORT: ${GATEWAY_PORT:-10000}
       CORS_ORIGIN: ${CORS_ORIGIN:-http://localhost:3000}
+      TARI_WALLET_URL: ${TARI_WALLET_URL:-http://tari-wallet:12000}
+      MONERO_WALLET_URL: ${MONERO_WALLET_URL:-http://monero-wallet:13000}
     networks:
       - myzubster-network
     healthcheck:
-      test: ["CMD", "wget", "--quiet", "--tries=1", "--spider", "http://localhost:10000/health"]
+      test: ["CMD", "node", "-e", "require('http').get('http://localhost:3000/health', (r) => {if(r.statusCode!==200)process.exit(1)})"]
       interval: 30s
       timeout: 10s
       retries: 3
-      start_period: 10s
+      start_period: 15s
     env_file:
       - .env
-    # Uncomment for development with volume mount
-    # volumes:
-    #   - ./:/app
-    #   - /app/node_modules
 
 volumes:
   mongodb_data:
+    driver: local
+  redis_data:
+    driver: local
+  tari_wallet_data:
+    driver: local
+  monero_wallet_data:
     driver: local
 
 networks:
