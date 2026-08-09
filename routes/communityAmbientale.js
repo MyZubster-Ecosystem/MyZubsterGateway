@@ -10,6 +10,7 @@ let quizzes = [{ id: 1, courseId: 1, questions: 10 }];
 let videos = [{ id: 1, url: 'https://video.myzubster.tld/eco' }];
 let forumPosts = [{ id: 1, user: 1, topic: 'Composting' }];
 let groups = [{ id: 1, name: 'Local Cleaners', members: [1] }];
+let chats = [{ id: 1, user: 1, message: 'Hello eco friends!', timestamp: new Date().toISOString() }];
 
 // --- Community ---
 router.get('/profiles', (req, res) => res.json(users));
@@ -48,9 +49,25 @@ router.post('/points/add', (req, res) => {
         res.status(404).json({ error: 'User not found' });
     }
 });
+router.post('/badges/add', (req, res) => {
+    const { userId, badge } = req.body;
+    const user = users.find(u => u.id === userId);
+    if (user) {
+        user.badges.push(badge);
+        res.json(user);
+    } else {
+        res.status(404).json({ error: 'User not found' });
+    }
+});
 
 // --- Social ---
 router.get('/forum', (req, res) => res.json(forumPosts));
 router.get('/groups', (req, res) => res.json(groups));
+router.get('/chat', (req, res) => res.json(chats));
+router.post('/chat', (req, res) => {
+    const newChat = { id: chats.length + 1, timestamp: new Date().toISOString(), ...req.body };
+    chats.push(newChat);
+    res.json(newChat);
+});
 
 module.exports = router;
