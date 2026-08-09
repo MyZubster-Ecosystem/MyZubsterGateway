@@ -1,6 +1,53 @@
 const express = require('express');
+const path = require('path');
+const zlib = require('zlib');
 const app = express();
 const PORT = process.env.PORT || 5002;
+
+// Serve static files from frontend/dist with caching
+app.use('/dist', express.static(path.join(__dirname, 'frontend', 'dist'), {
+  maxAge: '1d',
+  etag: true,
+  lastModified: true,
+  setHeaders: (res, filePath) => {
+    if (filePath.endsWith('.html')) {
+      res.setHeader('Cache-Control', 'public, max-age=3600');
+    } else if (filePath.endsWith('.svg') || filePath.endsWith('.js')) {
+      res.setHeader('Cache-Control', 'public, max-age=86400');
+    }
+  }
+}));
+
+// Gzip compression for API responses (built-in zlib, no external deps)
+app.use((req, res, next) => {
+  const acceptEncoding = req.headers['accept-encoding'] || '';
+  if (acceptEncoding.includes('gzip')) {
+    const originalSend = res.send.bind(res);
+    res.send = function(body) {
+      if (typeof body === 'string' && body.length > 1024) {
+        const compressed = zlib.gzipSync(body);
+        res.setHeader('Content-Encoding', 'gzip');
+        res.setHeader('Vary', 'Accept-Encoding');
+        return originalSend(compressed);
+      }
+      return originalSend(body);
+    };
+  }
+  next();
+});
+
+// Cache-Control for API responses
+app.use((req, res, next) => {
+  if (req.path.startsWith('/api/')) {
+    res.setHeader('Cache-Control', 'no-cache, no-store, must-revalidate');
+  }
+  next();
+});
+
+// Redirect root to dashboard
+app.get('/', (req, res) => {
+  res.redirect('/dist/index.html');
+});
 
 app.get('/api/health', (req, res) => {
   res.json({ 
