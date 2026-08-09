@@ -1,0 +1,8 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: gateway-config
+  namespace: myzubster
+data:
+  NODE_ENV: production
+  PORT: "10000"

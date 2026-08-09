@@ -1,0 +1,3 @@
+FROM monero-project/monero:latest
+EXPOSE 18081
+ENTRYPOINT ["monero-wallet-rpc"]

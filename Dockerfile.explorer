@@ -1,0 +1,2 @@
+FROM moneroexamples/onion-monero-blockchain-explorer:latest
+EXPOSE 8081
