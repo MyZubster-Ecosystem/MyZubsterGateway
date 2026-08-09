@@ -1,0 +1,143 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>📡 Comunicazione Interstellare - MyZubster</title>
+  <style>
+    :root {
+      --bg: #0a0a1a;
+      --surface: #12122a;
+      --surface-2: #1a1a3a;
+      --text: #e8e6f0;
+      --text-soft: #9898b8;
+      --border: #2a2a4a;
+      --shadow: 0 8px 32px rgba(40, 120, 220, 0.2);
+      --radius: 12px;
+      --status-active: #22c55e;
+      --status-warning: #eab308;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      min-height: 100vh;
+      overflow-x: hidden;
+    }
+    .stars { position: fixed; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none; z-index: 0; }
+    .header {
+      position: relative; z-index: 1;
+      background: linear-gradient(135deg, #1e40af, #3b82f6);
+      padding: 24px 32px;
+      display: flex; justify-content: space-between; align-items: center;
+      flex-wrap: wrap; gap: 16px;
+      border-bottom: 2px solid #60a5fa;
+    }
+    .header h1 { font-size: 1.8rem; color: #fff; }
+    .header p { color: rgba(255,255,255,0.8); font-size: 0.9rem; margin-top: 4px; }
+    .badge {
+      background: rgba(255,255,255,0.15); padding: 6px 14px;
+      border-radius: 20px; font-size: 0.8rem; color: rgba(255,255,255,0.9);
+    }
+    .content { position: relative; z-index: 1; max-width: 1300px; margin: 0 auto; padding: 32px 24px; }
+    .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(340px, 1fr)); gap: 24px; margin-bottom: 32px; }
+    .card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 24px;
+      box-shadow: var(--shadow);
+      transition: transform 0.2s;
+    }
+    .card:hover { transform: translateY(-2px); }
+    .card h3 { font-size: 1.15rem; margin-bottom: 16px; color: #60a5fa; }
+    .card p { color: var(--text-soft); font-size: 0.85rem; line-height: 1.6; }
+    .stat-row { display: flex; justify-content: space-between; padding: 8px 0; border-bottom: 1px solid var(--border); font-size: 0.9rem; }
+    .stat-row:last-child { border-bottom: none; }
+    .stat-label { color: var(--text-soft); }
+    .stat-value { color: #60a5fa; font-weight: 600; font-family: monospace; }
+    .sd { display: inline-block; width: 10px; height: 10px; border-radius: 50%; margin-right: 6px; }
+    .sd.active { background: var(--status-active); box-shadow: 0 0 8px var(--status-active); }
+    .sd.warning { background: var(--status-warning); box-shadow: 0 0 8px var(--status-warning); }
+    .progress-bar { height: 8px; background: var(--surface-2); border-radius: 4px; overflow: hidden; margin-top: 8px; }
+    .progress-fill { height: 100%; border-radius: 4px; background: linear-gradient(90deg, #2563eb, #60a5fa); }
+    .footer { text-align: center; padding: 24px; color: var(--text-soft); font-size: 0.8rem; position: relative; z-index: 1; }
+    @media (max-width: 768px) { .header { padding: 16px; } .content { padding: 16px; } .grid { grid-template-columns: 1fr; } }
+  </style>
+</head>
+<body>
+  <canvas class="stars" id="stars"></canvas>
+  <header class="header">
+    <div>
+      <h1>📡 Comunicazione Interstellare</h1>
+      <p>Rete Mesh Quantistica &bull; MyZubster Space Division</p>
+    </div>
+    <div style="display:flex;gap:8px;flex-wrap:wrap;"><span class="badge">Protocollo: Quantum</span><span class="badge">Velocità: Istantanea</span><span class="badge">Nodi: 12,847</span></div>
+  </header>
+  <div class="content">
+    <div class="grid">
+      <div class="card">
+        <h3>🌐 Rete Mesh Quantistica</h3>
+        <div class="stat-row"><span class="stat-label">Nodi attivi</span><span class="stat-value">12,847</span></div><div class="stat-row"><span class="stat-label">Latenza media</span><span class="stat-value">0.0003 ms</span></div><div class="stat-row"><span class="stat-label">Throughput</span><span class="stat-value">1.2 Zbps</span></div><div class="stat-row"><span class="stat-label">Topologia</span><span class="stat-value">Entanglement Mesh</span></div>
+        <div class="progress-bar"><div class="progress-fill" style="width:99.8%"></div></div>
+        <p style="margin-top:12px;">Rete decentralizzata basata su entanglement quantistico per comunicazione superluminale tra colonie.</p>
+      </div>
+      <div class="card">
+        <h3>💬 Messaggistica Istantanea</h3>
+        <div class="stat-row"><span class="stat-label">Messaggi/giorno</span><span class="stat-value">4.2 miliardi</span></div><div class="stat-row"><span class="stat-label">Canali attivi</span><span class="stat-value">3,891</span></div><div class="stat-row"><span class="stat-label">Dimensione max</span><span class="stat-value">1 TB</span></div><div class="stat-row"><span class="stat-label">Uptime</span><span class="stat-value"><span class="sd active"></span>99.999%</span></div>
+        <div class="progress-bar"><div class="progress-fill" style="width:99.9%"></div></div>
+        <p style="margin-top:12px;">Sistema di messaggistica quantistica con conferma di ricezione entangled e routing ottimizzato.</p>
+      </div>
+      <div class="card">
+        <h3>📹 Videochiamate Spaziali</h3>
+        <div class="stat-row"><span class="stat-label">Chiamate attive</span><span class="stat-value">247,000</span></div><div class="stat-row"><span class="stat-label">Risoluzione max</span><span class="stat-value">32K HDR</span></div><div class="stat-row"><span class="stat-label">Frame rate</span><span class="stat-value">240 fps</span></div><div class="stat-row"><span class="stat-label">Compressione</span><span class="stat-value">HEVC Quantum</span></div>
+        <div class="progress-bar"><div class="progress-fill" style="width:98%"></div></div>
+        <p style="margin-top:12px;">Videochiamate olografiche con compressione quantistica e latenza zero percepita tra sistemi stellari.</p>
+      </div>
+      <div class="card">
+        <h3>📢 Broadcast Universale</h3>
+        <div class="stat-row"><span class="stat-label">Trasmettitori</span><span class="stat-value">842</span></div><div class="stat-row"><span class="stat-label">Copertura</span><span class="stat-value">47 sistemi</span></div><div class="stat-row"><span class="stat-label">Potenza segnale</span><span class="stat-value">42 EW</span></div><div class="stat-row"><span class="stat-label">Multilingua</span><span class="stat-value">284 lingue</span></div>
+        <div class="progress-bar"><div class="progress-fill" style="width:94%"></div></div>
+        <p style="margin-top:12px;">Broadcast quantistico omnidirezionale con traduzione neurale istantanea per comunicazione inter-colonia.</p>
+      </div>
+      <div class="card">
+        <h3>🔐 Crittografia Avanzata</h3>
+        <div class="stat-row"><span class="stat-label">Algoritmo</span><span class="stat-value">QKD-256-PQC</span></div><div class="stat-row"><span class="stat-label">Chiavi/giorno</span><span class="stat-value">1.7×10¹²</span></div><div class="stat-row"><span class="stat-label">Forza cifratura</span><span class="stat-value">2²⁵⁶ bit</span></div><div class="stat-row"><span class="stat-label">Intrusioni rilevate</span><span class="stat-value">0</span></div>
+        <div class="progress-bar"><div class="progress-fill" style="width:100%"></div></div>
+        <p style="margin-top:12px;">Crittografia post-quantistica con distribuzione chiavi quantistiche e rilevamento intrusioni entangled.</p>
+      </div>
+      <div class="card">
+        <h3>📊 Stato Rete</h3>
+        <div class="stat-row"><span class="stat-label">Pacchetti persi</span><span class="stat-value">0.00001%</span></div><div class="stat-row"><span class="stat-label">Tempo recupero</span><span class="stat-value">0.1 µs</span></div><div class="stat-row"><span class="stat-label">Ridondanza</span><span class="stat-value">5×</span></div><div class="stat-row"><span class="stat-label">Stato</span><span class="stat-value"><span class="sd active"></span>Operativa</span></div>
+        <div class="progress-bar"><div class="progress-fill" style="width:99.99%"></div></div>
+        <p style="margin-top:12px;">Monitoraggio in tempo reale della rete con healing automatico e bilanciamento del carico quantistico.</p>
+      </div>
+    </div>
+  </div>
+  <footer class="footer">MyZubster Comunicazione Interstellare &bull; Rete Mesh Quantistica &bull; v1.0</footer>
+  <script>
+    const canvas = document.getElementById('stars');
+    const ctx = canvas.getContext('2d');
+    let stars = [];
+    function resize() { canvas.width = window.innerWidth; canvas.height = window.innerHeight; }
+    resize();
+    window.addEventListener('resize', resize);
+    for (let i = 0; i < 150; i++) {
+      stars.push({ x: Math.random() * canvas.width, y: Math.random() * canvas.height, r: Math.random() * 1.2 + 0.3, speed: Math.random() * 0.2 + 0.05 });
+    }
+    function animate() {
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+      stars.forEach(s => {
+        ctx.beginPath(); ctx.arc(s.x, s.y, s.r, 0, Math.PI * 2);
+        ctx.fillStyle = 'rgba(96,165,250,' + (0.4 + Math.random() * 0.4) + ')';
+        ctx.fill();
+        s.y += s.speed;
+        if (s.y > canvas.height) { s.y = 0; s.x = Math.random() * canvas.width; }
+      });
+      requestAnimationFrame(animate);
+    }
+    animate();
+  </script>
+</body>
+</html>
