@@ -1,5 +1,6 @@
 const express = require('express');
 const router = express.Router();
+
 const auth = require('../middleware/auth');
 const SeedExchange = require('../models/SeedExchange');
 
@@ -161,4 +162,5 @@ router.delete('/:id', auth, async (req, res) => {
   }
 });
 
+module.exports = router;
 module.exports = router;
