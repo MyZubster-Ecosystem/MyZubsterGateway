@@ -31,14 +31,41 @@ const TokenSchema = new mongoose.Schema({
   assetLocation: {
     type: String
   },
+<<<<<<< HEAD
   status: {
     type: String,
     enum: ['active', 'inactive', 'pending'],
+=======
+  country: {
+    type: String
+  },
+  currency: {
+    type: String,
+    default: 'SGD'
+  },
+  expectedYield: {
+    type: Number,
+    default: 5
+  },
+  minInvestment: {
+    type: Number,
+    default: 0.1
+  },
+  status: {
+    type: String,
+    enum: ['active', 'inactive', 'pending', 'upcoming'],
+>>>>>>> origin/main
     default: 'active'
   },
   createdAt: {
     type: Date,
     default: Date.now
+<<<<<<< HEAD
+=======
+  },
+  launchDate: {
+    type: Date
+>>>>>>> origin/main
   }
 });
 
