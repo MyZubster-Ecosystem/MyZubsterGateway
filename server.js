@@ -118,6 +118,11 @@ try { const routes = require("./routes/massBounty997"); app.use("/api/bounty-997
 try { const routes = require("./routes/massBounty998"); app.use("/api/bounty-998", routes); } catch(e) {}
 try { const routes = require("./routes/massBounty999"); app.use("/api/bounty-999", routes); } catch(e) {}
 
+// Robot Social Media (#380) - Generazione post social per negozi
+try { const routes = require("./routes/robotSocial"); app.use("/api/robot/social", routes); } catch(e) {}
+// Payment Gateway MYZ/XMR (#382) - Pagamenti con escrow
+try { const routes = require("./routes/paymentGateway"); app.use("/api/payments", routes); } catch(e) {}
+
 // Anthea modules
 try { const routes = require("./core-backend/routes/antheaPayroll"); app.use("/api/anthea/payroll", routes); } catch(e) {}
 try { const routes = require("./core-backend/routes/antheaCompliance"); app.use("/api/anthea/compliance", routes); } catch(e) {}
