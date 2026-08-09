@@ -245,7 +245,8 @@ describe('translation catalogs', () => {
     );
 
     expect(englishReadme).toContain('[Español](README.es.md)');
-    expect(spanishReadme).toContain('[English](README.md)');
+    expect(spanishReadme).toContain('[Inglés](README.md)');
+    expect(spanishReadme).toContain('[Francés](README.fr.md)');
     expect(spanishReadme).toContain('## 📡 Endpoints de la API');
     expect(spanishReadme).toContain('## 🌍 Localización de la API');
     expect(spanishReadme).toContain('## 🔐 Seguridad');
