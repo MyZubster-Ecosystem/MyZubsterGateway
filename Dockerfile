@@ -1,37 +1,45 @@
-# ---- Build Stage ----
-FROM node:20-alpine AS builder
-WORKDIR /app
+# Multi-stage build for Node.js Express gateway
+FROM node:18-alpine AS builder
+
+WORKDIR /build
+
+# Copy package files
 COPY package*.json ./
-RUN npm ci
-COPY . .
 
-# ---- Production Stage ----
-FROM node:20-alpine
+# Install production dependencies only
+RUN npm ci --omit=dev && \
+    npm cache clean --force
+
+# Runtime stage
+FROM node:18-alpine
+
 WORKDIR /app
-
-# Security: run as non-root
-RUN addgroup -g 1001 -S nodejs && adduser -S nodejs -u 1001
 
 # Install dumb-init for proper signal handling
 RUN apk add --no-cache dumb-init
 
-COPY --from=builder /app/node_modules ./node_modules
-COPY --from=builder /app/package*.json ./
-COPY --from=builder /app/server.js ./
-COPY --from=builder /app/routes ./routes
-COPY --from=builder /app/middleware ./middleware
-COPY --from=builder /app/models ./models
-COPY --from=builder /app/services ./services
-COPY --from=builder /app/agents ./agents
-COPY --from=builder /app/config ./config
-COPY --from=builder /app/public ./public
-COPY --from=builder /app/views ./views
+# Create app user for security (non-root)
+RUN addgroup -g 1001 -S nodejs && \
+    adduser -S nodejs -u 1001
 
+# Copy production node_modules from builder
+COPY --from=builder --chown=nodejs:nodejs /build/node_modules ./node_modules
+
+# Copy application code
+COPY --chown=nodejs:nodejs . .
+
+# Switch to non-root user
 USER nodejs
-EXPOSE 3000
 
-HEALTHCHECK --interval=30s --timeout=5s --start-period=10s --retries=3 \
-  CMD wget --no-verbose --tries=1 --spider http://localhost:3000/health || exit 1
+# Expose port
+EXPOSE 10000
 
-ENTRYPOINT ["dumb-init", "--"]
-CMD ["node", "server.js"]
+# Health check
+HEALTHCHECK --interval=30s --timeout=10s --start-period=5s --retries=3 \
+    CMD node -e "require('http').get('http://localhost:10000/health', (r) => {if (r.statusCode !== 200) throw new Error(r.statusCode)})"
+
+# Use dumb-init to handle signals properly
+ENTRYPOINT ["/sbin/dumb-init", "--"]
+
+# Start application
+CMD ["node", "server.js.backup12"]

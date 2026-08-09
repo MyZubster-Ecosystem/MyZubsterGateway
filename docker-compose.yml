@@ -1,109 +1,64 @@
 version: '3.8'
 
 services:
+  mongodb:
+    image: mongo:7
+    container_name: myzubster-mongodb
+    restart: unless-stopped
+    ports:
+      - "27017:27017"
+    volumes:
+      - mongodb_data:/data/db
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: ${MONGO_USER:-admin}
+      MONGO_INITDB_ROOT_PASSWORD: ${MONGO_PASSWORD:-password}
+      MONGO_INITDB_DATABASE: myzubster
+    networks:
+      - myzubster-network
+    healthcheck:
+      test: ["CMD", "mongosh", "--eval", "db.adminCommand('ping')"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 20s
+
   gateway:
     build:
       context: .
       dockerfile: Dockerfile
-      target: production
     container_name: myzubster-gateway
+    restart: unless-stopped
     ports:
-      - "${GATEWAY_PORT:-3000}:3000"
-    environment:
-      - NODE_ENV=production
-      - PORT=3000
-      - MONGODB_URI=${MONGODB_URI:-mongodb://mongo:27017/myzubster}
-      - REDIS_URL=${REDIS_URL:-redis://redis:6379}
-      - JWT_SECRET=${JWT_SECRET}
-      - MONERO_RPC_URL=${MONERO_RPC_URL:-http://monero-wallet:18082}
+      - "${GATEWAY_PORT:-10000}:10000"
     depends_on:
-      mongo:
+      mongodb:
         condition: service_healthy
-      redis:
-        condition: service_healthy
-    restart: unless-stopped
+    environment:
+      NODE_ENV: ${NODE_ENV:-production}
+      PORT: 10000
+      MONGODB_URI: mongodb://${MONGO_USER:-admin}:${MONGO_PASSWORD:-password}@mongodb:27017/myzubster?authSource=admin
+      JWT_SECRET: ${JWT_SECRET:-change-me-in-production}
+      GATEWAY_PORT: ${GATEWAY_PORT:-10000}
+      CORS_ORIGIN: ${CORS_ORIGIN:-http://localhost:3000}
     networks:
-      - myzubster-net
+      - myzubster-network
     healthcheck:
-      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:3000/health"]
+      test: ["CMD", "wget", "--quiet", "--tries=1", "--spider", "http://localhost:10000/health"]
       interval: 30s
-      timeout: 5s
+      timeout: 10s
       retries: 3
-      start_period: 15s
-
-  biodiversity-ml:
-    build:
-      context: ./biodiversity-ml
-      dockerfile: Dockerfile.ml
-    container_name: myzubster-biodiversity-ml
-    ports:
-      - "${ML_PORT:-5000}:5000"
-    environment:
-      - FLASK_ENV=production
-      - MODEL_PATH=/app/models
-    volumes:
-      - ml-models:/app/models
-    restart: unless-stopped
-    networks:
-      - myzubster-net
-    healthcheck:
-      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:5000/health"]
-      interval: 30s
-      timeout: 5s
-      retries: 3
-
-  websocket:
-    build:
-      context: ./websocket-optimized
-      dockerfile: Dockerfile.ws
-    container_name: myzubster-websocket
-    ports:
-      - "${WS_PORT:-8080}:8080"
-    environment:
-      - NODE_ENV=production
-      - REDIS_URL=${REDIS_URL:-redis://redis:6379}
-    depends_on:
-      redis:
-        condition: service_healthy
-    restart: unless-stopped
-    networks:
-      - myzubster-net
-
-  mongo:
-    image: mongo:7
-    container_name: myzubster-mongo
-    volumes:
-      - mongo-data:/data/db
-    environment:
-      - MONGO_INITDB_DATABASE=myzubster
-    restart: unless-stopped
-    networks:
-      - myzubster-net
-    healthcheck:
-      test: echo 'db.runCommand("ping").ok' | mongosh --quiet
-      interval: 10s
-      timeout: 5s
-      retries: 5
-
-  redis:
-    image: redis:7-alpine
-    container_name: myzubster-redis
-    volumes:
-      - redis-data:/data
-    restart: unless-stopped
-    networks:
-      - myzubster-net
-    healthcheck:
-      test: ["CMD", "redis-cli", "ping"]
-      interval: 10s
-      timeout: 3s
-      retries: 5
+      start_period: 10s
+    env_file:
+      - .env
+    # Uncomment for development with volume mount
+    # volumes:
+    #   - ./:/app
+    #   - /app/node_modules
 
 volumes:
-  mongo-data:
-  redis-data:
-  ml-models:
+  mongodb_data:
+    driver: local
 
 networks:
-  myzubster-net:
+  myzubster-network:
     driver: bridge
