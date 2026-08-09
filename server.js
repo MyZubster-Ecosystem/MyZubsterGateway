@@ -68,6 +68,9 @@ app.use('/api/payments/multi-currency', require('./routes/multiCurrency'));
 console.log('✅ Caricamento routes Fiat Payments...');
 app.use('/api/payments/fiat', require('./routes/fiatPayments'));
 
+console.log('✅ Caricamento routes Smart Contract...');
+app.use('/api/blockchain/smart-contract', require('./routes/smartContract'));
+
 app.use('/api/backup', require('./routes/backup'));
 
 app.get('/health', (req, res) => {
