@@ -1,140 +1,117 @@
-/**
- * 🌿 Nature Tokenization System
- * Tokenizzazione di animali, piante e ecosistemi
- */
+// Nature Tokenization Module — Bounty #1224
+// Tokenizzazione Animali, Piante, Ecosistemi, Conservazione su MyZubster Chain
 
-class NatureTokenization {
-  constructor() {
-    this.animals = [];
-    this.plants = [];
-    this.ecosystems = [];
-    this.conservation = [];
-    this.totalTokens = 0;
-    
-    this.initializeNature();
-  }
+const crypto = require('crypto');
 
-  initializeNature() {
-    console.log('🌿 Inizializzazione del Sistema Natura...');
-    
-    // Animali domestici
-    this.createAnimal('Cane', 'Domestico', 'Mammifero', 100, 'Famiglia');
-    this.createAnimal('Gatto', 'Domestico', 'Mammifero', 90, 'Famiglia');
-    this.createAnimal('Cavallo', 'Domestico', 'Mammifero', 80, 'Lavoro');
-    this.createAnimal('Mucca', 'Domestico', 'Mammifero', 70, 'Alimentazione');
-    this.createAnimal('Pecora', 'Domestico', 'Mammifero', 60, 'Alimentazione');
-    this.createAnimal('Maiale', 'Domestico', 'Mammifero', 50, 'Alimentazione');
-    
-    // Animali selvatici
-    this.createAnimal('Leone', 'Selvatico', 'Mammifero', 150, 'Africa');
-    this.createAnimal('Tigre', 'Selvatico', 'Mammifero', 140, 'Asia');
-    this.createAnimal('Elefante', 'Selvatico', 'Mammifero', 130, 'Africa');
-    this.createAnimal('Giraffa', 'Selvatico', 'Mammifero', 120, 'Africa');
-    this.createAnimal('Orso', 'Selvatico', 'Mammifero', 110, 'Europa');
-    this.createAnimal('Lupo', 'Selvatico', 'Mammifero', 100, 'Europa');
-    this.createAnimal('Aquila', 'Selvatico', 'Uccello', 90, 'Montagne');
-    this.createAnimal('Delfino', 'Selvatico', 'Mammifero', 130, 'Oceano');
-    this.createAnimal('Balena', 'Selvatico', 'Mammifero', 160, 'Oceano');
-    
-    // Piante e alberi
-    this.createPlant('Quercia', 'Albero', 200, 'Europa');
-    this.createPlant('Pino', 'Albero', 180, 'Europa');
-    this.createPlant('Abete', 'Albero', 160, 'Montagne');
-    this.createPlant('Olivo', 'Albero', 150, 'Mediterraneo');
-    this.createPlant('Vite', 'Pianta', 120, 'Mediterraneo');
-    this.createPlant('Rosa', 'Fiore', 100, 'Mondo');
-    this.createPlant('Girasole', 'Fiore', 90, 'Mondo');
-    this.createPlant('Bambù', 'Pianta', 80, 'Asia');
-    this.createPlant('Palma', 'Albero', 110, 'Tropicale');
-    this.createPlant('Sequoia', 'Albero', 220, 'America');
-    
-    // Ecosistemi
-    this.createEcosystem('Foresta Amazzonica', 'Foresta', 300);
-    this.createEcosystem('Barriera Corallina', 'Marino', 250);
-    this.createEcosystem('Savana Africana', 'Prateria', 200);
-    this.createEcosystem('Alpi', 'Montagna', 180);
-    this.createEcosystem('Mare Mediterraneo', 'Marino', 160);
-    this.createEcosystem('Deserto del Sahara', 'Deserto', 140);
-    
-    // Conservazione
-    this.createConservation('Riserva Naturale', 'Parco Nazionale', 100);
-    this.createConservation('Area Protetta', 'Conservazione', 80);
-    this.createConservation('Santuario Animali', 'Protezione', 70);
-    
-    this.totalTokens = this.animals.length + this.plants.length + 
-                       this.ecosystems.length + this.conservation.length;
-    
-    console.log(`🌿 Sistema Natura inizializzato: ${this.totalTokens} oggetti tokenizzati`);
-  }
+// NFT minting store (in-memory; production would use DB/blockchain)
+const mintedNFTs = [];
 
-  createAnimal(name, type, species, rarity, habitat) {
-    const animal = {
-      id: `animal-${Date.now()}-${this.animals.length}`,
-      name,
-      type: type || 'Selvatico',
-      species: species || 'Mammifero',
-      rarity: rarity || 50,
-      habitat: habitat || 'Mondo',
-      status: 'tokenized',
-      tokenId: `NFT-NATURE-ANIMAL-${String(this.animals.length + 1).padStart(3, '0')}`,
-      createdAt: new Date()
-    };
-    this.animals.push(animal);
-    return animal;
-  }
-
-  createPlant(name, type, age, region) {
-    const plant = {
-      id: `plant-${Date.now()}-${this.plants.length}`,
-      name,
-      type: type || 'Pianta',
-      age: age || 100,
-      region: region || 'Mondo',
-      status: 'tokenized',
-      tokenId: `NFT-NATURE-PLANT-${String(this.plants.length + 1).padStart(3, '0')}`,
-      createdAt: new Date()
-    };
-    this.plants.push(plant);
-    return plant;
-  }
-
-  createEcosystem(name, type, biodiversity) {
-    const ecosystem = {
-      id: `ecosystem-${Date.now()}-${this.ecosystems.length}`,
-      name,
-      type: type || 'Naturale',
-      biodiversity: biodiversity || 100,
-      status: 'tokenized',
-      tokenId: `NFT-NATURE-ECO-${String(this.ecosystems.length + 1).padStart(3, '0')}`,
-      createdAt: new Date()
-    };
-    this.ecosystems.push(ecosystem);
-    return ecosystem;
-  }
-
-  createConservation(name, type, importance) {
-    const conservation = {
-      id: `conservation-${Date.now()}-${this.conservation.length}`,
-      name,
-      type: type || 'Protezione',
-      importance: importance || 50,
-      status: 'tokenized',
-      tokenId: `NFT-NATURE-CONS-${String(this.conservation.length + 1).padStart(3, '0')}`,
-      createdAt: new Date()
-    };
-    this.conservation.push(conservation);
-    return conservation;
-  }
-
-  getStats() {
-    return {
-      animals: this.animals.length,
-      plants: this.plants.length,
-      ecosystems: this.ecosystems.length,
-      conservation: this.conservation.length,
-      total: this.totalTokens
-    };
-  }
+function generateNFTId() {
+  return 'NFT-NATURE-' + crypto.randomBytes(8).toString('hex');
 }
 
-module.exports = new NatureTokenization();
+// ===== DATA =====
+
+const animals = [
+  { id: 1, name: 'Cane (Dog)', scientificName: 'Canis lupus familiaris', category: 'Domestico', rarity: 'Common' },
+  { id: 2, name: 'Gatto (Cat)', scientificName: 'Felis catus', category: 'Domestico', rarity: 'Common' },
+  { id: 3, name: 'Cavallo (Horse)', scientificName: 'Equus ferus caballus', category: 'Domestico', rarity: 'Uncommon' },
+  { id: 4, name: 'Pappagallo (Parrot)', scientificName: 'Psittaciformes', category: 'Domestico', rarity: 'Rare' },
+  { id: 5, name: 'Coniglio (Rabbit)', scientificName: 'Oryctolagus cuniculus', category: 'Domestico', rarity: 'Common' },
+  { id: 6, name: 'Pesce Rosso (Goldfish)', scientificName: 'Carassius auratus', category: 'Domestico', rarity: 'Common' },
+  { id: 7, name: 'Leone (Lion)', scientificName: 'Panthera leo', category: 'Selvatico', rarity: 'Legendary' },
+  { id: 8, name: 'Tigre (Tiger)', scientificName: 'Panthera tigris', category: 'Selvatico', rarity: 'Legendary' },
+  { id: 9, name: 'Elefante (Elephant)', scientificName: 'Loxodonta africana', category: 'Selvatico', rarity: 'Legendary' },
+  { id: 10, name: 'Aquila (Eagle)', scientificName: 'Aquila chrysaetos', category: 'Selvatico', rarity: 'Rare' },
+  { id: 11, name: 'Lupo (Wolf)', scientificName: 'Canis lupus', category: 'Selvatico', rarity: 'Rare' },
+  { id: 12, name: 'Delfino (Dolphin)', scientificName: 'Delphinus delphis', category: 'Selvatico', rarity: 'Rare' },
+  { id: 13, name: 'Orso Bruno (Brown Bear)', scientificName: 'Ursus arctos', category: 'Selvatico', rarity: 'Uncommon' },
+  { id: 14, name: 'Cervo (Deer)', scientificName: 'Cervus elaphus', category: 'Selvatico', rarity: 'Uncommon' },
+  { id: 15, name: 'Volpe (Fox)', scientificName: 'Vulpes vulpes', category: 'Selvatico', rarity: 'Uncommon' }
+];
+
+const plants = [
+  { id: 1, name: 'Quercia (Oak)', scientificName: 'Quercus robur', type: 'Albero', rarity: 'Common' },
+  { id: 2, name: 'Rosa (Rose)', scientificName: 'Rosa gallica', type: 'Fiore', rarity: 'Common' },
+  { id: 3, name: 'Olivo (Olive Tree)', scientificName: 'Olea europaea', type: 'Albero', rarity: 'Uncommon' },
+  { id: 4, name: 'Girasole (Sunflower)', scientificName: 'Helianthus annuus', type: 'Fiore', rarity: 'Common' },
+  { id: 5, name: 'Lavanda (Lavender)', scientificName: 'Lavandula angustifolia', type: 'Arbusto', rarity: 'Common' },
+  { id: 6, name: 'Sequoia (Redwood)', scientificName: 'Sequoiadendron giganteum', type: 'Albero', rarity: 'Legendary' },
+  { id: 7, name: 'Orchidea (Orchid)', scientificName: 'Orchidaceae', type: 'Fiore', rarity: 'Rare' },
+  { id: 8, name: 'Bambu (Bamboo)', scientificName: 'Bambusoideae', type: 'Erba', rarity: 'Uncommon' },
+  { id: 9, name: 'Cactus Saguaro', scientificName: 'Carnegiea gigantea', type: 'Succulenta', rarity: 'Rare' },
+  { id: 10, name: 'Ninfea (Water Lily)', scientificName: 'Nymphaea alba', type: 'Acquatica', rarity: 'Uncommon' }
+];
+
+const ecosystems = [
+  { id: 1, name: 'Foresta Amazzonica', location: 'Sud America', area_km2: 5500000, biodiversity: 'Altissima' },
+  { id: 2, name: 'Barriera Corallina', location: 'Australia', area_km2: 344400, biodiversity: 'Altissima' },
+  { id: 3, name: 'Savana Africana', location: 'Africa', area_km2: 13000000, biodiversity: 'Alta' },
+  { id: 4, name: 'Tundra Artica', location: 'Artide', area_km2: 11500000, biodiversity: 'Media' },
+  { id: 5, name: 'Foresta Pluviale Temperata', location: 'Pacifico NW', area_km2: 75000, biodiversity: 'Alta' },
+  { id: 6, name: 'Delta del Danubio', location: 'Romania/Ucraina', area_km2: 4152, biodiversity: 'Altissima' }
+];
+
+const conservation = [
+  { id: 1, name: 'Parco Nazionale Yellowstone', country: 'USA', area_km2: 8983, status: 'Protected' },
+  { id: 2, name: 'Parco Nazionale del Gran Paradiso', country: 'Italia', area_km2: 703, status: 'Protected' },
+  { id: 3, name: 'Riserva Marina Galapagos', country: 'Ecuador', area_km2: 133000, status: 'Marine Reserve' }
+];
+
+// ===== NFT MINTING FUNCTIONS =====
+
+function mintNFT(category, item, wallet) {
+  const nftId = generateNFTId();
+  const timestamp = new Date().toISOString();
+  const nft = {
+    id: nftId,
+    category,
+    itemId: item.id,
+    name: item.name,
+    scientificName: item.scientificName || null,
+    rarity: item.rarity || null,
+    wallet,
+    mintedAt: timestamp,
+    tokenURI: `https://api.myzubster.com/nft/nature/${nftId}`
+  };
+  mintedNFTs.push(nft);
+  return nft;
+}
+
+function batchMint(category, wallet) {
+  const items = { animals, plants, ecosystems, conservation }[category];
+  if (!items) throw new Error('Invalid category');
+  return items.map(item => mintNFT(category, item, wallet));
+}
+
+function getNFTsByWallet(wallet) {
+  return mintedNFTs.filter(n => n.wallet === wallet);
+}
+
+function getStats() {
+  const byCategory = {};
+  mintedNFTs.forEach(n => {
+    byCategory[n.category] = (byCategory[n.category] || 0) + 1;
+  });
+  return {
+    totalMinted: mintedNFTs.length,
+    byCategory,
+    categories: {
+      animals: animals.length,
+      plants: plants.length,
+      ecosystems: ecosystems.length,
+      conservation: conservation.length
+    }
+  };
+}
+
+module.exports = {
+  animals,
+  plants,
+  ecosystems,
+  conservation,
+  mintNFT,
+  batchMint,
+  getNFTsByWallet,
+  getStats
+};
