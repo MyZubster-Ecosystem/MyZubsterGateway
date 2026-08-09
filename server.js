@@ -95,22 +95,35 @@ try { const routes = require("./routes/webhookRoutes"); app.use("/webhook", rout
 // Benzina XMR
 try { const routes = require("./routes/benzinaXmr"); app.use("/api/benzina-xmr", routes); } catch(e) {}
 
-// Mass Bounty 990-999
+// Mass Bounty 990
 try { const routes = require("./routes/massBounty990"); app.use("/api/bounty-990", routes); } catch(e) {}
-try { const routes = require("./routes/massBounty991"); app.use("/api/bounty-991", routes); } catch(e) {}
-try { const routes = require("./routes/massBounty992"); app.use("/api/bounty-992", routes); } catch(e) {}
-try { const routes = require("./routes/massBounty993"); app.use("/api/bounty-993", routes); } catch(e) {}
-try { const routes = require("./routes/massBounty994"); app.use("/api/bounty-994", routes); } catch(e) {}
-try { const routes = require("./routes/massBounty995"); app.use("/api/bounty-995", routes); } catch(e) {}
-try { const routes = require("./routes/massBounty996"); app.use("/api/bounty-996", routes); } catch(e) {}
-try { const routes = require("./routes/massBounty997"); app.use("/api/bounty-997", routes); } catch(e) {}
-try { const routes = require("./routes/massBounty998"); app.use("/api/bounty-998", routes); } catch(e) {}
-try { const routes = require("./routes/massBounty999"); app.use("/api/bounty-999", routes); } catch(e) {}
 
-// Anthea modules
-try { const routes = require("./core-backend/routes/antheaPayroll"); app.use("/api/anthea/payroll", routes); } catch(e) {}
-try { const routes = require("./core-backend/routes/antheaCompliance"); app.use("/api/anthea/compliance", routes); } catch(e) {}
-try { const routes = require("./core-backend/routes/antheaWelfare"); app.use("/api/anthea/welfare", routes); } catch(e) {}
+// Mass Bounty 991
+try { const routes = require("./routes/massBounty991"); app.use("/api/bounty-991", routes); } catch(e) {}
+
+// Mass Bounty 992
+try { const routes = require("./routes/massBounty992"); app.use("/api/bounty-992", routes); } catch(e) {}
+
+// Mass Bounty 993
+try { const routes = require("./routes/massBounty993"); app.use("/api/bounty-993", routes); } catch(e) {}
+
+// Mass Bounty 994
+try { const routes = require("./routes/massBounty994"); app.use("/api/bounty-994", routes); } catch(e) {}
+
+// Mass Bounty 995
+try { const routes = require("./routes/massBounty995"); app.use("/api/bounty-995", routes); } catch(e) {}
+
+// Mass Bounty 996
+try { const routes = require("./routes/massBounty996"); app.use("/api/bounty-996", routes); } catch(e) {}
+
+// Mass Bounty 997
+try { const routes = require("./routes/massBounty997"); app.use("/api/bounty-997", routes); } catch(e) {}
+
+// Mass Bounty 998
+try { const routes = require("./routes/massBounty998"); app.use("/api/bounty-998", routes); } catch(e) {}
+
+// Mass Bounty 999
+try { const routes = require("./routes/massBounty999"); app.use("/api/bounty-999", routes); } catch(e) {}
 
 // Swagger UI
 try {
@@ -136,7 +149,7 @@ app.get("*", (req, res) => {
 });
 
 // Start server
-app.listen(PORT, '0.0.0.0', () => {
+app.listen(PORT, () => {
   console.log(`🚪 MyZubster Gateway avviato sulla porta ${PORT}`);
   console.log(`🔍 Health: /api/health`);
   console.log(`📚 Swagger: /api/docs`);
