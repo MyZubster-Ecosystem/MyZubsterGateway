@@ -11,6 +11,10 @@ const { assignReward } = require('./services/rewardService');
 const app = express();
 app.use(express.json());
 
+// i18n Middleware
+const i18nMiddleware = require('./middleware/i18n');
+app.use(i18nMiddleware);
+
 // MongoDB connection
 mongoose.connect(process.env.MONGODB_URI || 'mongodb://localhost:27017/myzubster')
   .then(() => console.log('✅ Connected to MongoDB'))
