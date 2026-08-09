@@ -1,0 +1,200 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>🌀 Hera-Wormhole - MyZubster</title>
+  <style>
+    :root {
+      --accent: #8b5cf6;
+      --accent-strong: #7c3aed;
+      --bg: #0a0a1a;
+      --surface: #12122a;
+      --surface-2: #1a1a3a;
+      --text: #e8e6f0;
+      --text-soft: #9898b8;
+      --border: #2a2a4a;
+      --shadow: 0 8px 32px rgba(80, 40, 200, 0.2);
+      --radius: 12px;
+      --status-active: #22c55e;
+      --status-warning: #eab308;
+      --status-critical: #ef4444;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      min-height: 100vh;
+      overflow-x: hidden;
+    }
+    .stars { position: fixed; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none; z-index: 0; }
+    .header {
+      position: relative; z-index: 1;
+      background: linear-gradient(135deg, #2e1065, #4c1d95, #5b21b6);
+      padding: 24px 32px;
+      display: flex; justify-content: space-between; align-items: center;
+      flex-wrap: wrap; gap: 16px;
+      border-bottom: 2px solid #7c3aed;
+    }
+    .header h1 { font-size: 1.8rem; color: #fff; display: flex; align-items: center; gap: 12px; }
+    .header p { color: #c4b5fd; font-size: 0.9rem; margin-top: 4px; }
+    .badge {
+      background: rgba(255,255,255,0.15); padding: 6px 14px;
+      border-radius: 20px; font-size: 0.8rem; color: #e9d5ff;
+    }
+    .content { position: relative; z-index: 1; max-width: 1300px; margin: 0 auto; padding: 32px 24px; }
+    .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap: 24px; margin-bottom: 32px; }
+    .card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 24px;
+      box-shadow: var(--shadow);
+      transition: transform 0.2s, box-shadow 0.2s;
+    }
+    .card:hover { transform: translateY(-2px); box-shadow: 0 12px 40px rgba(80, 40, 200, 0.3); }
+    .card h3 { font-size: 1.2rem; margin-bottom: 16px; display: flex; align-items: center; gap: 8px; color: #c4b5fd; }
+    .card p { color: var(--text-soft); font-size: 0.9rem; line-height: 1.6; }
+    .stat-row { display: flex; justify-content: space-between; padding: 8px 0; border-bottom: 1px solid var(--border); font-size: 0.9rem; }
+    .stat-row:last-child { border-bottom: none; }
+    .stat-label { color: var(--text-soft); }
+    .stat-value { color: #a78bfa; font-weight: 600; font-family: monospace; }
+    .status-dot { display: inline-block; width: 10px; height: 10px; border-radius: 50%; margin-right: 6px; }
+    .status-dot.active { background: var(--status-active); box-shadow: 0 0 8px var(--status-active); }
+    .status-dot.warning { background: var(--status-warning); }
+    .wormhole-viz {
+      width: 100%; height: 200px;
+      border-radius: var(--radius);
+      background: linear-gradient(135deg, #4c1d95, #7c3aed, #a78bfa, #6366f1, #312e81);
+      position: relative; overflow: hidden;
+      margin-bottom: 24px;
+      display: flex; align-items: center; justify-content: center;
+    }
+    .wormhole-viz::before {
+      content: '';
+      position: absolute;
+      width: 100px; height: 100px;
+      border-radius: 50%;
+      background: radial-gradient(circle, rgba(255,255,255,0.9) 0%, rgba(139,92,246,0.4) 40%, transparent 70%);
+      animation: pulse 2s ease-in-out infinite;
+    }
+    @keyframes pulse {
+      0%, 100% { transform: scale(1); opacity: 0.8; }
+      50% { transform: scale(1.5); opacity: 0.3; }
+    }
+    .progress-bar { height: 8px; background: var(--surface-2); border-radius: 4px; overflow: hidden; margin-top: 8px; }
+    .progress-fill { height: 100%; border-radius: 4px; background: linear-gradient(90deg, #7c3aed, #a78bfa); }
+    .footer { text-align: center; padding: 24px; color: var(--text-soft); font-size: 0.8rem; position: relative; z-index: 1; }
+    @media (max-width: 768px) { .header { padding: 16px; } .content { padding: 16px; } .grid { grid-template-columns: 1fr; } }
+  </style>
+</head>
+<body>
+  <canvas class="stars" id="stars"></canvas>
+  <header class="header">
+    <div>
+      <h1>🌀 Hera-Wormhole</h1>
+      <p>Tecnologia Wormhole &bull; MyZubster Space Division</p>
+    </div>
+    <div style="display:flex;gap:8px;flex-wrap:wrap;">
+      <span class="badge">Distanza: Illimitata</span>
+      <span class="badge">Stabilit&agrave;: 24-48h</span>
+      <span class="badge">Capacit&agrave;: 10,000t</span>
+    </div>
+  </header>
+  <div class="content">
+    <div class="wormhole-viz">
+      <span style="position:relative;z-index:1;font-size:1.5rem;color:#fff;font-weight:bold;">WORMHOLE ATTIVO</span>
+    </div>
+    <div class="grid">
+      <div class="card">
+        <h3>⚡ Generatore Wormhole</h3>
+        <div class="stat-row"><span class="stat-label">Potenza</span><span class="stat-value">2.4 PW</span></div>
+        <div class="stat-row"><span class="stat-label">Efficienza</span><span class="stat-value">87.3%</span></div>
+        <div class="stat-row"><span class="stat-label">Stato</span><span class="stat-value"><span class="status-dot active"></span>Operativo</span></div>
+        <div class="progress-bar"><div class="progress-fill" style="width:87%"></div></div>
+        <p style="margin-top:12px;">Generatore a energia oscura con confinamento a plasma di quark-gluoni per l&apos;apertura dello spazio-tempo.</p>
+      </div>
+      <div class="card">
+        <h3>🔒 Stabilizzazione</h3>
+        <div class="stat-row"><span class="stat-label">Campo di contenimento</span><span class="stat-value">99.7%</span></div>
+        <div class="stat-row"><span class="stat-label">Durata residua</span><span class="stat-value">41h 12m</span></div>
+        <div class="stat-row"><span class="stat-label">Fluttuazioni</span><span class="stat-value">0.03%</span></div>
+        <div class="progress-bar"><div class="progress-fill" style="width:99%"></div></div>
+        <p style="margin-top:12px;">Sistema di compensazione a materia esotica con feedback quantistico per mantenere la gola del wormhole aperta.</p>
+      </div>
+      <div class="card">
+        <h3>🧭 Navigazione</h3>
+        <div class="stat-row"><span class="stat-label">Destinazione attuale</span><span class="stat-value">Proxima Centauri b</span></div>
+        <div class="stat-row"><span class="stat-label">Tempo di transito</span><span class="stat-value">0.8 secondi</span></div>
+        <div class="stat-row"><span class="stat-label">Precisione</span><span class="stat-value">99.99%</span></div>
+        <div class="progress-bar"><div class="progress-fill" style="width:99.99%"></div></div>
+        <p style="margin-top:12px;">Calibrazione spazio-temporale con ancore a pulsar per navigazione interstellare di precisione.</p>
+      </div>
+      <div class="card">
+        <h3>🗺️ Mappatura Rete</h3>
+        <div class="stat-row"><span class="stat-label">Nodi attivi</span><span class="stat-value">12</span></div>
+        <div class="stat-row"><span class="stat-label">Nodi in costruzione</span><span class="stat-value">3</span></div>
+        <div class="stat-row"><span class="stat-label">Copertura galattica</span><span class="stat-value">0.003%</span></div>
+        <div class="progress-bar"><div class="progress-fill" style="width:12%"></div></div>
+        <p style="margin-top:12px;">Rete neurale quantistica per l&apos;ottimizzazione dei percorsi nello spazio-tempo curvo.</p>
+      </div>
+      <div class="card">
+        <h3>🛡️ Sistema di Sicurezza</h3>
+        <div class="stat-row"><span class="stat-label">Scudi gravitazionali</span><span class="stat-value"><span class="status-dot active"></span>Attivi</span></div>
+        <div class="stat-row"><span class="stat-label">Rilevamento intrusioni</span><span class="stat-value"><span class="status-dot active"></span>Online</span></div>
+        <div class="stat-row"><span class="stat-label">Protocollo collasso</span><span class="stat-value"><span class="status-dot warning"></span>Standby</span></div>
+        <div class="progress-bar"><div class="progress-fill" style="width:100%"></div></div>
+        <p style="margin-top:12px;">Barriera a curvatura invertita con fail-safe a collasso immediato in caso di instabilit&agrave; critica.</p>
+      </div>
+      <div class="card">
+        <h3>🤖 AI Gestione Wormhole</h3>
+        <div class="stat-row"><span class="stat-label">Modello AI</span><span class="stat-value">Hera-Core v4.2</span></div>
+        <div class="stat-row"><span class="stat-label">Predizioni/orario</span><span class="stat-value">2.8M</span></div>
+        <div class="stat-row"><span class="stat-label">Affidabilit&agrave;</span><span class="stat-value">99.97%</span></div>
+        <div class="progress-bar"><div class="progress-fill" style="width:99.97%"></div></div>
+        <p style="margin-top:12px;">Intelligenza artificiale quantistica specializzata nella gestione predittiva delle fluttuazioni spazio-temporali.</p>
+      </div>
+    </div>
+    <div class="card" style="margin-bottom:24px;">
+      <h3>🚢 Trasporto Navi e Merci</h3>
+      <div class="grid" style="margin-bottom:0;">
+        <div>
+          <div class="stat-row"><span class="stat-label">Navi in transito (oggi)</span><span class="stat-value">47</span></div>
+          <div class="stat-row"><span class="stat-label">Massa trasportata</span><span class="stat-value">89,450 ton</span></div>
+          <div class="stat-row"><span class="stat-label">Tempo medio di transito</span><span class="stat-value">0.92s</span></div>
+        </div>
+        <div>
+          <div class="stat-row"><span class="stat-label">Navi in coda</span><span class="stat-value">3</span></div>
+          <div class="stat-row"><span class="stat-label">Capacit&agrave; massima/giorno</span><span class="stat-value">120 navi</span></div>
+          <div class="stat-row"><span class="stat-label">Efficienza cargo</span><span class="stat-value">94.2%</span></div>
+        </div>
+      </div>
+    </div>
+  </div>
+  <footer class="footer">MyZubster Hera-Wormhole &bull; Tecnologia Wormhole Interstellare &bull; v1.0</footer>
+  <script>
+    const canvas = document.getElementById('stars');
+    const ctx = canvas.getContext('2d');
+    let stars = [];
+    function resize() { canvas.width = window.innerWidth; canvas.height = window.innerHeight; }
+    resize();
+    window.addEventListener('resize', resize);
+    for (let i = 0; i < 200; i++) {
+      stars.push({ x: Math.random() * canvas.width, y: Math.random() * canvas.height, r: Math.random() * 1.5 + 0.5, speed: Math.random() * 0.3 + 0.1 });
+    }
+    function animate() {
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+      stars.forEach(s => {
+        ctx.beginPath(); ctx.arc(s.x, s.y, s.r, 0, Math.PI * 2);
+        ctx.fillStyle = 'rgba(180,160,255,' + (0.5 + Math.random() * 0.5) + ')';
+        ctx.fill();
+        s.y += s.speed;
+        if (s.y > canvas.height) { s.y = 0; s.x = Math.random() * canvas.width; }
+      });
+      requestAnimationFrame(animate);
+    }
+    animate();
+  </script>
+</body>
+</html>
