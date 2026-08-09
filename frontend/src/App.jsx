@@ -5,7 +5,12 @@ import Home from './pages/Home';
 import UrbanGardenDashboard from './pages/UrbanGardenDashboard';
 import HospitalDashboard from './pages/HospitalDashboard';
 import TransactionHistory from './pages/TransactionHistory';
+<<<<<<< HEAD
 import ComplianceDashboard from './pages/ComplianceDashboard';
+=======
+import AdminDashboard from './pages/AdminDashboard';
+import ApiDocs from './pages/ApiDocs';
+>>>>>>> origin/main
 
 function App() {
   return (
@@ -16,7 +21,12 @@ function App() {
         <Route path="/garden" element={<UrbanGardenDashboard />} />
         <Route path="/hospital" element={<HospitalDashboard />} />
         <Route path="/transactions" element={<TransactionHistory />} />
+<<<<<<< HEAD
         <Route path="/compliance" element={<ComplianceDashboard />} />
+=======
+        <Route path="/admin" element={<AdminDashboard />} />
+        <Route path="/api-docs" element={<ApiDocs />} />
+>>>>>>> origin/main
       </Routes>
     </BrowserRouter>
   );
