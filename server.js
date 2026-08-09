@@ -3,6 +3,8 @@ const express = require('express');
 const path = require('path');
 const mongoose = require('mongoose');
 const cors = require('cors');
+const http = require('http');
+const socketService = require('./services/socketService');
 const app = express();
 const PORT = process.env.PORT || 10000;
 
@@ -83,7 +85,10 @@ mongoose.connect(process.env.MONGODB_URI || 'mongodb://localhost:27017/myzubster
   .then(() => console.log('✅ Connected to MongoDB'))
   .catch(err => console.error('❌ MongoDB connection error:', err));
 
-const server = app.listen(PORT, () => {
+const server = http.createServer(app);
+socketService.init(server);
+
+server.listen(PORT, () => {
   console.log(`🚀 Gateway running on http://localhost:${PORT}`);
 });
 
