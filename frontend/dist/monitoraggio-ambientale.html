@@ -1,0 +1,908 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>🌱 Monitoraggio Ambientale - Futura Ambiente</title>
+
+  <!-- Leaflet (interactive map) -->
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
+        integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin="" />
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"
+          integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
+
+  <!-- Chart.js -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+
+  <style>
+    :root {
+      --accent: #2ecc71;
+      --accent-strong: #27ae60;
+      --bg: #0a0e1a;
+      --surface: #141824;
+      --surface-2: #1a2030;
+      --text: #e0e6f0;
+      --text-soft: #8899aa;
+      --border: rgba(255,255,255,0.08);
+      --shadow: 0 8px 32px rgba(0,0,0,0.3);
+      --radius: 14px;
+      --radius-sm: 10px;
+      --air-color: #3498db;
+      --water-color: #1abc9c;
+      --soil-color: #e67e22;
+      --waste-color: #9b59b6;
+      --danger: #e74c3c;
+      --warning: #f39c12;
+      --good: #2ecc71;
+      --info: #3498db;
+    }
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      -webkit-font-smoothing: antialiased;
+    }
+    .dashboard { max-width: 1440px; margin: 0 auto; padding: 20px; }
+
+    /* Header */
+    .header {
+      text-align: center; padding: 32px 24px; margin-bottom: 28px;
+      background: linear-gradient(135deg, #0d2137, #0a1a2e);
+      border-radius: var(--radius);
+      border: 1px solid rgba(52,152,219,0.15);
+      position: relative; overflow: hidden;
+    }
+    .header::before {
+      content: ''; position: absolute; top: -50%; left: -50%; width: 200%; height: 200%;
+      background: radial-gradient(circle at 30% 50%, rgba(46,204,113,0.06), transparent 60%);
+      animation: headerPulse 6s ease-in-out infinite;
+    }
+    @keyframes headerPulse { 0%, 100% { opacity: 0.3; } 50% { opacity: 0.8; } }
+    .header h1 { font-size: 2.2rem; position: relative; }
+    .header h1 span { color: var(--accent); }
+    .header p { margin: 8px 0 0; color: var(--text-soft); font-size: 1rem; position: relative; }
+    .header .badge-row { display: flex; justify-content: center; gap: 12px; margin-top: 14px; position: relative; flex-wrap: wrap; }
+    .header .badge {
+      display: inline-flex; align-items: center; gap: 6px; padding: 6px 16px;
+      border-radius: 20px; font-size: 0.8rem; font-weight: 600;
+    }
+    .badge.live { background: rgba(46,204,113,0.15); color: var(--good); border: 1px solid rgba(46,204,113,0.2); }
+    .badge.updated { background: rgba(52,152,219,0.15); color: var(--info); border: 1px solid rgba(52,152,219,0.2); }
+    .badge .dot { display: inline-block; width: 8px; height: 8px; border-radius: 50%; animation: dotPulse 2s infinite; }
+    .badge.live .dot { background: var(--good); }
+    @keyframes dotPulse { 0%,100% { opacity: 1; } 50% { opacity: 0.3; } }
+
+    /* Section tabs */
+    .section-tabs {
+      display: flex; gap: 8px; margin-bottom: 24px; flex-wrap: wrap;
+    }
+    .section-tab {
+      display: flex; align-items: center; gap: 8px; padding: 12px 20px;
+      border-radius: 12px; border: 1px solid var(--border); cursor: pointer;
+      background: transparent; color: var(--text-soft); font-size: 0.9rem; font-weight: 500;
+      transition: all 0.3s; font-family: inherit;
+    }
+    .section-tab:hover { background: rgba(255,255,255,0.05); color: var(--text); }
+    .section-tab.active {
+      background: rgba(46,204,113,0.1); border-color: var(--accent); color: var(--accent);
+    }
+    .section-tab .count {
+      background: rgba(255,255,255,0.08); padding: 2px 8px; border-radius: 10px;
+      font-size: 0.75rem; font-weight: 600;
+    }
+    .section-tab.active .count { background: rgba(46,204,113,0.2); }
+
+    /* Section panels */
+    .section-panel { display: none; }
+    .section-panel.active { display: block; }
+
+    /* KPI Grid */
+    .kpi-grid {
+      display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap: 14px; margin-bottom: 24px;
+    }
+    .kpi-card {
+      padding: 18px; border-radius: var(--radius-sm);
+      border: 1px solid var(--border); background: var(--surface);
+      position: relative; overflow: hidden;
+    }
+    .kpi-card::after {
+      content: ''; position: absolute; top: 0; left: 0; right: 0; height: 3px;
+    }
+    .kpi-card.air::after { background: linear-gradient(90deg, #3498db, #2ecc71); }
+    .kpi-card.water::after { background: linear-gradient(90deg, #1abc9c, #3498db); }
+    .kpi-card.soil::after { background: linear-gradient(90deg, #e67e22, #f39c12); }
+    .kpi-card.waste::after { background: linear-gradient(90deg, #9b59b6, #3498db); }
+    .kpi-card.general::after { background: linear-gradient(90deg, var(--accent), var(--accent-strong)); }
+    .kpi-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; }
+    .kpi-label { font-size: 0.8rem; color: var(--text-soft); text-transform: uppercase; letter-spacing: 0.5px; }
+    .kpi-icon { font-size: 1.5rem; }
+    .kpi-value { font-size: 1.8rem; font-weight: bold; }
+    .kpi-value.danger { color: var(--danger); }
+    .kpi-value.warning { color: var(--warning); }
+    .kpi-value.good { color: var(--good); }
+    .kpi-value.info { color: var(--info); }
+    .kpi-sub { font-size: 0.75rem; color: var(--text-soft); margin-top: 4px; }
+    .kpi-trend { font-size: 0.8rem; margin-top: 2px; }
+    .kpi-trend.up { color: var(--danger); }
+    .kpi-trend.down { color: var(--good); }
+    .kpi-trend.stable { color: var(--text-soft); }
+
+    /* Charts & Cards */
+    .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-bottom: 24px; }
+    .grid-3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 20px; margin-bottom: 24px; }
+    .grid-4 { display: grid; grid-template-columns: 1fr 1fr 1fr 1fr; gap: 16px; margin-bottom: 24px; }
+    .card {
+      background: var(--surface); border: 1px solid var(--border);
+      border-radius: var(--radius-sm); padding: 20px;
+    }
+    .card h2 { font-size: 1rem; margin-bottom: 16px; display: flex; align-items: center; gap: 8px; }
+    .card h2 .badge-n { background: rgba(100,149,237,0.15); color: var(--info); padding: 2px 10px; border-radius: 12px; font-size: 0.75rem; font-weight: 600; }
+
+    /* Bar Chart (CSS) */
+    .bar-chart { display: flex; flex-direction: column; gap: 10px; }
+    .bar-row { display: flex; align-items: center; gap: 8px; }
+    .bar-label { font-size: 0.8rem; color: var(--text-soft); min-width: 70px; text-align: right; }
+    .bar-track { flex: 1; height: 22px; background: rgba(255,255,255,0.04); border-radius: 6px; overflow: hidden; }
+    .bar-fill {
+      height: 100%; border-radius: 6px; transition: width 1.5s ease;
+      display: flex; align-items: center; justify-content: flex-end; padding-right: 8px;
+      font-size: 0.7rem; font-weight: 600; color: #fff; min-width: 30px;
+    }
+    .bar-fill.air { background: linear-gradient(90deg, #3498db, #2ecc71); }
+    .bar-fill.water { background: linear-gradient(90deg, #1abc9c, #2ecc71); }
+    .bar-fill.soil { background: linear-gradient(90deg, #e67e22, #f39c12); }
+    .bar-fill.waste { background: linear-gradient(90deg, #9b59b6, #3498db); }
+    .bar-fill.danger { background: linear-gradient(90deg, #e74c3c, #c0392b); }
+    .bar-fill.warning { background: linear-gradient(90deg, #f39c12, #e67e22); }
+    .bar-fill.good { background: linear-gradient(90deg, #2ecc71, #27ae60); }
+    .bar-fill.info { background: linear-gradient(90deg, #3498db, #2980b9); }
+    .bar-value { font-size: 0.75rem; font-weight: 600; min-width: 40px; color: var(--text-soft); }
+
+    /* AQI meter */
+    .aqi-meter {
+      width: 100%; height: 12px; border-radius: 6px; background: linear-gradient(90deg,
+        #2ecc71 0%, #2ecc71 20%, #f39c12 20%, #f39c12 40%,
+        #e67e22 40%, #e67e22 60%, #e74c3c 60%, #e74c3c 80%, #8e44ad 80%, #8e44ad 100%);
+      margin: 12px 0; position: relative;
+    }
+    .aqi-marker {
+      position: absolute; top: -6px; width: 4px; height: 24px; background: #fff;
+      border-radius: 2px; transition: left 1.5s ease; box-shadow: 0 0 8px rgba(255,255,255,0.5);
+    }
+    .aqi-labels { display: flex; justify-content: space-between; font-size: 0.7rem; color: var(--text-soft); margin-top: 2px; }
+
+    /* Map */
+    #monitor-map {
+      height: 350px; border-radius: var(--radius-sm); overflow: hidden;
+      background: #1a2030;
+    }
+
+    /* Table */
+    .table-wrap { overflow-x: auto; }
+    table { width: 100%; border-collapse: collapse; }
+    th { padding: 10px 12px; text-align: left; font-weight: 600; color: var(--text-soft); font-size: 0.8rem; border-bottom: 1px solid var(--border); }
+    td { padding: 8px 12px; border-bottom: 1px solid rgba(255,255,255,0.04); font-size: 0.85rem; }
+    tr:hover { background: rgba(255,255,255,0.02); }
+    .status-tag {
+      display: inline-block; padding: 3px 10px; border-radius: 10px;
+      font-size: 0.75rem; font-weight: 600;
+    }
+    .status-tag.good { background: rgba(46,204,113,0.15); color: var(--good); }
+    .status-tag.warning { background: rgba(243,156,18,0.15); color: var(--warning); }
+    .status-tag.danger { background: rgba(231,76,60,0.15); color: var(--danger); }
+    .status-tag.info { background: rgba(52,152,219,0.15); color: var(--info); }
+
+    /* Circular progress */
+    .circular-grid { display: flex; justify-content: space-around; gap: 16px; flex-wrap: wrap; }
+    .circular-item { text-align: center; }
+    .circular-chart {
+      width: 100px; height: 100px; position: relative; margin: 0 auto 8px;
+    }
+    .circular-chart svg { transform: rotate(-90deg); }
+    .circular-bg { fill: none; stroke: rgba(255,255,255,0.05); stroke-width: 6; }
+    .circular-progress {
+      fill: none; stroke-width: 6; stroke-linecap: round;
+      transition: stroke-dasharray 1.5s ease;
+    }
+    .circular-progress.air { stroke: #3498db; }
+    .circular-progress.water { stroke: #1abc9c; }
+    .circular-progress.soil { stroke: #e67e22; }
+    .circular-progress.waste { stroke: #9b59b6; }
+    .circular-text {
+      position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%);
+      font-size: 1.2rem; font-weight: bold;
+    }
+    .circular-label { font-size: 0.75rem; color: var(--text-soft); }
+
+    /* Responsive */
+    @media (max-width: 900px) {
+      .grid-2, .grid-3, .grid-4 { grid-template-columns: 1fr; }
+      .kpi-grid { grid-template-columns: repeat(2, 1fr); }
+      .header h1 { font-size: 1.6rem; }
+    }
+    @media (max-width: 480px) {
+      .kpi-grid { grid-template-columns: 1fr; }
+      .dashboard { padding: 12px; }
+    }
+
+    /* Animations */
+    @keyframes fadeInUp {
+      from { opacity: 0; transform: translateY(20px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+    .section-panel.active .card { animation: fadeInUp 0.5s ease-out; }
+    .section-panel.active .card:nth-child(2) { animation-delay: 0.1s; }
+    .section-panel.active .card:nth-child(3) { animation-delay: 0.2s; }
+    .section-panel.active .card:nth-child(4) { animation-delay: 0.3s; }
+
+    /* Scrollbar */
+    ::-webkit-scrollbar { width: 6px; }
+    ::-webkit-scrollbar-track { background: transparent; }
+    ::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.1); border-radius: 3px; }
+    ::-webkit-scrollbar-thumb:hover { background: rgba(255,255,255,0.2); }
+  </style>
+</head>
+<body>
+<div class="dashboard">
+
+  <!-- Header -->
+  <div class="header">
+    <h1>🌱 <span>Monitoraggio Ambientale</span> — Futura Ambiente</h1>
+    <p>Dashboard in tempo reale per la qualità dell'aria, delle acque, del suolo e la gestione dei rifiuti</p>
+    <div class="badge-row">
+      <span class="badge live"><span class="dot"></span> Dati in tempo reale</span>
+      <span class="badge updated">🔄 Aggiornato ogni 30s</span>
+      <span class="badge updated">📍 12 stazioni di monitoraggio</span>
+    </div>
+  </div>
+
+  <!-- Section tabs -->
+  <div class="section-tabs" id="sectionTabs">
+    <button class="section-tab active" data-section="aria">
+      🌬️ Qualità Aria <span class="count">4</span>
+    </button>
+    <button class="section-tab" data-section="acque">
+      💧 Qualità Acque <span class="count">4</span>
+    </button>
+    <button class="section-tab" data-section="suolo">
+      🌍 Monitoraggio Suolo <span class="count">3</span>
+    </button>
+    <button class="section-tab" data-section="rifiuti">
+      ♻️ Rifiuti & Riciclo <span class="count">3</span>
+    </button>
+  </div>
+
+  <!-- ============ ARIA ============ -->
+  <div class="section-panel active" id="panel-aria">
+
+    <!-- KPI -->
+    <div class="kpi-grid">
+      <div class="kpi-card air">
+        <div class="kpi-header">
+          <span class="kpi-label">Indice AQI</span>
+          <span class="kpi-icon">🌡️</span>
+        </div>
+        <div class="kpi-value info" id="aqi-value">42</div>
+        <div class="kpi-sub">Buona — Rischio basso</div>
+        <div class="kpi-trend stable">◆ Stabile</div>
+      </div>
+      <div class="kpi-card air">
+        <div class="kpi-header">
+          <span class="kpi-label">PM2.5</span>
+          <span class="kpi-icon">🔬</span>
+        </div>
+        <div class="kpi-value good" id="pm25-value">12</div>
+        <div class="kpi-sub">µg/m³ — Limite: 25</div>
+        <div class="kpi-trend down">▼ -3%</div>
+      </div>
+      <div class="kpi-card air">
+        <div class="kpi-header">
+          <span class="kpi-label">PM10</span>
+          <span class="kpi-icon">💨</span>
+        </div>
+        <div class="kpi-value good" id="pm10-value">28</div>
+        <div class="kpi-sub">µg/m³ — Limite: 50</div>
+        <div class="kpi-trend down">▼ -5%</div>
+      </div>
+      <div class="kpi-card air">
+        <div class="kpi-header">
+          <span class="kpi-label">CO₂</span>
+          <span class="kpi-icon">🏭</span>
+        </div>
+        <div class="kpi-value warning" id="co2-value">415</div>
+        <div class="kpi-sub">ppm — Media globale: 420</div>
+        <div class="kpi-trend up">▲ +0.5%</div>
+      </div>
+    </div>
+
+    <!-- AQI Meter + Chart -->
+    <div class="grid-2">
+      <div class="card">
+        <h2>🌡️ Indice di Qualità dell'Aria (AQI)</h2>
+        <div class="aqi-meter">
+          <div class="aqi-marker" id="aqi-marker" style="left: 21%;"></div>
+        </div>
+        <div class="aqi-labels">
+          <span>Buono (0-50)</span>
+          <span>Moderato (51-100)</span>
+          <span>Insalubre (101-150)</span>
+          <span>Pericoloso (151+)</span>
+        </div>
+        <div class="bar-chart" style="margin-top: 16px;">
+          <div class="bar-row">
+            <span class="bar-label">O₃ Ozono</span>
+            <div class="bar-track"><div class="bar-fill info" style="width: 35%;">35 ppb</div></div>
+          </div>
+          <div class="bar-row">
+            <span class="bar-label">NO₂</span>
+            <div class="bar-track"><div class="bar-fill good" style="width: 22%;">22 ppb</div></div>
+          </div>
+          <div class="bar-row">
+            <span class="bar-label">SO₂</span>
+            <div class="bar-track"><div class="bar-fill good" style="width: 8%;">8 ppb</div></div>
+          </div>
+          <div class="bar-row">
+            <span class="bar-label">CO</span>
+            <div class="bar-track"><div class="bar-fill warning" style="width: 55%;">1.2 ppm</div></div>
+          </div>
+        </div>
+      </div>
+      <div class="card">
+        <h2>📈 Trend Giornalieri — PM10 & PM2.5</h2>
+        <canvas id="airTrendChart" height="200"></canvas>
+      </div>
+    </div>
+
+    <!-- Station table -->
+    <div class="card">
+      <h2>📍 Stazioni di Monitoraggio Aria</h2>
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr><th>Stazione</th><th>AQI</th><th>PM2.5</th><th>PM10</th><th>CO₂</th><th>Stato</th></tr>
+          </thead>
+          <tbody>
+            <tr><td>🏙️ Centro Urbano</td><td>45</td><td>14</td><td>30</td><td>410</td><td><span class="status-tag good">Buono</span></td></tr>
+            <tr><td>🏭 Zona Industriale</td><td>78</td><td>22</td><td>48</td><td>435</td><td><span class="status-tag warning">Moderato</span></td></tr>
+            <tr><td>🌳 Parco Nord</td><td>28</td><td>8</td><td>18</td><td>398</td><td><span class="status-tag good">Buono</span></td></tr>
+            <tr><td>🚗 Via Roma</td><td>62</td><td>18</td><td>38</td><td>420</td><td><span class="status-tag warning">Moderato</span></td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <!-- ============ ACQUE ============ -->
+  <div class="section-panel" id="panel-acque">
+
+    <div class="kpi-grid">
+      <div class="kpi-card water">
+        <div class="kpi-header">
+          <span class="kpi-label">pH</span>
+          <span class="kpi-icon">🧪</span>
+        </div>
+        <div class="kpi-value good" id="ph-value">7.2</div>
+        <div class="kpi-sub">Neutro — Range: 6.5-8.5</div>
+        <div class="kpi-trend stable">◆ Stabile</div>
+      </div>
+      <div class="kpi-card water">
+        <div class="kpi-header">
+          <span class="kpi-label">Ossigeno Disciolto</span>
+          <span class="kpi-icon">🫧</span>
+        </div>
+        <div class="kpi-value info" id="odo-value">7.8</div>
+        <div class="kpi-sub">mg/L — Min: 5 mg/L</div>
+        <div class="kpi-trend stable">◆ Stabile</div>
+      </div>
+      <div class="kpi-card water">
+        <div class="kpi-header">
+          <span class="kpi-label">Temperatura</span>
+          <span class="kpi-icon">🌡️</span>
+        </div>
+        <div class="kpi-value" id="temp-value" style="color: #1abc9c;">18.5</div>
+        <div class="kpi-sub">°C — Range: 15-25 °C</div>
+        <div class="kpi-trend up">▲ +0.8°C</div>
+      </div>
+      <div class="kpi-card water">
+        <div class="kpi-header">
+          <span class="kpi-label">Torbidità</span>
+          <span class="kpi-icon">🌊</span>
+        </div>
+        <div class="kpi-value good" id="turbidity-value">3.2</div>
+        <div class="kpi-sub">NTU — Limite: 5 NTU</div>
+        <div class="kpi-trend down">▼ -12%</div>
+      </div>
+    </div>
+
+    <div class="grid-2">
+      <div class="card">
+        <h2>🧪 Parametri Qualità Acque</h2>
+        <div class="bar-chart">
+          <div class="bar-row">
+            <span class="bar-label">pH</span>
+            <div class="bar-track"><div class="bar-fill good" style="width: 72%;">7.2</div></div>
+          </div>
+          <div class="bar-row">
+            <span class="bar-label">O₂ Disciolto</span>
+            <div class="bar-track"><div class="bar-fill info" style="width: 78%;">7.8 mg/L</div></div>
+          </div>
+          <div class="bar-row">
+            <span class="bar-label">Conducibilità</span>
+            <div class="bar-track"><div class="bar-fill water" style="width: 45%;">450 µS/cm</div></div>
+          </div>
+          <div class="bar-row">
+            <span class="bar-label">Azoto (N-NO₃)</span>
+            <div class="bar-track"><div class="bar-fill good" style="width: 25%;">5.2 mg/L</div></div>
+          </div>
+          <div class="bar-row">
+            <span class="bar-label">Fosfati (PO₄)</span>
+            <div class="bar-track"><div class="bar-fill warning" style="width: 60%;">0.12 mg/L</div></div>
+          </div>
+          <div class="bar-row">
+            <span class="bar-label">Batteri Coliformi</span>
+            <div class="bar-track"><div class="bar-fill good" style="width: 15%;">15 UFC/100mL</div></div>
+          </div>
+        </div>
+      </div>
+      <div class="card">
+        <h2>📊 Livelli Mari e Fiumi</h2>
+        <canvas id="waterLevelChart" height="200"></canvas>
+      </div>
+    </div>
+
+    <div class="card">
+      <h2>📍 Punti di Monitoraggio Acque</h2>
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr><th>Punto</th><th>pH</th><th>O₂ (mg/L)</th><th>Temp (°C)</th><th>Inquinanti</th><th>Stato</th></tr>
+          </thead>
+          <tbody>
+            <tr><td>🏞️ Fiume Verde</td><td>7.4</td><td>8.2</td><td>17.2</td><td>Nessuno</td><td><span class="status-tag good">Buono</span></td></tr>
+            <tr><td>🌊 Lago Blu</td><td>7.8</td><td>7.5</td><td>19.8</td><td>Fosfati bassi</td><td><span class="status-tag info">Monitorato</span></td></tr>
+            <tr><td>🏭 Canale Industriale</td><td>6.8</td><td>5.2</td><td>22.5</td><td>Metalli pesanti (traccia)</td><td><span class="status-tag warning">Attenzione</span></td></tr>
+            <tr><td>🏖️ Costa Marina</td><td>8.1</td><td>6.9</td><td>21.0</td><td>Nessuno</td><td><span class="status-tag good">Buono</span></td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <!-- ============ SUOLO ============ -->
+  <div class="section-panel" id="panel-suolo">
+
+    <div class="kpi-grid">
+      <div class="kpi-card soil">
+        <div class="kpi-header">
+          <span class="kpi-label">Indice di Fertilità</span>
+          <span class="kpi-icon">🌿</span>
+        </div>
+        <div class="kpi-value good" id="fertility-value">76</div>
+        <div class="kpi-sub">/100 — Buona fertilità</div>
+        <div class="kpi-trend down">▼ -2%</div>
+      </div>
+      <div class="kpi-card soil">
+        <div class="kpi-header">
+          <span class="kpi-label">Contaminazione</span>
+          <span class="kpi-icon">☣️</span>
+        </div>
+        <div class="kpi-value good" id="contamination-value">18</div>
+        <div class="kpi-sub">/100 — Bassa contaminazione</div>
+        <div class="kpi-trend down">▼ -8%</div>
+      </div>
+      <div class="kpi-card soil">
+        <div class="kpi-header">
+          <span class="kpi-label">Uso Agricolo</span>
+          <span class="kpi-icon">🌾</span>
+        </div>
+        <div class="kpi-value info" id="agriculture-value">42</div>
+        <div class="kpi-sub">% del territorio</div>
+        <div class="kpi-trend stable">◆ Stabile</div>
+      </div>
+      <div class="kpi-card soil">
+        <div class="kpi-header">
+          <span class="kpi-label">Carbonio Organico</span>
+          <span class="kpi-icon">🪨</span>
+        </div>
+        <div class="kpi-value good" id="carbon-value">2.8</div>
+        <div class="kpi-sub">% — Range: 2-5%</div>
+        <div class="kpi-trend down">▼ -0.1%</div>
+      </div>
+    </div>
+
+    <div class="grid-3">
+      <div class="card">
+        <h2>🌿 Fertilità del Suolo</h2>
+        <div class="bar-chart">
+          <div class="bar-row">
+            <span class="bar-label">Sostanza Organica</span>
+            <div class="bar-track"><div class="bar-fill good" style="width: 68%;">68%</div></div>
+          </div>
+          <div class="bar-row">
+            <span class="bar-label">Azoto (N)</span>
+            <div class="bar-track"><div class="bar-fill info" style="width: 55%;">55%</div></div>
+          </div>
+          <div class="bar-row">
+            <span class="bar-label">Fosforo (P)</span>
+            <div class="bar-track"><div class="bar-fill warning" style="width: 40%;">40%</div></div>
+          </div>
+          <div class="bar-row">
+            <span class="bar-label">Potassio (K)</span>
+            <div class="bar-track"><div class="bar-fill good" style="width: 72%;">72%</div></div>
+          </div>
+          <div class="bar-row">
+            <span class="bar-label">pH del Suolo</span>
+            <div class="bar-track"><div class="bar-fill good" style="width: 65%;">6.5</div></div>
+          </div>
+        </div>
+      </div>
+      <div class="card">
+        <h2>☣️ Contaminazione</h2>
+        <div class="bar-chart">
+          <div class="bar-row">
+            <span class="bar-label">Metalli Pesanti</span>
+            <div class="bar-track"><div class="bar-fill good" style="width: 12%;">12%</div></div>
+          </div>
+          <div class="bar-row">
+            <span class="bar-label">Pesticidi</span>
+            <div class="bar-track"><div class="bar-fill good" style="width: 8%;">8%</div></div>
+          </div>
+          <div class="bar-row">
+            <span class="bar-label">Idrocarburi</span>
+            <div class="bar-track"><div class="bar-fill warning" style="width: 22%;">22%</div></div>
+          </div>
+          <div class="bar-row">
+            <span class="bar-label">Microplastiche</span>
+            <div class="bar-track"><div class="bar-fill danger" style="width: 35%;">35%</div></div>
+          </div>
+        </div>
+      </div>
+      <div class="card">
+        <h2>🗺️ Uso del Suolo</h2>
+        <div style="display: flex; flex-direction: column; gap: 12px;">
+          <div class="bar-row">
+            <span class="bar-label">Agricolo</span>
+            <div class="bar-track"><div class="bar-fill soil" style="width: 42%;">42%</div></div>
+          </div>
+          <div class="bar-row">
+            <span class="bar-label">Urbano</span>
+            <div class="bar-track"><div class="bar-fill danger" style="width: 28%;">28%</div></div>
+          </div>
+          <div class="bar-row">
+            <span class="bar-label">Boschivo</span>
+            <div class="bar-track"><div class="bar-fill good" style="width: 18%;">18%</div></div>
+          </div>
+          <div class="bar-row">
+            <span class="bar-label">Industriale</span>
+            <div class="bar-track"><div class="bar-fill warning" style="width: 12%;">12%</div></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ============ RIFIUTI ============ -->
+  <div class="section-panel" id="panel-rifiuti">
+
+    <div class="kpi-grid">
+      <div class="kpi-card waste">
+        <div class="kpi-header">
+          <span class="kpi-label">Raccolta Differenziata</span>
+          <span class="kpi-icon">♻️</span>
+        </div>
+        <div class="kpi-value info" id="differenziata-value">73</div>
+        <div class="kpi-sub">% — Obiettivo: 75%</div>
+        <div class="kpi-trend up">▲ +3%</div>
+      </div>
+      <div class="kpi-card waste">
+        <div class="kpi-header">
+          <span class="kpi-label">Rifiuti Totali</span>
+          <span class="kpi-icon">🗑️</span>
+        </div>
+        <div class="kpi-value" id="waste-total-value" style="color: #9b59b6;">48.2</div>
+        <div class="kpi-sub">tonnellate/mese</div>
+        <div class="kpi-trend down">▼ -5%</div>
+      </div>
+      <div class="kpi-card waste">
+        <div class="kpi-header">
+          <span class="kpi-label">Tasso Riciclo</span>
+          <span class="kpi-icon">🔄</span>
+        </div>
+        <div class="kpi-value good" id="recycle-value">68</div>
+        <div class="kpi-sub">% — Obiettivo UE: 70%</div>
+        <div class="kpi-trend up">▲ +2%</div>
+      </div>
+      <div class="kpi-card waste">
+        <div class="kpi-header">
+          <span class="kpi-label">Recupero Energetico</span>
+          <span class="kpi-icon">⚡</span>
+        </div>
+        <div class="kpi-value info" id="energy-value">15</div>
+        <div class="kpi-sub">% dei rifiuti</div>
+        <div class="kpi-trend stable">◆ Stabile</div>
+      </div>
+    </div>
+
+    <div class="grid-2">
+      <div class="card">
+        <h2>♻️ Raccolta Differenziata per Categoria</h2>
+        <div class="bar-chart">
+          <div class="bar-row">
+            <span class="bar-label">Carta</span>
+            <div class="bar-track"><div class="bar-fill info" style="width: 82%;">82%</div></div>
+          </div>
+          <div class="bar-row">
+            <span class="bar-label">Vetro</span>
+            <div class="bar-track"><div class="bar-fill good" style="width: 78%;">78%</div></div>
+          </div>
+          <div class="bar-row">
+            <span class="bar-label">Plastica</span>
+            <div class="bar-track"><div class="bar-fill warning" style="width: 55%;">55%</div></div>
+          </div>
+          <div class="bar-row">
+            <span class="bar-label">Organico</span>
+            <div class="bar-track"><div class="bar-fill soil" style="width: 70%;">70%</div></div>
+          </div>
+          <div class="bar-row">
+            <span class="bar-label">Metalli</span>
+            <div class="bar-track"><div class="bar-fill info" style="width: 65%;">65%</div></div>
+          </div>
+          <div class="bar-row">
+            <span class="bar-label">RAEE</span>
+            <div class="bar-track"><div class="bar-fill warning" style="width: 42%;">42%</div></div>
+          </div>
+        </div>
+      </div>
+      <div class="card">
+        <h2>📊 Andamento Raccolta Rifiuti</h2>
+        <canvas id="wasteTrendChart" height="200"></canvas>
+      </div>
+    </div>
+
+    <div class="card">
+      <h2>🏭 Centri di Raccolta e Smaltimento</h2>
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr><th>Centro</th><th>Tipo</th><th>Capacità (t/giorno)</th><th>Occupazione</th><th>Stato</th></tr>
+          </thead>
+          <tbody>
+            <tr><td>♻️ Centro Riciclo Nord</td><td>Riciclo</td><td>50</td><td>68%</td><td><span class="status-tag good">Attivo</span></td></tr>
+            <tr><td>🔥 Termovalorizzatore</td><td>Recupero Energetico</td><td>80</td><td>45%</td><td><span class="status-tag info">Operativo</span></td></tr>
+            <tr><td>🗑️ Discarica Sud</td><td>Smaltimento</td><td>120</td><td>82%</td><td><span class="status-tag warning">Quasi saturo</span></td></tr>
+            <tr><td>🌱 Compostaggio</td><td>Organico</td><td>30</td><td>55%</td><td><span class="status-tag good">Attivo</span></td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <!-- Interactive Map -->
+  <div class="card" style="margin-top: 24px;">
+    <h2>🗺️ Mappa Interattiva — Stazioni di Monitoraggio</h2>
+    <div id="monitor-map"></div>
+  </div>
+
+</div>
+
+<script>
+(function() {
+  'use strict';
+
+  // ---- Tab switching ----
+  const tabs = document.querySelectorAll('.section-tab');
+  const panels = {
+    aria: document.getElementById('panel-aria'),
+    acque: document.getElementById('panel-acque'),
+    suolo: document.getElementById('panel-suolo'),
+    rifiuti: document.getElementById('panel-rifiuti'),
+  };
+
+  tabs.forEach(tab => {
+    tab.addEventListener('click', function() {
+      tabs.forEach(t => t.classList.remove('active'));
+      this.classList.add('active');
+      const section = this.dataset.section;
+      Object.keys(panels).forEach(k => {
+        panels[k].classList.toggle('active', k === section);
+      });
+    });
+  });
+
+  // ---- Simulated data updates ----
+  function randomBetween(min, max) {
+    return Math.round((Math.random() * (max - min) + min) * 10) / 10;
+  }
+
+  function updateData() {
+    // Air quality
+    const aqi = Math.round(randomBetween(30, 55));
+    document.getElementById('aqi-value').textContent = aqi;
+    document.getElementById('aqi-marker').style.left = (aqi / 2) + '%';
+    document.getElementById('pm25-value').textContent = Math.round(randomBetween(8, 18));
+    document.getElementById('pm10-value').textContent = Math.round(randomBetween(20, 35));
+    document.getElementById('co2-value').textContent = Math.round(randomBetween(400, 430));
+
+    // Water quality
+    document.getElementById('ph-value').textContent = randomBetween(6.8, 7.8).toFixed(1);
+    document.getElementById('odo-value').textContent = randomBetween(6.5, 8.5).toFixed(1);
+    document.getElementById('temp-value').textContent = randomBetween(16, 22).toFixed(1);
+    document.getElementById('turbidity-value').textContent = randomBetween(2, 5).toFixed(1);
+
+    // Soil
+    document.getElementById('fertility-value').textContent = Math.round(randomBetween(65, 82));
+    document.getElementById('contamination-value').textContent = Math.round(randomBetween(12, 25));
+    document.getElementById('agriculture-value').textContent = Math.round(randomBetween(38, 46));
+    document.getElementById('carbon-value').textContent = randomBetween(2.2, 3.2).toFixed(1);
+
+    // Waste
+    document.getElementById('differenziata-value').textContent = Math.round(randomBetween(68, 78));
+    document.getElementById('waste-total-value').textContent = randomBetween(42, 54).toFixed(1);
+    document.getElementById('recycle-value').textContent = Math.round(randomBetween(62, 72));
+    document.getElementById('energy-value').textContent = Math.round(randomBetween(12, 18));
+  }
+
+  setInterval(updateData, 30000);
+
+  // ---- Chart.js: Air Quality Trend ----
+  const airCtx = document.getElementById('airTrendChart').getContext('2d');
+  const days = ['Lun', 'Mar', 'Mer', 'Gio', 'Ven', 'Sab', 'Dom'];
+  new Chart(airCtx, {
+    type: 'line',
+    data: {
+      labels: days,
+      datasets: [
+        {
+          label: 'PM10 (µg/m³)',
+          data: [32, 28, 30, 25, 27, 22, 28],
+          borderColor: '#3498db',
+          backgroundColor: 'rgba(52,152,219,0.1)',
+          fill: true,
+          tension: 0.4,
+          pointRadius: 4,
+        },
+        {
+          label: 'PM2.5 (µg/m³)',
+          data: [15, 13, 14, 11, 12, 9, 12],
+          borderColor: '#2ecc71',
+          backgroundColor: 'rgba(46,204,113,0.1)',
+          fill: true,
+          tension: 0.4,
+          pointRadius: 4,
+        }
+      ]
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      plugins: { legend: { labels: { color: '#8899aa' } } },
+      scales: {
+        x: { ticks: { color: '#8899aa' }, grid: { color: 'rgba(255,255,255,0.05)' } },
+        y: { ticks: { color: '#8899aa' }, grid: { color: 'rgba(255,255,255,0.05)' } }
+      }
+    }
+  });
+
+  // ---- Chart.js: Water Levels ----
+  const waterCtx = document.getElementById('waterLevelChart').getContext('2d');
+  new Chart(waterCtx, {
+    type: 'bar',
+    data: {
+      labels: ['Fiume Verde', 'Lago Blu', 'Canale Ind.', 'Costa Marina'],
+      datasets: [
+        {
+          label: 'Livello (m)',
+          data: [2.8, 4.2, 1.5, 0.8],
+          backgroundColor: ['rgba(26,188,156,0.7)', 'rgba(52,152,219,0.7)', 'rgba(243,156,18,0.7)', 'rgba(46,204,113,0.7)'],
+          borderColor: ['#1abc9c', '#3498db', '#f39c12', '#2ecc71'],
+          borderWidth: 1,
+          borderRadius: 6,
+        }
+      ]
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      plugins: { legend: { labels: { color: '#8899aa' } } },
+      scales: {
+        x: { ticks: { color: '#8899aa' }, grid: { color: 'rgba(255,255,255,0.05)' } },
+        y: { ticks: { color: '#8899aa' }, grid: { color: 'rgba(255,255,255,0.05)' } }
+      }
+    }
+  });
+
+  // ---- Chart.js: Waste Trend ----
+  const wasteCtx = document.getElementById('wasteTrendChart').getContext('2d');
+  new Chart(wasteCtx, {
+    type: 'line',
+    data: {
+      labels: ['Gen', 'Feb', 'Mar', 'Apr', 'Mag', 'Giu'],
+      datasets: [
+        {
+          label: 'Rifiuti Totali (t)',
+          data: [52, 48, 50, 45, 47, 48],
+          borderColor: '#9b59b6',
+          backgroundColor: 'rgba(155,89,182,0.1)',
+          fill: true,
+          tension: 0.4,
+          pointRadius: 4,
+          yAxisID: 'y',
+        },
+        {
+          label: 'Differenziata (%)',
+          data: [65, 68, 67, 71, 70, 73],
+          borderColor: '#2ecc71',
+          backgroundColor: 'rgba(46,204,113,0.1)',
+          fill: true,
+          tension: 0.4,
+          pointRadius: 4,
+          yAxisID: 'y1',
+        }
+      ]
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      interaction: { mode: 'index', intersect: false },
+      plugins: { legend: { labels: { color: '#8899aa' } } },
+      scales: {
+        x: { ticks: { color: '#8899aa' }, grid: { color: 'rgba(255,255,255,0.05)' } },
+        y: {
+          type: 'linear', display: true, position: 'left',
+          ticks: { color: '#8899aa' }, grid: { color: 'rgba(255,255,255,0.05)' },
+          title: { display: true, text: 'tonnellate', color: '#8899aa' }
+        },
+        y1: {
+          type: 'linear', display: true, position: 'right',
+          ticks: { color: '#8899aa' }, grid: { drawOnChartArea: false },
+          min: 50, max: 90,
+          title: { display: true, text: '%', color: '#8899aa' }
+        }
+      }
+    }
+  });
+
+  // ---- Leaflet Map ----
+  const map = L.map('monitor-map').setView([41.9, 12.5], 6);
+  L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+    attribution: '&copy; OpenStreetMap',
+    maxZoom: 18,
+  }).addTo(map);
+
+  const stations = [
+    { name: 'Centro Urbano', lat: 41.9028, lng: 12.4964, aqi: 45, type: 'aria' },
+    { name: 'Zona Industriale', lat: 41.85, lng: 12.5, aqi: 78, type: 'aria' },
+    { name: 'Parco Nord', lat: 41.95, lng: 12.48, aqi: 28, type: 'aria' },
+    { name: 'Fiume Verde', lat: 41.88, lng: 12.42, aqi: 74, type: 'water' },
+    { name: 'Lago Blu', lat: 42.0, lng: 12.6, aqi: 82, type: 'water' },
+    { name: 'Costa Marina', lat: 41.75, lng: 12.28, aqi: 68, type: 'water' },
+    { name: 'Zona Agricola', lat: 41.8, lng: 12.55, aqi: 76, type: 'soil' },
+    { name: 'Discarica Sud', lat: 41.72, lng: 12.45, aqi: 55, type: 'waste' },
+  ];
+
+  const iconColors = {
+    aria: { color: '#3498db', emoji: '🌬️' },
+    water: { color: '#1abc9c', emoji: '💧' },
+    soil: { color: '#e67e22', emoji: '🌍' },
+    waste: { color: '#9b59b6', emoji: '♻️' },
+  };
+
+  stations.forEach(s => {
+    const c = iconColors[s.type] || iconColors.aria;
+    const icon = L.divIcon({
+      html: `<div style="background:${c.color};color:#fff;width:34px;height:34px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:16px;border:2px solid rgba(255,255,255,0.3);box-shadow:0 2px 8px rgba(0,0,0,0.3);">${c.emoji}</div>`,
+      className: '',
+      iconSize: [34, 34],
+      iconAnchor: [17, 17],
+    });
+    L.marker([s.lat, s.lng], { icon })
+      .addTo(map)
+      .bindPopup(`<b>${c.emoji} ${s.name}</b><br>AQI: ${s.aqi}<br>Tipo: ${s.type}`);
+  });
+
+})();
+</script>
+</body>
+</html>
