@@ -1,0 +1,142 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>☀️ Hera-Dyson - MyZubster</title>
+  <style>
+    :root {
+      --bg: #0a0a1a;
+      --surface: #12122a;
+      --surface-2: #1a1a3a;
+      --text: #e8e6f0;
+      --text-soft: #9898b8;
+      --border: #2a2a4a;
+      --shadow: 0 8px 32px rgba(80, 40, 200, 0.2);
+      --radius: 12px;
+      --status-active: #22c55e;
+      --status-warning: #eab308;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      min-height: 100vh;
+      overflow-x: hidden;
+    }
+    .stars { position: fixed; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none; z-index: 0; }
+    .header {
+      position: relative; z-index: 1;
+      background: linear-gradient(135deg, #b45309, #f59e0b);
+      padding: 24px 32px;
+      display: flex; justify-content: space-between; align-items: center;
+      flex-wrap: wrap; gap: 16px;
+      border-bottom: 2px solid #fbbf24;
+    }
+    .header h1 { font-size: 1.8rem; color: #fff; }
+    .header p { color: rgba(255,255,255,0.8); font-size: 0.9rem; margin-top: 4px; }
+    .badge {
+      background: rgba(255,255,255,0.15); padding: 6px 14px;
+      border-radius: 20px; font-size: 0.8rem; color: rgba(255,255,255,0.9);
+    }
+    .content { position: relative; z-index: 1; max-width: 1300px; margin: 0 auto; padding: 32px 24px; }
+    .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(340px, 1fr)); gap: 24px; margin-bottom: 32px; }
+    .card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 24px;
+      box-shadow: var(--shadow);
+      transition: transform 0.2s;
+    }
+    .card:hover { transform: translateY(-2px); }
+    .card h3 { font-size: 1.15rem; margin-bottom: 16px; color: #fbbf24; }
+    .card p { color: var(--text-soft); font-size: 0.85rem; line-height: 1.6; }
+    .stat-row { display: flex; justify-content: space-between; padding: 8px 0; border-bottom: 1px solid var(--border); font-size: 0.9rem; }
+    .stat-row:last-child { border-bottom: none; }
+    .stat-label { color: var(--text-soft); }
+    .stat-value { color: #fbbf24; font-weight: 600; font-family: monospace; }
+    .sd { display: inline-block; width: 10px; height: 10px; border-radius: 50%; margin-right: 6px; }
+    .sd.active { background: var(--status-active); box-shadow: 0 0 8px var(--status-active); }
+    .progress-bar { height: 8px; background: var(--surface-2); border-radius: 4px; overflow: hidden; margin-top: 8px; }
+    .progress-fill { height: 100%; border-radius: 4px; background: linear-gradient(90deg, #f59e0b, #fbbf24); }
+    .footer { text-align: center; padding: 24px; color: var(--text-soft); font-size: 0.8rem; position: relative; z-index: 1; }
+    @media (max-width: 768px) { .header { padding: 16px; } .content { padding: 16px; } .grid { grid-template-columns: 1fr; } }
+  </style>
+</head>
+<body>
+  <canvas class="stars" id="stars"></canvas>
+  <header class="header">
+    <div>
+      <h1>☀️ Hera-Dyson</h1>
+      <p>Sfera di Dyson &bull; MyZubster Space Division</p>
+    </div>
+    <div style="display:flex;gap:8px;flex-wrap:wrap;"><span class="badge">Stella: Sol</span><span class="badge">Raggio: 1 AU</span><span class="badge">Potenza: 3.8×10²⁶ W</span></div>
+  </header>
+  <div class="content">
+    <div class="grid">
+      <div class="card">
+        <h3>☀️ Collettori Solari</h3>
+        <div class="stat-row"><span class="stat-label">Pannelli dispiegati</span><span class="stat-value">0.002%</span></div><div class="stat-row"><span class="stat-label">Potenza catturata</span><span class="stat-value">7.6 EW</span></div><div class="stat-row"><span class="stat-label">Efficienza</span><span class="stat-value">42.3%</span></div><div class="stat-row"><span class="stat-label">Materiale</span><span class="stat-value">Grafene+Perovskite</span></div>
+        <div class="progress-bar"><div class="progress-fill" style="width:0.002%"></div></div>
+        <p style="margin-top:12px;">Pannelli solari a film sottile dispiegati in orbita a 1 AU con efficienza quantistica potenziata.</p>
+      </div>
+      <div class="card">
+        <h3>🏗️ Costruzione Orbitale</h3>
+        <div class="stat-row"><span class="stat-label">Stazioni costruttrici</span><span class="stat-value">4</span></div><div class="stat-row"><span class="stat-label">Droni assemblaggio</span><span class="stat-value">47,000</span></div><div class="stat-row"><span class="stat-label">Produzione giornaliera</span><span class="stat-value">12 km²</span></div><div class="stat-row"><span class="stat-label">Completamento</span><span class="stat-value">3,842 anni</span></div>
+        <div class="progress-bar"><div class="progress-fill" style="width:0.0001%"></div></div>
+        <p style="margin-top:12px;">Stazioni orbitali automatizzate con droni auto-replicanti per la costruzione della sfera.</p>
+      </div>
+      <div class="card">
+        <h3>🔋 Trasmissione Energia</h3>
+        <div class="stat-row"><span class="stat-label">Fasci microonde</span><span class="stat-value">12 attivi</span></div><div class="stat-row"><span class="stat-label">Potenza trasmessa</span><span class="stat-value">5.2 EW</span></div><div class="stat-row"><span class="stat-label">Stazioni riceventi</span><span class="stat-value">3</span></div><div class="stat-row"><span class="stat-label">Perdite</span><span class="stat-value">3.8%</span></div>
+        <div class="progress-bar"><div class="progress-fill" style="width:99%"></div></div>
+        <p style="margin-top:12px;">Trasmissione wireless di energia tramite fasci a microonde verso stazioni riceventi planetarie.</p>
+      </div>
+      <div class="card">
+        <h3>🤖 Manutenzione Autonoma</h3>
+        <div class="stat-row"><span class="stat-label">Robot riparatori</span><span class="stat-value">12,400</span></div><div class="stat-row"><span class="stat-label">Guasti/giorno</span><span class="stat-value">847</span></div><div class="stat-row"><span class="stat-label">Tempo medio riparazione</span><span class="stat-value">2.3 min</span></div><div class="stat-row"><span class="stat-label">Affidabilità</span><span class="stat-value">99.97%</span></div>
+        <div class="progress-bar"><div class="progress-fill" style="width:99.97%"></div></div>
+        <p style="margin-top:12px;">Sciame di nanorobot auto-replicanti per manutenzione predittiva e riparazione danni.</p>
+      </div>
+      <div class="card">
+        <h3>🌡️ Gestione Termica</h3>
+        <div class="stat-row"><span class="stat-label">Temperatura pannelli</span><span class="stat-value">342°C</span></div><div class="stat-row"><span class="stat-label">Radiatori</span><span class="stat-value">8,200 km²</span></div><div class="stat-row"><span class="stat-label">Refrigerante</span><span class="stat-value">Sodio liquido</span></div><div class="stat-row"><span class="stat-label">Efficienza raffreddamento</span><span class="stat-value">96.2%</span></div>
+        <div class="progress-bar"><div class="progress-fill" style="width:96%"></div></div>
+        <p style="margin-top:12px;">Sistema di raffreddamento a sodio liquido con radiatori a film sottile per dissipazione termica.</p>
+      </div>
+      <div class="card">
+        <h3>🛡️ Difesa Anti-Meteoriti</h3>
+        <div class="stat-row"><span class="stat-label">Laser difensivi</span><span class="stat-value">240</span></div><div class="stat-row"><span class="stat-label">Impatti/giorno</span><span class="stat-value">14</span></div><div class="stat-row"><span class="stat-label">Dimensione max rilevata</span><span class="stat-value">3.2m</span></div><div class="stat-row"><span class="stat-label">Scudi attivi</span><span class="stat-value"><span class="sd active"></span>Online</span></div>
+        <div class="progress-bar"><div class="progress-fill" style="width:100%"></div></div>
+        <p style="margin-top:12px;">Rete di laser ad alta energia per vaporizzare meteoriti prima dell'impatto sulla sfera.</p>
+      </div>
+    </div>
+  </div>
+  <footer class="footer">MyZubster Hera-Dyson &bull; Sfera di Dyson &bull; v1.0</footer>
+  <script>
+    const canvas = document.getElementById('stars');
+    const ctx = canvas.getContext('2d');
+    let stars = [];
+    function resize() { canvas.width = window.innerWidth; canvas.height = window.innerHeight; }
+    resize();
+    window.addEventListener('resize', resize);
+    for (let i = 0; i < 150; i++) {
+      stars.push({ x: Math.random() * canvas.width, y: Math.random() * canvas.height, r: Math.random() * 1.2 + 0.3, speed: Math.random() * 0.2 + 0.05 });
+    }
+    function animate() {
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+      stars.forEach(s => {
+        ctx.beginPath(); ctx.arc(s.x, s.y, s.r, 0, Math.PI * 2);
+        ctx.fillStyle = 'rgba(180,190,210,' + (0.4 + Math.random() * 0.4) + ')';
+        ctx.fill();
+        s.y += s.speed;
+        if (s.y > canvas.height) { s.y = 0; s.x = Math.random() * canvas.width; }
+      });
+      requestAnimationFrame(animate);
+    }
+    animate();
+  </script>
+</body>
+</html>
