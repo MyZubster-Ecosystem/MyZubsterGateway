@@ -195,6 +195,7 @@ app.use('/api/churches', churchesRoutes);
 // 🌿 Route Tokenizzazione Natura
 const natureRoutes = require('./routes/natureRoutes');
 app.use('/api/nature', natureRoutes);
+try { const humanRobotsRoutes = require("./routes/humanRobotsRoutes"); app.use("/api/human-robots", humanRobotsRoutes); } catch(e) {}
 
 const fashionRoutesRoutes = require('./routes/fashionRoutesRoutes');
 app.use('/api/fashion', fashionRoutesRoutes);
