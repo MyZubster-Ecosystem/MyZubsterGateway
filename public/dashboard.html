@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="it">
+<html lang="es">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -33,19 +33,19 @@
     <div class="container">
         <div class="header">
             <h1>🚀 MyZubster Admin Dashboard</h1>
-            <div class="subtitle">Gateway v1.0.0 - Sistema di pagamenti Monero</div>
+            <div class="subtitle">Gateway v1.0.0 - Sistema de pagos Monero</div>
         </div>
 
-        <button class="refresh-btn" onclick="loadStats()">🔄 Aggiorna Dati</button>
+        <button class="refresh-btn" onclick="loadStats()">🔄 Actualizar datos</button>
         <br><br>
 
         <div id="stats-container">
-            <div class="loading">⏳ Caricamento statistiche...</div>
+            <div class="loading">⏳ Cargando estadísticas...</div>
         </div>
 
         <div class="section">
-            <h2>📊 Dati Raw (JSON)</h2>
-            <pre id="raw-data">Nessun dato caricato</pre>
+            <h2>📊 Datos sin procesar (JSON)</h2>
+            <pre id="raw-data">No se han cargado datos</pre>
         </div>
     </div>
 
@@ -54,21 +54,21 @@
             const container = document.getElementById('stats-container');
             const rawData = document.getElementById('raw-data');
             
-            container.innerHTML = '<div class="loading">⏳ Caricamento...</div>';
+            container.innerHTML = '<div class="loading">⏳ Cargando...</div>';
             
             try {
                 const response = await fetch('/api/admin/stats');
                 const data = await response.json();
                 
                 if (!data.success) {
-                    throw new Error(data.error || 'Errore sconosciuto');
+                    throw new Error(data.error || 'Error desconocido');
                 }
 
                 renderStats(data.data);
                 rawData.textContent = JSON.stringify(data, null, 2);
             } catch (error) {
-                container.innerHTML = `<div class="loading" style="color:red;">❌ Errore: ${error.message}</div>`;
-                rawData.textContent = 'Errore: ' + error.message;
+                container.innerHTML = `<div class="loading" style="color:red;">❌ Error: ${error.message}</div>`;
+                rawData.textContent = 'Error: ' + error.message;
             }
         }
 
@@ -76,13 +76,13 @@
             const container = document.getElementById('stats-container');
             
             const cards = [
-                { label: '👥 Utenti', value: stats.users?.total || 0 },
-                { label: '📦 Ordini Totali', value: stats.orders?.total || 0 },
-                { label: '📦 Ordini Aperti', value: stats.orders?.open || 0 },
-                { label: '💳 Pagamenti Totali', value: stats.payments?.total || 0 },
-                { label: '⏳ Pagamenti Pendenti', value: stats.payments?.pending || 0 },
-                { label: '✅ Pagamenti Completati', value: stats.payments?.completed || 0 },
-                { label: '🗄️ Collezioni DB', value: stats.database?.collections || 0 },
+                { label: '👥 Usuarios', value: stats.users?.total || 0 },
+                { label: '📦 Pedidos totales', value: stats.orders?.total || 0 },
+                { label: '📦 Pedidos abiertos', value: stats.orders?.open || 0 },
+                { label: '💳 Pagos totales', value: stats.payments?.total || 0 },
+                { label: '⏳ Pagos pendientes', value: stats.payments?.pending || 0 },
+                { label: '✅ Pagos completados', value: stats.payments?.completed || 0 },
+                { label: '🗄️ Colecciones de BD', value: stats.database?.collections || 0 },
                 { label: '⏱️ Uptime', value: formatUptime(stats.uptime) },
             ];
 
@@ -97,15 +97,15 @@
             });
             html += '</div>';
 
-            // Status servizi
+            // Estado de los servicios
             html += `<div class="section" style="margin-top:20px;">
-                <h2>🔧 Stato Servizi</h2>
+                <h2>🔧 Estado de los servicios</h2>
                 <div>
-                    <p><strong>MongoDB:</strong> <span class="status-badge ${stats.database ? 'status-ok' : 'status-error'}">${stats.database ? '✅ Connesso' : '❌ Disconnesso'}</span></p>
-                    <p><strong>Monero:</strong> <span class="status-badge status-warning">⏳ In attesa...</span></p>
+                    <p><strong>MongoDB:</strong> <span class="status-badge ${stats.database ? 'status-ok' : 'status-error'}">${stats.database ? '✅ Conectado' : '❌ Desconectado'}</span></p>
+                    <p><strong>Monero:</strong> <span class="status-badge status-warning">⏳ Esperando...</span></p>
                     <p><strong>Node.js:</strong> ${stats.nodeVersion || 'N/A'}</p>
-                    <p><strong>Piattaforma:</strong> ${stats.platform || 'N/A'}</p>
-                    <p><strong>Ultimo aggiornamento:</strong> ${new Date(stats.timestamp).toLocaleString()}</p>
+                    <p><strong>Plataforma:</strong> ${stats.platform || 'N/A'}</p>
+                    <p><strong>Última actualización:</strong> ${new Date(stats.timestamp).toLocaleString('es-ES')}</p>
                 </div>
             </div>`;
 
@@ -124,10 +124,10 @@
             return `${secs}s`;
         }
 
-        // Carica i dati all'avvio
+        // Cargar datos al iniciar
         loadStats();
 
-        // Aggiornamento automatico ogni 60 secondi
+        // Actualización automática cada 60 segundos
         setInterval(loadStats, 60000);
     </script>
 </body>

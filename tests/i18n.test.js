@@ -253,6 +253,22 @@ describe('translation catalogs', () => {
     expect(spanishReadme).toContain('## 🤝 Cómo contribuir');
   });
 
+  test('uses Spanish text and locale formatting in the admin dashboard', () => {
+    const dashboard = fs.readFileSync(
+      path.join(__dirname, '..', 'public', 'dashboard.html'),
+      'utf8'
+    );
+
+    expect(dashboard).toContain('<html lang="es">');
+    expect(dashboard).toContain('Actualizar datos');
+    expect(dashboard).toContain('Cargando estadísticas...');
+    expect(dashboard).toContain('Pedidos totales');
+    expect(dashboard).toContain('Estado de los servicios');
+    expect(dashboard).toContain("toLocaleString('es-ES')");
+    expect(dashboard).not.toContain('Aggiorna Dati');
+    expect(dashboard).not.toContain('Caricamento statistiche...');
+  });
+
   test('falls back to English and returns unknown keys deterministically', () => {
     expect(translate('fr-FR', 'errors.internal')).toBe(
       'Internal server error'
