@@ -168,9 +168,19 @@ app.get('/alien', (req, res) => {
   res.sendFile('/opt/MyZubster/MyZubsterGateway/public/alien-zorgax.html');
 });
 
+<<<<<<< HEAD
+app.get('/benzina-pagamento', (req, res) => {
+  res.sendFile(path.join(__dirname, 'frontend/dist/benzina-pagamento.html'));
+});
+
+// Static frontend
+const frontendPath = path.join(__dirname, 'frontend/dist');
+app.use(express.static(frontendPath));
+=======
 // 👽 Route Connessione ZORGAX-Terra
 const alienConnectionRoutes = require('./routes/alienConnectionRoutes');
 app.use('/api/alien', alienConnectionRoutes);
+>>>>>>> main
 
 // 🚀 Route Colonizzazione Spaziale
 const colonizationRoutes = require('./routes/colonizationRoutes');
