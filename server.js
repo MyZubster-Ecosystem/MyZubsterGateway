@@ -209,6 +209,12 @@ app.use('/api/churches', churchesRoutes);
 // 🌿 Route Tokenizzazione Natura
 const natureRoutes = require('./routes/natureRoutes');
 app.use('/api/nature', natureRoutes);
+try { const sportRoutes = require("./routes/sportRoutes"); app.use("/api/sport", sportRoutes); } catch(e) {}
+try { const musicRoutes = require("./routes/musicRoutes"); app.use("/api/music", musicRoutes); } catch(e) {}
+try { const foodRoutes = require("./routes/foodRoutes"); app.use("/api/food", foodRoutes); } catch(e) {}
+try { const citiesRoutes = require("./routes/citiesRoutes"); app.use("/api/cities", citiesRoutes); } catch(e) {}
+try { const gamingRoutes = require("./routes/gamingRoutes"); app.use("/api/gaming", gamingRoutes); } catch(e) {}
+
 
 const fashionRoutesRoutes = require('./routes/fashionRoutesRoutes');
 app.use('/api/fashion', fashionRoutesRoutes);
