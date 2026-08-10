@@ -29,3 +29,12 @@ temp/
 .idea/
 *.swp
 *.swo
+<<<<<<< HEAD
+node_modules/
+.env
+server.log
+*.backup*
+=======
+.env.backup*
+*.env.backup*
+>>>>>>> origin/main

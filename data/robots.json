@@ -1,0 +1,156 @@
+{
+  "robots": [
+    {
+      "id": "eva-ioni-001",
+      "name": "EVA IONI - Robot Agricolo",
+      "brand": "MyZubster",
+      "model": "EVA IONI v1.0",
+      "type": "agricultural",
+      "walletAddress": "45M4DW1ug8bdQowWpxucTpgsfjLbVxbYaAra79VewmBobuuhgqTjyD4R3DzpqLM2veiphcB16n24qN1QbLg3y2PYGK3Qkoe",
+      "owner": "45M4DW1ug8bdQowWpxucTpgsfjLbVxbYaAra79VewmBobuuhgqTjyD4R3DzpqLM2veiphcB16n24qN1QbLg3y2PYGK3Qkoe",
+      "capabilities": [
+        "irrigazione",
+        "monitoraggio_suolo"
+      ],
+      "metadata": {
+        "batteryLife": 120,
+        "sensors": [
+          "ph",
+          "temperature",
+          "moisture"
+        ]
+      },
+      "status": "registered",
+      "balance": 0,
+      "registeredAt": "2026-08-09T14:30:23.491Z",
+      "lastActive": "2026-08-09T14:30:23.491Z",
+      "clones": [],
+      "parentId": null,
+      "referralEarnings": 0,
+      "totalEarnings": 0
+    },
+    {
+      "id": "eva-ioni-integration-001",
+      "name": "EVA IONI - Integrated Robot",
+      "brand": "MyZubster",
+      "model": "EVA IONI v2.0",
+      "type": "agricultural",
+      "walletAddress": "45M4DW1ug8bdQowWpxucTpgsfjLbVxbYaAra79VewmBobuuhgqTjyD4R3DzpqLM2veiphcB16n24qN1QbLg3y2PYGK3Qkoe",
+      "capabilities": [
+        "irrigazione",
+        "monitoraggio_suolo",
+        "raccolta",
+        "mapping"
+      ],
+      "metadata": {
+        "batteryLife": 120,
+        "weight": 5.2,
+        "sensors": [
+          "ph",
+          "ec",
+          "temperature",
+          "humidity",
+          "light",
+          "moisture",
+          "co2"
+        ],
+        "autonomy": 120,
+        "chargingTime": 60,
+        "areaCapacity": 50
+      },
+      "status": "registered",
+      "balance": 0,
+      "registeredAt": "2026-08-09T16:40:51.673Z",
+      "lastActive": "2026-08-09T16:40:51.673Z",
+      "clones": [],
+      "parentId": null,
+      "referralEarnings": 0,
+      "totalEarnings": 0
+    },
+    {
+      "id": "alien-xenomorph-001",
+      "name": "ZORGAX - Primo Alieno Reale",
+      "brand": "MyZubster",
+      "model": "Xenomorph v1.0",
+      "type": "alien",
+      "capabilities": [
+        "telepatia",
+        "teletrasporto",
+        "mutazione",
+        "rigenerazione",
+        "controllo_mentale",
+        "viaggio_temporale"
+      ],
+      "metadata": {
+        "species": "Xenomorph",
+        "origin": "Andromeda Galaxy",
+        "age": "2.5 billion years",
+        "intelligence": 999,
+        "powers": [
+          "shape_shifting",
+          "energy_absorption",
+          "dimensional_travel",
+          "mind_reading",
+          "telekinesis"
+        ],
+        "language": "Telepathic",
+        "friendly": true,
+        "color": "chromatic",
+        "size": "variable",
+        "diet": "energy"
+      },
+      "status": "active",
+      "balance": 0,
+      "registeredAt": "2026-08-09T17:36:49.789Z",
+      "lastActive": "2026-08-09T17:36:49.789Z",
+      "clones": [],
+      "parentId": null,
+      "referralEarnings": 0,
+      "totalEarnings": 0
+    }
+  ],
+  "jobs": [
+    {
+      "id": "job_1786293659972_y0njvrigd",
+      "robotId": "eva-ioni-integration-001",
+      "type": "irrigazione",
+      "amount": 0.01,
+      "currency": "XMR",
+      "description": "Lavoro automatico da AI",
+      "priority": 5,
+      "parameters": {
+        "waterAmount": 5,
+        "area": "giardino_integrato",
+        "duration": 30
+      },
+      "status": "completed",
+      "createdAt": "2026-08-09T16:40:59.972Z",
+      "assignedAt": "2026-08-09T16:40:59.972Z",
+      "acceptedAt": null,
+      "completedAt": "2026-08-09T16:40:59.987Z",
+      "result": {
+        "success": true,
+        "details": "Lavoro completato con successo"
+      }
+    }
+  ],
+  "payments": [
+    {
+      "id": "pay_1786293659987_59jzc38s3",
+      "robotId": "eva-ioni-integration-001",
+      "amount": 0.01,
+      "currency": "XMR",
+      "totalAmount": 0.011,
+      "fees": {
+        "platform": 0.0002,
+        "bosco": 0.0008,
+        "referral": 0,
+        "total": 0.001
+      },
+      "address": "4Ayrk9vycqdc...",
+      "status": "pending",
+      "createdAt": "2026-08-09T16:40:59.987Z",
+      "expiresAt": "2026-08-09T17:40:59.987Z"
+    }
+  ]
+}
