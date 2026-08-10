@@ -304,3 +304,19 @@ Every contribution counts. Join us in building a transparent, privacy-first plat
 ## 💬 Community
 
 - **Telegram Channel**: [@myzubster](https://t.me/myzubster) – follow for updates, news, and discussions about the MyZubster ecosystem.
+
+## Development & Testing
+
+### Quick Start
+1. Install dependencies
+2. Run tests
+3. Build the project
+
+### CI/CD
+See `.github/workflows/boost-quality.yml` for the automated CI pipeline.
+
+### Contributing
+Fork and create feature branches. Add tests. Open a PR.
+
+### License
+See LICENSE file.
