@@ -1,22 +1,21 @@
-// routes/payout.js — Payout/Withdraw API for MYZ → Tari wallet
+// routes/payout.js - Payout/Withdraw API for MYZ -> Tari wallet
 const express = require('express');
 const router = express.Router();
+const auth = require('../middleware/auth');
 const Reward = require('../models/Reward');
 const tariPayout = require('../gateway/tari_payout');
 
-// GET /api/payout/balance — Get available balance for withdrawal
-router.get('/balance', async (req, res) => {
+// GET /api/payout/balance - Get available balance for withdrawal
+// SECURITY: Requires JWT auth - userId extracted from token, not query param
+router.get('/balance', auth, async (req, res) => {
   try {
-    const { userId } = req.query;
-    if (!userId) return res.status(400).json({ error: 'userId required' });
+    const userId = req.user.id;
 
-    // Sum all completed rewards
     const completed = await Reward.aggregate([
       { $match: { userId, status: 'completed' } },
       { $group: { _id: null, total: { $sum: '$amount' } } }
     ]);
 
-    // Sum all already withdrawn
     const withdrawn = await Reward.aggregate([
       { $match: { userId, status: 'withdrawn' } },
       { $group: { _id: null, total: { $sum: '$amount' } } }
@@ -38,19 +37,19 @@ router.get('/balance', async (req, res) => {
   } catch (err) { res.status(500).json({ error: err.message }); }
 });
 
-// POST /api/payout/withdraw — Request withdrawal to Tari address
-router.post('/withdraw', async (req, res) => {
+// POST /api/payout/withdraw - Request withdrawal to Tari address
+// SECURITY: Requires JWT auth - userId extracted from token, not body param
+router.post('/withdraw', auth, async (req, res) => {
   try {
-    const { userId, address, amount } = req.body;
-    if (!userId || !address || !amount) {
-      return res.status(400).json({ error: 'userId, address, and amount are required' });
+    const userId = req.user.id;
+    const { address, amount } = req.body;
+    if (!address || !amount) {
+      return res.status(400).json({ error: 'address and amount are required' });
     }
-
     if (amount <= 0) {
       return res.status(400).json({ error: 'amount must be positive' });
     }
 
-    // Check available balance
     const completed = await Reward.aggregate([
       { $match: { userId, status: 'completed' } },
       { $group: { _id: null, total: { $sum: '$amount' } } }
@@ -70,20 +69,17 @@ router.post('/withdraw', async (req, res) => {
       });
     }
 
-    // Create withdrawal record
     const withdrawal = new Reward({
       userId,
-      amount: -amount, // negative = withdrawal
-      reason: `Withdrawal to Tari: ${address.slice(0, 12)}...`,
+      amount: -amount,
+      reason: 'Withdrawal to Tari: ' + address.slice(0, 12) + '...',
       source: 'payout',
       status: 'pending'
     });
     await withdrawal.save();
 
-    // Execute Tari transfer
     try {
       const result = await tariPayout.transferToAddress(userId, address, amount);
-
       withdrawal.txId = result.txId;
       withdrawal.status = 'withdrawn';
       withdrawal.metadata = {
@@ -115,16 +111,17 @@ router.post('/withdraw', async (req, res) => {
   } catch (err) { res.status(500).json({ error: err.message }); }
 });
 
-// GET /api/payout/history — Get withdrawal history
-router.get('/history', async (req, res) => {
+// GET /api/payout/history - Get withdrawal history
+// SECURITY: Requires JWT auth - userId extracted from token, not query param
+router.get('/history', auth, async (req, res) => {
   try {
-    const { userId, limit = 20 } = req.query;
-    if (!userId) return res.status(400).json({ error: 'userId required' });
-    
+    const userId = req.user.id;
+    const limit = Math.min(parseInt(req.query.limit) || 20, 100);
+
     const history = await Reward.find({
       userId,
       status: { $in: ['withdrawn', 'pending'] }
-    }).sort({ createdAt: -1 }).limit(parseInt(limit));
+    }).sort({ createdAt: -1 }).limit(limit);
 
     res.json({
       success: true,
@@ -140,8 +137,9 @@ router.get('/history', async (req, res) => {
   } catch (err) { res.status(500).json({ error: err.message }); }
 });
 
-// GET /api/payout/status/:transferId — Check transfer status
-router.get('/status/:transferId', (req, res) => {
+// GET /api/payout/status/:transferId - Check transfer status
+// SECURITY: Requires JWT auth to prevent enumeration
+router.get('/status/:transferId', auth, (req, res) => {
   const status = tariPayout.getTransferStatus(req.params.transferId);
   if (!status) return res.status(404).json({ error: 'Transfer not found' });
   res.json({ success: true, transfer: status });
