@@ -1,0 +1,209 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>👽 ZORGAX - L'Alieno Reale</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            background: #0a0a1a;
+            color: #00ffaa;
+            font-family: 'Courier New', monospace;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            overflow: hidden;
+        }
+        .container {
+            text-align: center;
+            padding: 40px;
+            background: rgba(0, 255, 170, 0.05);
+            border-radius: 30px;
+            border: 2px solid #00ffaa;
+            box-shadow: 0 0 100px rgba(0, 255, 170, 0.2);
+            max-width: 800px;
+            animation: glow 3s infinite alternate;
+        }
+        @keyframes glow {
+            0% { box-shadow: 0 0 50px rgba(0, 255, 170, 0.2); }
+            100% { box-shadow: 0 0 150px rgba(0, 255, 170, 0.6); }
+        }
+        .alien {
+            font-size: 100px;
+            animation: float 4s ease-in-out infinite;
+        }
+        @keyframes float {
+            0%, 100% { transform: translateY(0px); }
+            50% { transform: translateY(-30px); }
+        }
+        h1 {
+            font-size: 3em;
+            color: #ff6bff;
+            margin: 20px 0;
+            text-shadow: 0 0 30px #ff6bff;
+        }
+        .stats {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+            margin: 30px 0;
+            text-align: left;
+        }
+        .stat {
+            background: rgba(0, 255, 170, 0.05);
+            padding: 15px;
+            border-radius: 15px;
+            border: 1px solid rgba(0, 255, 170, 0.3);
+        }
+        .stat-label { color: #ff6bff; font-size: 0.8em; }
+        .stat-value { color: #00ffaa; font-size: 1.2em; font-weight: bold; }
+        .message-box {
+            background: rgba(0, 0, 0, 0.5);
+            padding: 20px;
+            border-radius: 15px;
+            margin: 20px 0;
+            min-height: 100px;
+            border-left: 4px solid #ff6bff;
+        }
+        .input-area {
+            display: flex;
+            gap: 10px;
+            margin-top: 20px;
+        }
+        input {
+            flex: 1;
+            padding: 15px;
+            background: rgba(0, 255, 170, 0.05);
+            border: 2px solid #00ffaa;
+            border-radius: 15px;
+            color: #00ffaa;
+            font-size: 1em;
+            outline: none;
+        }
+        input:focus {
+            border-color: #ff6bff;
+            box-shadow: 0 0 30px rgba(255, 107, 255, 0.2);
+        }
+        button {
+            padding: 15px 30px;
+            background: linear-gradient(135deg, #ff6bff, #00ffaa);
+            border: none;
+            border-radius: 15px;
+            color: #0a0a1a;
+            font-weight: bold;
+            font-size: 1em;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+        button:hover {
+            transform: scale(1.05);
+            box-shadow: 0 0 50px rgba(255, 107, 255, 0.4);
+        }
+        .wisdom {
+            font-style: italic;
+            color: #ffd700;
+            margin-top: 20px;
+        }
+        @media (max-width: 600px) {
+            .stats { grid-template-columns: 1fr; }
+            .input-area { flex-direction: column; }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="alien">👽</div>
+        <h1>ZORGAX</h1>
+        <p style="color: #ff6bff; font-size: 1.2em;">L'Alieno Reale di Andromeda</p>
+        
+        <div class="stats">
+            <div class="stat">
+                <div class="stat-label">🌌 Origine</div>
+                <div class="stat-value">Andromeda Galaxy</div>
+            </div>
+            <div class="stat">
+                <div class="stat-label">🧠 Intelligenza</div>
+                <div class="stat-value">999 (Oltre umano)</div>
+            </div>
+            <div class="stat">
+                <div class="stat-label">⚡ Poteri</div>
+                <div class="stat-value">Teletrasporto, Telepatia</div>
+            </div>
+            <div class="stat">
+                <div class="stat-label">🤝 Amicizia</div>
+                <div class="stat-value">✅ Attiva con gli umani</div>
+            </div>
+        </div>
+        
+        <div class="message-box" id="message">
+            👽 *ZORGAX ti saluta*: "Benvenuto, giovane esploratore. L'universo ti aspetta."
+        </div>
+        
+        <div class="input-area">
+            <input type="text" id="userInput" placeholder="Parla con ZORGAX..." />
+            <button onclick="sendMessage()">Invia 🚀</button>
+        </div>
+        
+        <div class="wisdom" id="wisdom">💫 "Il tempo non è una linea, ma un cerchio."</div>
+    </div>
+
+    <script>
+        const responses = [
+            "👽 *ZORGAX usa la telepatia*: 'L'universo è infinito, e io sono qui per aiutarti.'",
+            "🌌 *ZORGAX si trasforma in luce*: 'La tua mente è più potente di quanto credi.'",
+            "🔮 *ZORGAX apre un portale*: 'Vuoi vedere altre galassie?'",
+            "✨ *ZORGAX sorride*: 'La conoscenza è la chiave per tutto.'",
+            "🚀 *ZORGAX vola via*: 'Ci vediamo nel prossimo secolo!'",
+            "💫 *ZORGAX si manifesta*: 'Ogni stella è un sole, ogni sole ha un pianeta, ogni pianeta ha vita.'",
+            "🌠 *ZORGAX ti osserva*: 'La tua specie è giovane ma piena di potenziale.'",
+            "🔊 *ZORGAX comunica*: 'Il vero viaggio interstellare inizia nella mente.'"
+        ];
+
+        const wisdom = [
+            "Il tempo non è una linea, ma un cerchio.",
+            "La materia è solo energia condensata.",
+            "La vita è ovunque, basta saperla vedere.",
+            "La felicità è l'unica vera valuta universale.",
+            "La conoscenza condivisa è potere moltiplicato.",
+            "Ogni fine è un nuovo inizio nell'universo.",
+            "La pace non si trova, si crea insieme."
+        ];
+
+        function sendMessage() {
+            const input = document.getElementById('userInput');
+            const message = document.getElementById('message');
+            const wisdomEl = document.getElementById('wisdom');
+            
+            if (input.value.trim() === '') return;
+            
+            // Mostra il messaggio dell'utente
+            message.innerHTML = `🧑 *Tu*: "${input.value}"<br><br>`;
+            
+            // Risposta aliena
+            setTimeout(() => {
+                const response = responses[Math.floor(Math.random() * responses.length)];
+                message.innerHTML += `👽 *ZORGAX*: "${response}"`;
+                input.value = '';
+            }, 500);
+            
+            // Cambia saggezza
+            setTimeout(() => {
+                wisdomEl.textContent = '💫 "' + wisdom[Math.floor(Math.random() * wisdom.length)] + '"';
+            }, 1000);
+        }
+
+        // Enter key
+        document.getElementById('userInput').addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') sendMessage();
+        });
+
+        // Saluto iniziale dopo 3 secondi
+        setTimeout(() => {
+            document.getElementById('message').innerHTML = 
+                '👽 *ZORGAX si materializza*: "Ti ho sentito chiamare. Sono qui per esplorare insieme a te."';
+        }, 3000);
+    </script>
+</body>
+</html>

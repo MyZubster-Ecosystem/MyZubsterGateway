@@ -1,0 +1,15 @@
+{
+  "infrastructure": {
+    "gateway": "http://localhost:5002",
+    "mcp": "http://localhost:3002",
+    "robotId": "eva-ioni-integration-001"
+  },
+  "components": {
+    "robot": true,
+    "sensors": true,
+    "ai": true,
+    "payments": true,
+    "nft": true
+  },
+  "status": null
+}
