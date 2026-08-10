@@ -115,7 +115,7 @@ router.post('/mint', authMiddleware, (req, res) => {
 // ============ GET STATS ============
 router.get('/stats', (req, res) => {
   try {
-    const types = ['hera_robot', 'waste_robot', 'resource', 'galaxy', 'star', 'planet', 'constellation', 'nebula', 'element', 'molecule', 'bounty', 'test'];
+    const types = ['hera_robot', 'waste_robot', 'resource', 'galaxy', 'star', 'planet', 'constellation', 'nebula', 'element', 'molecule', 'bounty', 'test', 'human_robot'];
     const stats = {};
     let total = 0;
     
