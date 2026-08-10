@@ -194,6 +194,10 @@ app.use('/api/universe', universeRoutes);
 const tvRoutes = require('./routes/tvRoutes');
 app.use('/api/tv', tvRoutes);
 
+// 🤖 Route Tokenizzazione Robot Umani
+const humanRobotsRoutes = require('./routes/humanRobotsRoutes');
+app.use('/api/human-robots', humanRobotsRoutes);
+
 // 🏛️ Route Tokenizzazione Politica
 const politicsRoutes = require('./routes/politicsRoutes');
 app.use('/api/politics', politicsRoutes);
