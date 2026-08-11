@@ -81,6 +81,15 @@ try {
 
 // Notifications
 try { const routes = require("./routes/notificationRoutes"); app.use("/api/notifications", routes); } catch(e) {}
+// Notification service (Bounty B6)
+let notificationService = null;
+try {
+  notificationService = require("./notifications");
+  app.get("/api/notifications/status", (_req, res) => {
+    res.json({ status: "ok", providers: notificationService.getStatus() });
+  });
+  console.log("[Notify] Notification service loaded");
+} catch(e) { console.warn("[Notify] Notification service unavailable:", e.message); }
 
 // Messages
 try { const routes = require("./routes/messageRoutes"); app.use("/api/messages", routes); } catch(e) {}
