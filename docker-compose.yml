@@ -40,6 +40,8 @@ services:
       JWT_SECRET: ${JWT_SECRET:-change-me-in-production}
       GATEWAY_PORT: ${GATEWAY_PORT:-10000}
       CORS_ORIGIN: ${CORS_ORIGIN:-http://localhost:3000}
+      TARI_WALLET_URL: ${TARI_WALLET_URL:-http://tari-wallet:12000}
+      MONERO_WALLET_URL: ${MONERO_WALLET_URL:-http://monero-wallet:18082}
     networks:
       - myzubster-network
     healthcheck:
@@ -50,13 +52,43 @@ services:
       start_period: 10s
     env_file:
       - .env
-    # Uncomment for development with volume mount
-    # volumes:
-    #   - ./:/app
-    #   - /app/node_modules
+
+  tari-wallet:
+    image: tariproject/wallet:latest
+    container_name: myzubster-tari-wallet
+    restart: unless-stopped
+    ports:
+      - "${TARI_WALLET_PORT:-12000}:12000"
+    environment:
+      TARI_NETWORK: ${TARI_NETWORK:-esmeralda}
+    volumes:
+      - tari_wallet_data:/home/tari/.tari
+    networks:
+      - myzubster-network
+    profiles:
+      - full
+
+  monero-wallet:
+    image: monero-wallet-rpc:latest
+    container_name: myzubster-monero-wallet
+    restart: unless-stopped
+    ports:
+      - "${MONERO_WALLET_PORT:-18082}:18082"
+    environment:
+      MONERO_DAEMON_ADDRESS: ${MONERO_DAEMON:-stagenet.community.rino.io:38081}
+    volumes:
+      - monero_wallet_data:/home/monero
+    networks:
+      - myzubster-network
+    profiles:
+      - full
 
 volumes:
   mongodb_data:
+    driver: local
+  tari_wallet_data:
+    driver: local
+  monero_wallet_data:
     driver: local
 
 networks:

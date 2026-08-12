@@ -81,6 +81,15 @@ try {
 
 // Notifications
 try { const routes = require("./routes/notificationRoutes"); app.use("/api/notifications", routes); } catch(e) {}
+// Notification service (Bounty B6)
+let notificationService = null;
+try {
+  notificationService = require("./notifications");
+  app.get("/api/notifications/status", (_req, res) => {
+    res.json({ status: "ok", providers: notificationService.getStatus() });
+  });
+  console.log("[Notify] Notification service loaded");
+} catch(e) { console.warn("[Notify] Notification service unavailable:", e.message); }
 
 // Messages
 try { const routes = require("./routes/messageRoutes"); app.use("/api/messages", routes); } catch(e) {}
@@ -168,9 +177,19 @@ app.get('/alien', (req, res) => {
   res.sendFile('/opt/MyZubster/MyZubsterGateway/public/alien-zorgax.html');
 });
 
+<<<<<<< HEAD
+app.get('/benzina-pagamento', (req, res) => {
+  res.sendFile(path.join(__dirname, 'frontend/dist/benzina-pagamento.html'));
+});
+
+// Static frontend
+const frontendPath = path.join(__dirname, 'frontend/dist');
+app.use(express.static(frontendPath));
+=======
 // 👽 Route Connessione ZORGAX-Terra
 const alienConnectionRoutes = require('./routes/alienConnectionRoutes');
 app.use('/api/alien', alienConnectionRoutes);
+>>>>>>> main
 
 // 🚀 Route Colonizzazione Spaziale
 const colonizationRoutes = require('./routes/colonizationRoutes');
@@ -184,6 +203,10 @@ app.use('/api/universe', universeRoutes);
 const tvRoutes = require('./routes/tvRoutes');
 app.use('/api/tv', tvRoutes);
 
+// 🤖 Route Tokenizzazione Robot Umani
+const humanRobotsRoutes = require('./routes/humanRobotsRoutes');
+app.use('/api/human-robots', humanRobotsRoutes);
+
 // 🏛️ Route Tokenizzazione Politica
 const politicsRoutes = require('./routes/politicsRoutes');
 app.use('/api/politics', politicsRoutes);
@@ -195,6 +218,12 @@ app.use('/api/churches', churchesRoutes);
 // 🌿 Route Tokenizzazione Natura
 const natureRoutes = require('./routes/natureRoutes');
 app.use('/api/nature', natureRoutes);
+try { const sportRoutes = require("./routes/sportRoutes"); app.use("/api/sport", sportRoutes); } catch(e) {}
+try { const musicRoutes = require("./routes/musicRoutes"); app.use("/api/music", musicRoutes); } catch(e) {}
+try { const foodRoutes = require("./routes/foodRoutes"); app.use("/api/food", foodRoutes); } catch(e) {}
+try { const citiesRoutes = require("./routes/citiesRoutes"); app.use("/api/cities", citiesRoutes); } catch(e) {}
+try { const gamingRoutes = require("./routes/gamingRoutes"); app.use("/api/gaming", gamingRoutes); } catch(e) {}
+
 
 const fashionRoutesRoutes = require('./routes/fashionRoutesRoutes');
 app.use('/api/fashion', fashionRoutesRoutes);
