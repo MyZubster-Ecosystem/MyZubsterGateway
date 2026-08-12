@@ -22,6 +22,46 @@ services:
       retries: 5
       start_period: 20s
 
+  tari-wallet-stub:
+    build:
+      context: ./gateway
+      dockerfile: Dockerfile.tari-stub
+    container_name: myzubster-tari-wallet
+    restart: unless-stopped
+    ports:
+      - "${TARI_WALLET_PORT:-12021}:12021"
+    environment:
+      WALLET_ADDRESS: ${TARI_WALLET_ADDRESS:-12Nbmmm5g5pDmJKNTJsHycQoLhYLoAitU4}
+      RPC_PORT: 12021
+    networks:
+      - myzubster-network
+    healthcheck:
+      test: ["CMD", "node", "-e", "require('http').get('http://localhost:12021/health', r => process.exit(r.statusCode===200?0:1))"]
+      interval: 15s
+      timeout: 5s
+      retries: 3
+      start_period: 10s
+
+  monero-wallet-stub:
+    build:
+      context: ./gateway
+      dockerfile: Dockerfile.xmr-stub
+    container_name: myzubster-monero-wallet
+    restart: unless-stopped
+    ports:
+      - "${XMR_WALLET_PORT:-18082}:18082"
+    environment:
+      WALLET_ADDRESS: ${XMR_WALLET_ADDRESS:-}
+      RPC_PORT: 18082
+    networks:
+      - myzubster-network
+    healthcheck:
+      test: ["CMD", "node", "-e", "require('http').get('http://localhost:18082/health', r => process.exit(r.statusCode===200?0:1))"]
+      interval: 15s
+      timeout: 5s
+      retries: 3
+      start_period: 10s
+
   gateway:
     build:
       context: .
@@ -33,64 +73,32 @@ services:
     depends_on:
       mongodb:
         condition: service_healthy
+      tari-wallet-stub:
+        condition: service_healthy
+      monero-wallet-stub:
+        condition: service_healthy
     environment:
       NODE_ENV: ${NODE_ENV:-production}
       PORT: 10000
       MONGODB_URI: mongodb://${MONGO_USER:-admin}:${MONGO_PASSWORD:-password}@mongodb:27017/myzubster?authSource=admin
-      JWT_SECRET: ${JWT_SECRET:-change-me-in-production}
-      GATEWAY_PORT: ${GATEWAY_PORT:-10000}
-      CORS_ORIGIN: ${CORS_ORIGIN:-http://localhost:3000}
-      TARI_WALLET_URL: ${TARI_WALLET_URL:-http://tari-wallet:12000}
-      MONERO_WALLET_URL: ${MONERO_WALLET_URL:-http://monero-wallet:18082}
+      TARI_WALLET_RPC: http://tari-wallet-stub:12021
+      XMR_WALLET_RPC: http://monero-wallet-stub:18082
+      JWT_SECRET: ${JWT_SECRET:-change-me}
+      RATE_LIMIT_WINDOW_MS: ${RATE_LIMIT_WINDOW_MS:-900000}
+      RATE_LIMIT_MAX: ${RATE_LIMIT_MAX:-100}
+      SENTRY_DSN: ${SENTRY_DSN:-}
     networks:
       - myzubster-network
     healthcheck:
-      test: ["CMD", "wget", "--quiet", "--tries=1", "--spider", "http://localhost:10000/health"]
-      interval: 30s
-      timeout: 10s
+      test: ["CMD", "node", "-e", "require('http').get('http://localhost:10000/api/health', r => process.exit(r.statusCode===200?0:1))"]
+      interval: 15s
+      timeout: 5s
       retries: 3
-      start_period: 10s
-    env_file:
-      - .env
-
-  tari-wallet:
-    image: tariproject/wallet:latest
-    container_name: myzubster-tari-wallet
-    restart: unless-stopped
-    ports:
-      - "${TARI_WALLET_PORT:-12000}:12000"
-    environment:
-      TARI_NETWORK: ${TARI_NETWORK:-esmeralda}
-    volumes:
-      - tari_wallet_data:/home/tari/.tari
-    networks:
-      - myzubster-network
-    profiles:
-      - full
-
-  monero-wallet:
-    image: monero-wallet-rpc:latest
-    container_name: myzubster-monero-wallet
-    restart: unless-stopped
-    ports:
-      - "${MONERO_WALLET_PORT:-18082}:18082"
-    environment:
-      MONERO_DAEMON_ADDRESS: ${MONERO_DAEMON:-stagenet.community.rino.io:38081}
-    volumes:
-      - monero_wallet_data:/home/monero
-    networks:
-      - myzubster-network
-    profiles:
-      - full
-
-volumes:
-  mongodb_data:
-    driver: local
-  tari_wallet_data:
-    driver: local
-  monero_wallet_data:
-    driver: local
+      start_period: 15s
 
 networks:
   myzubster-network:
     driver: bridge
+
+volumes:
+  mongodb_data:
