@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Robot Dashboard — MyZubster Gateway</title>
+<link rel="stylesheet" href="robots.css">
+</head>
+<body>
+<div class="dashboard">
+  <header class="header">
+    <h1>Robot Dashboard</h1>
+    <div class="status-bar">
+      <span class="status-indicator" id="connection-status">Connecting...</span>
+      <span class="last-update" id="last-update"></span>
+    </div>
+  </header>
+
+  <div class="stats-grid">
+    <div class="stat-card" id="active-robots-card">
+      <div class="stat-value" id="active-robots">0</div>
+      <div class="stat-label">Active Robots</div>
+    </div>
+    <div class="stat-card" id="jobs-card">
+      <div class="stat-value" id="ongoing-jobs">0</div>
+      <div class="stat-label">Ongoing Jobs</div>
+    </div>
+    <div class="stat-card" id="earned-card">
+      <div class="stat-value" id="myz-earned">0</div>
+      <div class="stat-label">MYZ Earned</div>
+    </div>
+    <div class="stat-card" id="escrow-card">
+      <div class="stat-value" id="escrow-balance">0</div>
+      <div class="stat-label">Escrow Balance</div>
+    </div>
+  </div>
+
+  <div class="filters">
+    <button class="filter-btn active" data-filter="all">All</button>
+    <button class="filter-btn" data-filter="idle">Idle</button>
+    <button class="filter-btn" data-filter="working">Working</button>
+    <button class="filter-btn" data-filter="delivering">Delivering</button>
+    <button class="filter-btn" data-filter="dispute">Dispute</button>
+  </div>
+
+  <div class="chart-container">
+    <canvas id="activity-chart"></canvas>
+  </div>
+
+  <div class="robot-list" id="robot-list">
+    <div class="empty-state">No robots connected. Waiting for data...</div>
+  </div>
+</div>
+<script src="robots.js"></script>
+</body>
+</html>
