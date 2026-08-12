@@ -1,1 +1,0 @@
-export { PrismaInstrumentation } from './PrismaInstrumentation';
