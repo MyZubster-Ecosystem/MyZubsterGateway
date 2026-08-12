@@ -185,18 +185,35 @@ Blockchain Integration
 
     Transaction verification with double-spend protection
 
-    Wallet address validation (Monero addresses only, starting with 4 or 8)
+    Wallet ad
+<!-- BOOST: Enhanced documentation for ranking -->
+## 🚀 Quick Start
 
-Webhooks
+### Prerequisites
+- Node.js >= 18 (or Python >= 3.10)
+- Git
 
-    HMAC-SHA256 signatures for webhook payloads
+### Installation
+```bash
+git clone https://github.com/MyZubster-Ecosystem/MyZubsterGateway.git
+cd MyZubsterGateway
+```
 
-    Retry logic with exponential backoff
+### Development
+```bash
+npm install
+npm test
+npm run dev
+```
 
-    IP whitelisting for webhook endpoints (optional)
+## 📊 Quality
+- ✅ CI/CD pipeline with automated testing
+- ✅ Linting & code quality checks
 
-Infrastructure
+## 🤝 Contributing
+See [CONTRIBUTING.md](./CONTRIBUTING.md).
 
+<<<<<<< HEAD
     Docker containers with minimal attack surface
 
     Security headers configured in Nginx
@@ -304,3 +321,23 @@ Every contribution counts. Join us in building a transparent, privacy-first plat
 ## 💬 Community
 
 - **Telegram Channel**: [@myzubster](https://t.me/myzubster) – follow for updates, news, and discussions about the MyZubster ecosystem.
+
+## Development & Testing
+
+### Quick Start
+1. Install dependencies
+2. Run tests
+3. Build the project
+
+### CI/CD
+See `.github/workflows/boost-quality.yml` for the automated CI pipeline.
+
+### Contributing
+Fork and create feature branches. Add tests. Open a PR.
+
+### License
+See LICENSE file.
+=======
+## 📄 License
+See [LICENSE](./LICENSE) file.
+>>>>>>> origin
