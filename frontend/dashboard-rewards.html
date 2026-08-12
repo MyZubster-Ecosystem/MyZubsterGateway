@@ -1,0 +1,213 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Rewards Dashboard — MyZubster</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;background:#0d1117;color:#c9d1d9;min-height:100vh}
+.header{background:#161b22;border-bottom:1px solid #30363d;padding:16px 24px;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px}
+.header h1{font-size:20px;color:#3fb950}
+.total-earned{background:#1c4128;border:1px solid #3fb95040;border-radius:8px;padding:8px 16px;text-align:center}
+.total-earned .amount{font-size:24px;font-weight:700;color:#3fb950}
+.total-earned .label{font-size:11px;color:#8b949e;text-transform:uppercase;letter-spacing:0.5px}
+.container{max-width:1200px;margin:0 auto;padding:24px}
+.controls{display:flex;gap:12px;margin-bottom:16px;flex-wrap:wrap}
+.search-input{flex:1;min-width:200px;padding:8px 12px;background:#0d1117;border:1px solid #30363d;border-radius:6px;color:#c9d1d9;font-size:14px}
+.search-input:focus{outline:none;border-color:#58a6ff}
+.filter-select{padding:8px 12px;background:#0d1117;border:1px solid #30363d;border-radius:6px;color:#c9d1d9;font-size:14px;cursor:pointer}
+.sort-btn{padding:8px 16px;background:#21262d;border:1px solid #30363d;border-radius:6px;color:#c9d1d9;font-size:13px;cursor:pointer;transition:background .15s}
+.sort-btn:hover{background:#30363d}
+.sort-btn.active{background:#1f6feb;border-color:#1f6feb}
+table{width:100%;border-collapse:collapse;background:#161b22;border:1px solid #30363d;border-radius:8px;overflow:hidden}
+th{background:#21262d;padding:10px 16px;text-align:left;font-size:13px;font-weight:600;color:#8b949e;border-bottom:1px solid #30363d;cursor:pointer;user-select:none}
+th:hover{color:#f0f6fc}
+th .arrow{font-size:11px;margin-left:4px}
+td{padding:10px 16px;font-size:14px;border-bottom:1px solid #21262d}
+tr:last-child td{border-bottom:none}
+tr:hover td{background:#1c2128}
+.status-pending{color:#d29922}
+.status-completed{color:#3fb950}
+.status-failed{color:#f85149}
+.amount-cell{font-weight:600;text-align:right}
+.pagination{display:flex;justify-content:center;align-items:center;gap:8px;margin-top:16px}
+.page-btn{padding:6px 12px;background:#21262d;border:1px solid #30363d;border-radius:6px;color:#c9d1d9;font-size:13px;cursor:pointer}
+.page-btn:hover:not(:disabled){background:#30363d}
+.page-btn:disabled{opacity:0.4;cursor:default}
+.page-btn.active{background:#1f6feb;border-color:#1f6feb}
+.page-info{font-size:13px;color:#8b949e}
+.empty{text-align:center;padding:40px;color:#8b949e}
+.loading{text-align:center;padding:40px;color:#8b949e}
+@media (max-width:768px) {
+  table{font-size:12px}
+  th,td{padding:8px 10px}
+  .controls{flex-direction:column}
+  .header{flex-direction:column;text-align:center}
+}
+</style>
+</head>
+<body>
+<div class="header">
+  <h1>Rewards History</h1>
+  <div class="total-earned">
+    <div class="amount" id="totalEarned">-</div>
+    <div class="label">Total MYZ Earned</div>
+  </div>
+</div>
+<div class="container">
+  <div class="controls">
+    <input type="text" class="search-input" placeholder="Search by bounty ID or description..." oninput="filterRewards()" id="searchInput">
+    <select class="filter-select" onchange="filterRewards()" id="statusFilter">
+      <option value="all">All Status</option>
+      <option value="pending">Pending</option>
+      <option value="completed">Completed</option>
+      <option value="failed">Failed</option>
+    </select>
+    <button class="sort-btn active" onclick="toggleSort(this,'date')">Date <span class="arrow">&#9660;</span></button>
+    <button class="sort-btn" onclick="toggleSort(this,'amount')">Amount <span class="arrow"></span></button>
+  </div>
+  <table>
+    <thead>
+      <tr>
+        <th>Bounty ID</th>
+        <th>Description</th>
+        <th>Amount (MYZ)</th>
+        <th>Status</th>
+        <th>Date</th>
+      </tr>
+    </thead>
+    <tbody id="rewardsTable"><tr><td colspan="5" class="loading">Loading rewards...</td></tr></tbody>
+  </table>
+  <div class="pagination" id="pagination">
+    <button class="page-btn" disabled>&#9664; Prev</button>
+    <span class="page-info">Page 1</span>
+    <button class="page-btn" disabled>Next &#9654;</button>
+  </div>
+</div>
+<script>
+const API_BASE = '/api/rewards';
+const PAGE_SIZE = 10;
+let allRewards = [];
+let currentPage = 1;
+let currentSort = {field:'date',dir:'desc'};
+
+async function loadRewards() {
+  const tableBody = document.getElementById('rewardsTable');
+  try {
+    const r = await fetch(API_BASE+'?userId=current');
+    if (!r.ok) throw new Error(r.status);
+    const data = await r.json();
+    allRewards = (data.rewards||data||[]).map((r,i) => ({
+      id: r.bountyId||r.id||('RWD-'+(i+1)),
+      description: r.description||r.title||'Reward',
+      amount: r.amount||r.value||r.rewardMYZ||0,
+      status: r.status||'pending',
+      date: r.date||r.createdAt||r.timestamp||new Date().toISOString().split('T')[0]
+    }));
+    
+    // Calculate total
+    const total = allRewards.filter(r=>r.status==='completed').reduce((s,r)=>s+r.amount,0);
+    document.getElementById('totalEarned').textContent = total.toLocaleString();
+    
+    renderTable();
+  } catch(e) {
+    tableBody.innerHTML = '<tr><td colspan="5" class="empty">Failed to load rewards. Using demo data.</td></tr>';
+    // Load demo data for preview
+    allRewards = [
+      {id:'BOT-1',description:'Dashboard robot real-time (WebSocket)',amount:100,status:'completed',date:'2026-08-10'},
+      {id:'BOT-2',description:'Wallet Tari integration',amount:80,status:'completed',date:'2026-08-09'},
+      {id:'B9',description:'Docker Compose setup',amount:60,status:'pending',date:'2026-08-12'},
+      {id:'B8',description:'Jest test automation',amount:120,status:'pending',date:'2026-08-12'},
+      {id:'B5',description:'Monero wallet stub',amount:70,status:'failed',date:'2026-08-08'},
+      {id:'B2',description:'Robot Dashboard frontend',amount:100,status:'completed',date:'2026-08-11'},
+      {id:'B1',description:'Rewards Dashboard frontend',amount:80,status:'completed',date:'2026-08-11'},
+      {id:'P6',description:'Webhook eventi robot',amount:90,status:'pending',date:'2026-08-12'},
+      {id:'BOT-8',description:'Hardware bridge robot',amount:150,status:'pending',date:'2026-08-12'},
+    ];
+    document.getElementById('totalEarned').textContent = allRewards.filter(r=>r.status==='completed').reduce((s,r)=>s+r.amount,0).toLocaleString();
+    renderTable();
+  }
+}
+
+function renderTable() {
+  let filtered = [...allRewards];
+  
+  // Search filter
+  const query = document.getElementById('searchInput').value.toLowerCase();
+  if (query) filtered = filtered.filter(r => r.id.toLowerCase().includes(query) || r.description.toLowerCase().includes(query));
+  
+  // Status filter
+  const statusFilter = document.getElementById('statusFilter').value;
+  if (statusFilter !== 'all') filtered = filtered.filter(r => r.status === statusFilter);
+  
+  // Sort
+  filtered.sort((a,b) => {
+    let va = a[currentSort.field], vb = b[currentSort.field];
+    if (currentSort.field === 'amount') { va=Number(va); vb=Number(vb); }
+    if (va < vb) return currentSort.dir==='asc'?-1:1;
+    if (va > vb) return currentSort.dir==='asc'?1:-1;
+    return 0;
+  });
+  
+  // Paginate
+  const totalPages = Math.ceil(filtered.length / PAGE_SIZE) || 1;
+  currentPage = Math.min(currentPage, totalPages);
+  const start = (currentPage-1) * PAGE_SIZE;
+  const page = filtered.slice(start, start + PAGE_SIZE);
+  
+  const tableBody = document.getElementById('rewardsTable');
+  if (!page.length) {
+    tableBody.innerHTML = '<tr><td colspan="5" class="empty">No rewards found</td></tr>';
+  } else {
+    tableBody.innerHTML = page.map(r => 
+      '<tr>'+
+        '<td>'+r.id+'</td>'+
+        '<td>'+r.description+'</td>'+
+        '<td class="amount-cell">'+r.amount+' MYZ</td>'+
+        '<td class="status-'+r.status+'">'+r.status.charAt(0).toUpperCase()+r.status.slice(1)+'</td>'+
+        '<td>'+r.date+'</td>'+
+      '</tr>'
+    ).join('');
+  }
+  
+  // Pagination controls
+  const pag = document.getElementById('pagination');
+  pag.innerHTML = 
+    '<button class="page-btn" '+(currentPage<=1?'disabled':'')+' onclick="goPage('+(currentPage-1)+')">&#9664; Prev</button>'+
+    '<span class="page-info">Page '+currentPage+' of '+totalPages+'</span>'+
+    '<button class="page-btn" '+(currentPage>=totalPages?'disabled':'')+' onclick="goPage('+(currentPage+1)+')">Next &#9654;</button>';
+}
+
+function filterRewards() {
+  currentPage = 1;
+  renderTable();
+}
+
+function toggleSort(btn, field) {
+  document.querySelectorAll('.sort-btn').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  
+  if (currentSort.field === field) {
+    currentSort.dir = currentSort.dir === 'asc' ? 'desc' : 'asc';
+  } else {
+    currentSort.field = field;
+    currentSort.dir = 'desc';
+  }
+  
+  // Update arrows
+  document.querySelectorAll('.sort-btn .arrow').forEach(a => a.textContent = '');
+  btn.querySelector('.arrow').textContent = currentSort.dir === 'desc' ? '\u25BC' : '\u25B2';
+  
+  renderTable();
+}
+
+function goPage(page) {
+  currentPage = page;
+  renderTable();
+}
+
+loadRewards();
+</script>
+</body>
+</html>
