@@ -1,5 +1,8 @@
 name: CI Boost
 <<<<<<< HEAD
+=======
+<<<<<<< HEAD
+>>>>>>> origin
 on: [push, pull_request]
 jobs:
   test-and-lint:
@@ -10,6 +13,8 @@ jobs:
         run: echo "CI active - tests OK"
       - name: Documentation check
         run: echo "Documentation verified"
+<<<<<<< HEAD
+=======
 =======
 on:
   push:
@@ -29,4 +34,5 @@ jobs:
       - run: npm run lint --if-present
       - run: npm test --if-present
       - run: npm run build --if-present
+>>>>>>> origin
 >>>>>>> origin
