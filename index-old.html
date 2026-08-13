@@ -1,0 +1,590 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=yes" />
+    <title>👽 Pytho Temporal - MyZubster Gateway</title>
+    
+    <!-- Meta Tags per social -->
+    <meta property="og:title" content="👽 Pytho Temporal - MyZubster Gateway" />
+    <meta property="og:description" content="La macchina del tempo open source che viaggia su blockchain" />
+    <meta property="og:type" content="website" />
+    
+    <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>👽</text></svg>" />
+    
+    <style>
+        /* ============================================
+           CSS VARIABLES & RESET
+           ============================================ */
+        :root {
+            --bg-primary: #0f0c29;
+            --bg-secondary: #302b63;
+            --bg-tertiary: #24243e;
+            --color-primary: #a855f7;
+            --color-secondary: #ec4899;
+            --color-accent: #22c55e;
+            --color-text: #ffffff;
+            --color-text-muted: rgba(255,255,255,0.6);
+            --radius: 20px;
+            --shadow: 0 25px 50px rgba(0,0,0,0.5);
+            --transition: 0.3s ease;
+            --font: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            --glow-primary: 0 0 40px rgba(168, 85, 247, 0.3);
+        }
+        
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: var(--font);
+            background: linear-gradient(135deg, var(--bg-primary) 0%, var(--bg-secondary) 50%, var(--bg-tertiary) 100%);
+            color: var(--color-text);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+            line-height: 1.6;
+        }
+        
+        /* ============================================
+           CONTAINER
+           ============================================ */
+        .container {
+            max-width: 1100px;
+            width: 100%;
+            background: rgba(255,255,255,0.05);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border-radius: var(--radius);
+            padding: 40px 45px 35px;
+            border: 1px solid rgba(255,255,255,0.08);
+            box-shadow: var(--shadow);
+        }
+        
+        /* ============================================
+           HEADER
+           ============================================ */
+        .header {
+            display: flex;
+            align-items: center;
+            gap: 18px;
+            margin-bottom: 8px;
+            flex-wrap: wrap;
+        }
+        
+        .alien-icon {
+            font-size: 3.8rem;
+            animation: float 3s ease-in-out infinite;
+            display: inline-block;
+            filter: drop-shadow(0 0 20px rgba(168, 85, 247, 0.4));
+            line-height: 1;
+        }
+        
+        @keyframes float {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-12px); }
+        }
+        
+        .header h1 {
+            font-size: 2.6rem;
+            font-weight: 700;
+            background: linear-gradient(135deg, var(--color-primary) 0%, var(--color-secondary) 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            line-height: 1.2;
+        }
+        
+        .header .subtitle {
+            font-size: 1rem;
+            color: var(--color-text-muted);
+            margin-top: 2px;
+            display: block;
+            width: 100%;
+            padding-left: 5px;
+        }
+        
+        .badges {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+            margin: 8px 0 12px;
+        }
+        
+        .badge {
+            padding: 4px 14px;
+            border-radius: 30px;
+            font-size: 0.75rem;
+            font-weight: 600;
+            letter-spacing: 0.3px;
+            background: rgba(34, 197, 94, 0.15);
+            border: 1px solid rgba(34, 197, 94, 0.3);
+            color: #4ade80;
+        }
+        
+        .badge.badge-purple {
+            background: rgba(168, 85, 247, 0.15);
+            border-color: rgba(168, 85, 247, 0.3);
+            color: var(--color-primary);
+        }
+        
+        .badge.badge-pink {
+            background: rgba(236, 72, 153, 0.15);
+            border-color: rgba(236, 72, 153, 0.3);
+            color: var(--color-secondary);
+        }
+        
+        /* ============================================
+           HERO
+           ============================================ */
+        .hero {
+            text-align: center;
+            padding: 30px 10px 20px;
+        }
+        
+        .hero .big-alien {
+            font-size: 5.5rem;
+            display: block;
+            animation: float 3s ease-in-out infinite;
+            filter: drop-shadow(0 0 40px rgba(168, 85, 247, 0.3));
+        }
+        
+        .hero h2 {
+            font-size: 1.8rem;
+            font-weight: 300;
+            margin: 10px 0 6px;
+        }
+        
+        .hero .hero-text {
+            color: var(--color-text-muted);
+            font-size: 1.05rem;
+            max-width: 600px;
+            margin: 0 auto 16px;
+        }
+        
+        .hero .cta {
+            display: inline-block;
+            padding: 12px 34px;
+            border-radius: 40px;
+            background: linear-gradient(135deg, var(--color-primary), var(--color-secondary));
+            color: #fff;
+            font-weight: 600;
+            text-decoration: none;
+            transition: transform var(--transition), box-shadow var(--transition);
+            box-shadow: 0 4px 20px rgba(168, 85, 247, 0.3);
+            font-size: 1rem;
+        }
+        
+        .hero .cta:hover {
+            transform: scale(1.05);
+            box-shadow: 0 6px 30px rgba(168, 85, 247, 0.5);
+        }
+        
+        /* ============================================
+           FEATURES GRID
+           ============================================ */
+        .features {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 18px;
+            margin: 30px 0 20px;
+        }
+        
+        .feature-card {
+            background: rgba(255,255,255,0.04);
+            padding: 22px 18px 18px;
+            border-radius: 16px;
+            border: 1px solid rgba(255,255,255,0.06);
+            transition: all var(--transition);
+            text-decoration: none;
+            color: var(--color-text);
+            text-align: center;
+        }
+        
+        .feature-card:hover {
+            background: rgba(255,255,255,0.08);
+            transform: translateY(-4px);
+            border-color: rgba(168, 85, 247, 0.25);
+        }
+        
+        .feature-card .icon {
+            font-size: 2.6rem;
+            display: block;
+            margin-bottom: 8px;
+        }
+        
+        .feature-card .name {
+            font-weight: 600;
+            font-size: 1.05rem;
+        }
+        
+        .feature-card .desc {
+            font-size: 0.85rem;
+            color: var(--color-text-muted);
+            margin-top: 4px;
+        }
+        
+        /* ============================================
+           STATS
+           ============================================ */
+        .stats {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+            gap: 14px;
+            margin: 25px 0 20px;
+        }
+        
+        .stat {
+            background: rgba(0,0,0,0.2);
+            padding: 14px 10px;
+            border-radius: 12px;
+            text-align: center;
+            border: 1px solid rgba(255,255,255,0.03);
+        }
+        
+        .stat .number {
+            font-size: 1.8rem;
+            font-weight: 700;
+            color: var(--color-primary);
+        }
+        
+        .stat .label {
+            font-size: 0.75rem;
+            color: var(--color-text-muted);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+        
+        /* ============================================
+           TIMELINE
+           ============================================ */
+        .section-title {
+            font-size: 1.3rem;
+            font-weight: 400;
+            margin: 25px 0 14px;
+            color: rgba(255,255,255,0.8);
+        }
+        
+        .section-title .emoji {
+            margin-right: 8px;
+        }
+        
+        .timeline {
+            background: rgba(0,0,0,0.15);
+            border-radius: 14px;
+            padding: 14px 18px;
+            max-height: 200px;
+            overflow-y: auto;
+        }
+        
+        .timeline-item {
+            display: flex;
+            justify-content: space-between;
+            padding: 6px 4px;
+            border-bottom: 1px solid rgba(255,255,255,0.04);
+            font-size: 0.9rem;
+            flex-wrap: wrap;
+        }
+        
+        .timeline-item .year {
+            font-weight: 600;
+            color: var(--color-primary);
+            min-width: 60px;
+        }
+        
+        .timeline-item .status {
+            font-size: 0.75rem;
+            opacity: 0.7;
+        }
+        
+        /* ============================================
+           ORTI BOTANICI
+           ============================================ */
+        .orti-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 12px;
+            margin: 12px 0 20px;
+        }
+        
+        .orto-card {
+            background: rgba(0,0,0,0.2);
+            padding: 12px 12px 10px;
+            border-radius: 12px;
+            text-align: center;
+            border: 1px solid rgba(255,255,255,0.03);
+            transition: var(--transition);
+        }
+        
+        .orto-card:hover {
+            border-color: rgba(168, 85, 247, 0.2);
+        }
+        
+        .orto-card .icon {
+            font-size: 1.6rem;
+            display: block;
+        }
+        
+        .orto-card .name {
+            font-size: 0.85rem;
+            font-weight: 500;
+        }
+        
+        .orto-card .species {
+            font-size: 0.7rem;
+            color: var(--color-text-muted);
+        }
+        
+        .orto-card .era {
+            display: inline-block;
+            font-size: 0.6rem;
+            background: rgba(168, 85, 247, 0.15);
+            padding: 1px 10px;
+            border-radius: 20px;
+            margin-top: 4px;
+            color: var(--color-primary);
+        }
+        
+        /* ============================================
+           FOOTER
+           ============================================ */
+        .footer {
+            margin-top: 28px;
+            padding-top: 20px;
+            border-top: 1px solid rgba(255,255,255,0.05);
+            text-align: center;
+            font-size: 0.8rem;
+            color: var(--color-text-muted);
+        }
+        
+        .footer .alien {
+            font-size: 1.2rem;
+            display: inline-block;
+            animation: float 3s ease-in-out infinite;
+        }
+        
+        .footer .socials {
+            display: flex;
+            justify-content: center;
+            gap: 18px;
+            margin: 10px 0 6px;
+            flex-wrap: wrap;
+        }
+        
+        .footer .socials a {
+            color: var(--color-text-muted);
+            text-decoration: none;
+            font-size: 0.85rem;
+            transition: color var(--transition);
+        }
+        
+        .footer .socials a:hover {
+            color: var(--color-primary);
+        }
+        
+        /* ============================================
+           RESPONSIVE
+           ============================================ */
+        @media (max-width: 768px) {
+            .container { padding: 24px 20px; }
+            .header h1 { font-size: 2rem; }
+            .alien-icon { font-size: 2.8rem; }
+            .hero .big-alien { font-size: 4rem; }
+            .hero h2 { font-size: 1.4rem; }
+            .features { grid-template-columns: 1fr 1fr; }
+            .stats { grid-template-columns: 1fr 1fr; }
+            .orti-grid { grid-template-columns: 1fr 1fr; }
+            .badges { justify-content: center; }
+        }
+        
+        @media (max-width: 480px) {
+            .container { padding: 16px 14px; }
+            .header h1 { font-size: 1.6rem; }
+            .alien-icon { font-size: 2.2rem; }
+            .features { grid-template-columns: 1fr; }
+            .stats { grid-template-columns: 1fr 1fr; }
+            .orti-grid { grid-template-columns: 1fr 1fr; }
+            .hero .big-alien { font-size: 3.2rem; }
+            .hero h2 { font-size: 1.2rem; }
+            .hero .cta { padding: 10px 24px; font-size: 0.9rem; }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- ==========================================
+        HEADER
+        ========================================== -->
+        <div class="header">
+            <span class="alien-icon">👽</span>
+            <div>
+                <h1>MyZubster Gateway</h1>
+                <span class="subtitle">🛸 Pytho Temporal — La Macchina del Tempo</span>
+            </div>
+        </div>
+
+        <div class="badges">
+            <span class="badge">✨ Live</span>
+            <span class="badge badge-purple">🌿 24 specie</span>
+            <span class="badge badge-pink">🛸 6 epoche</span>
+        </div>
+
+        <!-- ==========================================
+        HERO
+        ========================================== -->
+        <div class="hero">
+            <span class="big-alien">👽</span>
+            <h2>Viaggia nel tempo con Pytho</h2>
+            <p class="hero-text">
+                Esplora orti botanici dal Rinascimento al futuro galattico. 
+                Registra specie, fai pagamenti in XMR e MYZ, e contribuisci alla storia botanica.
+            </p>
+            <a href="/temporal" class="cta">⏳ Viaggia nel tempo</a>
+        </div>
+
+        <!-- ==========================================
+        FEATURES
+        ========================================== -->
+        <div class="features">
+            <a href="/temporal" class="feature-card">
+                <span class="icon">⏳</span>
+                <div class="name">Macchina del Tempo</div>
+                <div class="desc">Viaggia nel passato e futuro</div>
+            </a>
+            <a href="/mappa-globale" class="feature-card">
+                <span class="icon">🌍</span>
+                <div class="name">Mappa Globale</div>
+                <div class="desc">Esplora gli orti botanici</div>
+            </a>
+            <a href="/api/dashboard" class="feature-card">
+                <span class="icon">💰</span>
+                <div class="name">Pagamenti</div>
+                <div class="desc">XMR e MYZ</div>
+            </a>
+            <a href="/api/pytho/reproduction-status" class="feature-card">
+                <span class="icon">🌿</span>
+                <div class="name">Specie</div>
+                <div class="desc">24 specie recuperate</div>
+            </a>
+        </div>
+
+        <!-- ==========================================
+        STATS
+        ========================================== -->
+        <div class="stats">
+            <div class="stat">
+                <div class="number">24</div>
+                <div class="label">🌿 Specie recuperate</div>
+            </div>
+            <div class="stat">
+                <div class="number">6</div>
+                <div class="label">⏳ Epoche esplorate</div>
+            </div>
+            <div class="stat">
+                <div class="number">5</div>
+                <div class="label">📍 Località visitate</div>
+            </div>
+            <div class="stat">
+                <div class="number">850</div>
+                <div class="label">🪙 MYZ in bounty</div>
+            </div>
+        </div>
+
+        <!-- ==========================================
+        TIMELINE
+        ========================================== -->
+        <div class="section-title"><span class="emoji">🌌</span> Timeline di Pytho</div>
+        <div class="timeline" id="timelineContainer">
+            <div class="timeline-item">
+                <span class="year">2024</span>
+                <span>👽 Pytho creato</span>
+                <span class="status">✅</span>
+            </div>
+            <div class="timeline-item">
+                <span class="year">2024</span>
+                <span>🌿 Primo orto botanico</span>
+                <span class="status">✅</span>
+            </div>
+            <div class="timeline-item">
+                <span class="year">2024</span>
+                <span>🚀 Gateway live</span>
+                <span class="status">✅</span>
+            </div>
+            <div class="timeline-item">
+                <span class="year">2124</span>
+                <span>🛸 Giardino del Futuro</span>
+                <span class="status">⏳</span>
+            </div>
+            <div class="timeline-item">
+                <span class="year">3000</span>
+                <span>🌌 Orto Botanico Galattico</span>
+                <span class="status">🌀</span>
+            </div>
+        </div>
+
+        <!-- ==========================================
+        ORTI BOTANICI
+        ========================================== -->
+        <div class="section-title"><span class="emoji">🌿</span> Orti Botanici nel Tempo</div>
+        <div class="orti-grid">
+            <div class="orto-card">
+                <span class="icon">🌺</span>
+                <div class="name">Roma</div>
+                <div class="species">42 specie</div>
+                <span class="era">1500</span>
+            </div>
+            <div class="orto-card">
+                <span class="icon">🌸</span>
+                <div class="name">Napoli</div>
+                <div class="species">4 specie</div>
+                <span class="era">1800</span>
+            </div>
+            <div class="orto-card">
+                <span class="icon">🌻</span>
+                <div class="name">Palermo</div>
+                <div class="species">3 specie</div>
+                <span class="era">1900</span>
+            </div>
+            <div class="orto-card">
+                <span class="icon">🌱</span>
+                <div class="name">Roma</div>
+                <div class="species">3 specie</div>
+                <span class="era">2024</span>
+            </div>
+            <div class="orto-card">
+                <span class="icon">🛸</span>
+                <div class="name">Milano</div>
+                <div class="species">4 specie</div>
+                <span class="era">2124</span>
+            </div>
+            <div class="orto-card">
+                <span class="icon">🌌</span>
+                <div class="name">Galattico</div>
+                <div class="species">4 specie</div>
+                <span class="era">3000</span>
+            </div>
+        </div>
+
+        <!-- ==========================================
+        FOOTER
+        ========================================== -->
+        <div class="footer">
+            <span class="alien">👽</span>
+            <div>Pytho Temporal — Open Source</div>
+            <div class="socials">
+                <a href="https://github.com/DanielIoni-creator/I-ECO-01" target="_blank">GitHub</a>
+                <a href="https://myzubster-gateway.vercel.app" target="_blank">Vercel</a>
+                <a href="https://playstation-filling-metabolism-recent.trycloudflare.com" target="_blank">Cloudflare</a>
+                <a href="/api/dashboard">Dashboard</a>
+            </div>
+            <div style="margin-top:8px;font-size:0.7rem;opacity:0.4;">
+                MIT License &bull; 2024-2026 MyZubster
+            </div>
+        </div>
+    </div>
+</body>
+</html>

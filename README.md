@@ -213,5 +213,131 @@ npm run dev
 ## 🤝 Contributing
 See [CONTRIBUTING.md](./CONTRIBUTING.md).
 
+<<<<<<< HEAD
+    Docker containers with minimal attack surface
+
+    Security headers configured in Nginx
+
+    Automatic security updates via dependabot
+
+    Tor onion service for privacy-preserving access (optional)
+
+🛠️ Technology Stack
+Layer	Technology
+Backend	Node.js + Express
+Database	MongoDB + Mongoose
+Blockchain	Monero (XMR) RPC
+Authentication	JWT + bcrypt
+Security	Helmet, CORS, Rate Limiting
+Testing	Jest + Supertest
+Deployment	Docker + Vercel
+📂 Repository Structure
+text
+
+MyZubsterGateway/
+├── src/
+│   ├── api/           # API routes
+│   ├── controllers/   # Business logic
+│   ├── models/        # Database models
+│   ├── services/      # External services
+│   └── utils/         # Utilities
+├── tests/             # Unit and integration tests
+├── docs/              # Documentation
+├── security/          # Security tools
+├── .env.example       # Environment variables template
+├── server.js          # Entry point
+└── package.json       # Dependencies
+
+🔗 Related Projects
+Project	Description	Link
+Animal Registry	Documentation for animal registration	GitHub
+Plant Map	Global map for plant registration	GitHub
+Animal Map	Interactive map for animal registry	GitHub
+📚 Documentation
+
+    API Reference – Complete API documentation
+
+    Security Policy – Security guidelines
+
+    Contribution Guide – How to contribute
+
+    Fund Transparency – All transactions are public
+
+🤝 How to Contribute
+
+We welcome contributions! Open issues are available with 💰 bounties.
+Bounty Program
+Tier	XMR	Tasks
+Spicciolo	0.0005	Typo fix, docs
+Spiccioletto	0.001	Small fixes
+Spicciona	0.003	Unit tests
+SuperSpiccio	0.01	Features
+Premium	0.06	Complex features
+How to Claim
+
+    Browse issues with 💰 label
+
+    Comment "I'll take this!"
+
+    Open a PR with your Monero address
+
+    Get paid in XMR!
+
+📄 License
+
+MIT – Free for everyone to use and modify.
+💚 Built with ❤️ for animals and plants by MyZubster-Ecosystem
+
+🌐 GitHub: @MyZubster-Ecosystem
+🌟 Let's Build a Decentralized Ecosystem Together!
+
+Every contribution counts. Join us in building a transparent, privacy-first platform for the world.
+
+# MyZubster-Ecosystem
+
+## 🌐 Ecosystem Hub
+
+**MyZubster Ecosystem**: https://github.com/MyZubster-Ecosystem
+
+## 🌐 Ecosystem Hub
+
+**MyZubster Ecosystem**: https://github.com/MyZubster-Ecosystem
+
+
+## 💬 Community
+
+- **Telegram**: [@MyZubster_bot](https://t.me/MyZubster_bot) – for updates, support, and discussions.
+
+
+## 🌐 Connect with Us
+
+- **Telegram**: [@MyZubster_bot](https://t.me/MyZubster_bot) – updates, support, and discussions
+- **Twitter / X**: [@DanielIoni](https://twitter.com/DanielIoni) – project announcements and thoughts
+- **TikTok**: [@danielioni](https://tiktok.com/@danielioni) – behind the scenes and project updates
+- **Instagram**: [@danielioni](https://instagram.com/danielioni) – visuals and community stories
+- **dev.to**: [Daniel Ioni](https://dev.to/danielioni) – technical articles and project updates
+
+
+## 💬 Community
+
+- **Telegram Channel**: [@myzubster](https://t.me/myzubster) – follow for updates, news, and discussions about the MyZubster ecosystem.
+
+## Development & Testing
+
+### Quick Start
+1. Install dependencies
+2. Run tests
+3. Build the project
+
+### CI/CD
+See `.github/workflows/boost-quality.yml` for the automated CI pipeline.
+
+### Contributing
+Fork and create feature branches. Add tests. Open a PR.
+
+### License
+See LICENSE file.
+=======
 ## 📄 License
 See [LICENSE](./LICENSE) file.
+>>>>>>> origin

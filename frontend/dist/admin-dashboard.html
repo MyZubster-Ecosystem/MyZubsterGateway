@@ -1,0 +1,38 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>MyZubster Admin</title>
+  <link rel="stylesheet" href="/admin-dashboard.css">
+</head>
+<body>
+  <section id="login" class="login">
+    <h1>MyZubster Admin</h1>
+    <p>Enter the dashboard token configured on the gateway.</p>
+    <input id="token" class="token-input" type="password" autocomplete="current-password" placeholder="Admin token">
+    <button id="connect" class="button">Connect</button>
+    <div id="login-error" class="error hidden"></div>
+  </section>
+
+  <div id="app" class="shell hidden">
+    <aside class="sidebar">
+      <div class="brand">MyZubster<small>Administration</small></div>
+      <nav class="nav">
+        <button data-view="overview" class="active">Overview</button>
+        <button data-view="users">Users</button>
+        <button data-view="payments">Payments</button>
+        <button data-view="reports">Reports</button>
+      </nav>
+    </aside>
+    <main class="main">
+      <header class="topbar">
+        <h1 id="title">Overview</h1>
+        <span id="refresh-status" class="status">Not connected</span>
+      </header>
+      <div id="content" class="content"></div>
+    </main>
+  </div>
+  <script src="/admin-dashboard.js" defer></script>
+</body>
+</html>
