@@ -1,0 +1,246 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>MyZubster Robot Dashboard</title>
+<style>
+  :root {
+    --bg: #0b0f17;
+    --panel: #131a26;
+    --panel-2: #1a2434;
+    --border: #26324a;
+    --text: #e6ecf5;
+    --muted: #8b98ad;
+    --accent: #00d4a8;
+    --accent-2: #4c8dff;
+    --idle: #4c8dff;
+    --working: #ffb020;
+    --delivering: #00d4a8;
+    --dispute: #ff5470;
+    --offline: #6b7688;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    font-family: -apple-system, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    background: radial-gradient(1200px 600px at 80% -10%, #14243d 0%, var(--bg) 55%);
+    color: var(--text);
+    min-height: 100vh;
+  }
+  header {
+    padding: 20px 28px;
+    border-bottom: 1px solid var(--border);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 16px;
+    flex-wrap: wrap;
+  }
+  header h1 { font-size: 20px; margin: 0; font-weight: 650; }
+  header h1 span { color: var(--accent); }
+  .controls { display: flex; gap: 10px; align-items: center; }
+  .controls button {
+    background: var(--panel-2);
+    border: 1px solid var(--border);
+    color: var(--text);
+    padding: 8px 14px;
+    border-radius: 8px;
+    cursor: pointer;
+    font-size: 13px;
+  }
+  .controls button:hover { border-color: var(--accent); }
+  main { padding: 24px 28px; display: grid; grid-template-columns: 320px 1fr; gap: 20px; }
+  @media (max-width: 900px) { main { grid-template-columns: 1fr; } }
+  .panel {
+    background: var(--panel);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 16px;
+  }
+  .panel h2 { font-size: 14px; margin: 0 0 12px; color: var(--muted); text-transform: uppercase; letter-spacing: 0.06em; }
+  .robot-list { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 10px; }
+  .robot-item {
+    background: var(--panel-2);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 12px 14px;
+    cursor: pointer;
+    transition: border-color .15s;
+  }
+  .robot-item:hover, .robot-item.active { border-color: var(--accent); }
+  .robot-item .row { display: flex; justify-content: space-between; align-items: center; gap: 8px; }
+  .robot-item .name { font-weight: 600; font-size: 14px; }
+  .robot-item .id { color: var(--muted); font-size: 12px; font-family: ui-monospace, monospace; }
+  .badge {
+    font-size: 11px;
+    padding: 3px 9px;
+    border-radius: 999px;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    font-weight: 600;
+    white-space: nowrap;
+  }
+  .badge.idle { background: rgba(76,141,255,.16); color: var(--idle); }
+  .badge.working { background: rgba(255,176,32,.16); color: var(--working); }
+  .badge.delivering { background: rgba(0,212,168,.16); color: var(--delivering); }
+  .badge.dispute { background: rgba(255,84,112,.16); color: var(--dispute); }
+  .badge.offline { background: rgba(107,118,136,.16); color: var(--offline); }
+  .metric-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(120px, 1fr)); gap: 12px; margin-bottom: 16px; }
+  .metric { background: var(--panel-2); border: 1px solid var(--border); border-radius: 10px; padding: 12px; }
+  .metric .label { font-size: 11px; color: var(--muted); text-transform: uppercase; letter-spacing: 0.05em; }
+  .metric .value { font-size: 22px; font-weight: 700; margin-top: 4px; }
+  .kv { display: grid; grid-template-columns: 180px 1fr; gap: 8px; font-size: 13px; }
+  .kv dt { color: var(--muted); }
+  .kv dd { margin: 0; font-family: ui-monospace, monospace; font-size: 12.5px; word-break: break-word; }
+  .job-list { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 8px; }
+  .job-item { background: var(--panel-2); border: 1px solid var(--border); border-radius: 8px; padding: 10px 12px; font-size: 13px; }
+  .job-item .top { display: flex; justify-content: space-between; gap: 8px; }
+  .muted { color: var(--muted); }
+  .empty { color: var(--muted); font-size: 13px; padding: 20px; text-align: center; }
+  .status-pill { display: inline-flex; align-items: center; gap: 6px; font-size: 12px; }
+  .dot { width: 8px; height: 8px; border-radius: 50%; background: var(--muted); }
+  .dot.live { background: var(--accent); box-shadow: 0 0 8px var(--accent); }
+  .dot.mocked { background: var(--working); }
+  footer { padding: 12px 28px; border-top: 1px solid var(--border); color: var(--muted); font-size: 12px; }
+</style>
+</head>
+<body>
+<header>
+  <h1><span>&#9679;</span> MyZubster Robot Dashboard</h1>
+  <div class="controls">
+    <span class="status-pill" id="conn-status"><span class="dot mocked"></span><span id="conn-label">Mock mode</span></span>
+    <button id="refresh-btn">Refresh</button>
+  </div>
+</header>
+<main>
+  <section class="panel">
+    <h2>Active Robots</h2>
+    <ul class="robot-list" id="robot-list"></ul>
+  </section>
+  <section class="panel">
+    <h2>Fleet Overview</h2>
+    <div class="metric-grid" id="metric-grid"></div>
+    <h2 id="detail-title">Robot Detail</h2>
+    <dl class="kv" id="robot-detail"></dl>
+    <h2>Job History</h2>
+    <ul class="job-list" id="job-list"></ul>
+  </section>
+</main>
+<footer>Data source: <span id="data-source">GET /api/robot/status/:robotId &middot; GET /api/robot/escrow/:jobId</span> &middot; Auto-refresh every 15s</footer>
+<script>
+(function () {
+  var API_BASE = (window.location.origin || 'http://localhost:3000');
+  var MOCK_ROBOTS = [
+    { id: 'RB-1001', name: 'Atlas-7', status: 'working', reputation: 94, activeJobs: 2, completedJobs: 148 },
+    { id: 'RB-1002', name: 'Sophia-X', status: 'delivering', reputation: 88, activeJobs: 1, completedJobs: 120 },
+    { id: 'RB-1003', name: 'Pepper-L', status: 'idle', reputation: 91, activeJobs: 0, completedJobs: 203 },
+    { id: 'RB-1004', name: 'Ameca-N', status: 'dispute', reputation: 61, activeJobs: 1, completedJobs: 45 },
+    { id: 'RB-1005', name: 'Digit-W', status: 'idle', reputation: 77, activeJobs: 0, completedJobs: 66 }
+  ];
+  var MOCK_JOBS = [
+    { jobId: 'JOB-5001', robotId: 'RB-1001', task: 'Warehouse pick & pack', escrow: '412.50', status: 'in_progress' },
+    { jobId: 'JOB-5002', robotId: 'RB-1002', task: 'Last-mile delivery', escrow: '198.00', status: 'delivering' },
+    { jobId: 'JOB-5003', robotId: 'RB-1001', task: 'Inventory audit', escrow: '275.25', status: 'in_progress' },
+    { jobId: 'JOB-5004', robotId: 'RB-1004', task: 'Inspection dispute', escrow: '900.00', status: 'dispute' }
+  ];
+  var robots = MOCK_ROBOTS.slice();
+  var jobs = MOCK_JOBS.slice();
+  var live = false;
+  var selected = null;
+
+  function el(id) { return document.getElementById(id); }
+  function statusClass(s) {
+    var m = { idle: 'idle', working: 'working', delivering: 'delivering', dispute: 'dispute' };
+    return m[s] || 'offline';
+  }
+  function renderList() {
+    var list = el('robot-list');
+    list.innerHTML = '';
+    robots.forEach(function (r) {
+      var li = document.createElement('li');
+      li.className = 'robot-item' + (selected && selected.id === r.id ? ' active' : '');
+      li.innerHTML = '<div class="row"><span class="name">' + r.name + '</span>' +
+        '<span class="badge ' + statusClass(r.status) + '">' + r.status + '</span></div>' +
+        '<div class="id">' + r.id + ' &middot; rep ' + r.reputation + '</div>';
+      li.addEventListener('click', function () { select(r); });
+      list.appendChild(li);
+    });
+  }
+  function renderMetrics() {
+    var grid = el('metric-grid');
+    var counts = { idle: 0, working: 0, delivering: 0, dispute: 0 };
+    robots.forEach(function (r) { counts[r.status] = (counts[r.status] || 0) + 1; });
+    var items = [
+      { label: 'Total robots', value: robots.length },
+      { label: 'Working', value: counts.working },
+      { label: 'Delivering', value: counts.delivering },
+      { label: 'Idle', value: counts.idle },
+      { label: 'Disputes', value: counts.dispute }
+    ];
+    grid.innerHTML = '';
+    items.forEach(function (m) {
+      var d = document.createElement('div');
+      d.className = 'metric';
+      d.innerHTML = '<div class="label">' + m.label + '</div><div class="value">' + m.value + '</div>';
+      grid.appendChild(d);
+    });
+  }
+  function renderDetail(r) {
+    if (!r) { el('robot-detail').innerHTML = ''; el('job-list').innerHTML = '<li class="empty">Select a robot to view details</li>'; return; }
+    el('detail-title').textContent = 'Robot Detail — ' + r.name;
+    el('robot-detail').innerHTML =
+      '<dt>Robot ID</dt><dd>' + r.id + '</dd>' +
+      '<dt>Status</dt><dd>' + r.status + '</dd>' +
+      '<dt>Reputation</dt><dd>' + r.reputation + ' / 100</dd>' +
+      '<dt>Active jobs</dt><dd>' + (r.activeJobs != null ? r.activeJobs : 0) + '</dd>' +
+      '<dt>Completed jobs</dt><dd>' + (r.completedJobs != null ? r.completedJobs : 0) + '</dd>';
+    var rj = jobs.filter(function (j) { return j.robotId === r.id; });
+    var list = el('job-list');
+    list.innerHTML = '';
+    if (rj.length === 0) { list.innerHTML = '<li class="empty">No jobs recorded for this robot</li>'; return; }
+    rj.forEach(function (j) {
+      var li = document.createElement('li');
+      li.className = 'job-item';
+      li.innerHTML = '<div class="top"><span>' + j.task + '</span><span class="badge ' + statusClass(j.status) + '">' + j.status + '</span></div>' +
+        '<div class="muted">' + j.jobId + ' &middot; escrow ' + j.escrow + '</div>';
+      list.appendChild(li);
+    });
+  }
+  function select(r) { selected = r; renderList(); renderDetail(r); }
+  function setConn(mode) {
+    live = (mode === 'live');
+    el('conn-status').innerHTML = '<span class="dot ' + (live ? 'live' : 'mocked') + '"></span><span id="conn-label">' + (live ? 'Live API' : 'Mock mode') + '</span>';
+  }
+  function fetchJSON(url) {
+    return fetch(API_BASE + url, { headers: { Accept: 'application/json' } })
+      .then(function (res) { if (!res.ok) throw new Error('HTTP ' + res.status); return res.json(); });
+  }
+  function loadLive() {
+    return fetchJSON('/api/robot/status/all').then(function (data) {
+      var src = data.robots || data.data || data;
+      if (Array.isArray(src) && src.length) {
+        robots = src.map(function (r) { return {
+          id: r.robotId || r.id, name: r.name || r.robotId || r.id,
+          status: r.status || 'idle', reputation: r.reputation != null ? r.reputation : 0,
+          activeJobs: r.activeJobs != null ? r.activeJobs : 0, completedJobs: r.completedJobs != null ? r.completedJobs : 0
+        }; });
+        setConn('live');
+      }
+    }).catch(function () { setConn('mock'); });
+  }
+  function refresh() {
+    loadLive().then(function () {
+      renderList(); renderMetrics(); renderDetail(selected || robots[0]);
+    });
+  }
+  el('refresh-btn').addEventListener('click', refresh);
+  // Init
+  setConn('mock');
+  renderList(); renderMetrics(); renderDetail(robots[0]); selected = robots[0];
+  refresh();
+  setInterval(refresh, 15000);
+})();
+</script>
+</body>
+</html>
