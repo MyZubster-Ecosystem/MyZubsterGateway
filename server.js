@@ -115,6 +115,9 @@ try { const routes = require("./routes/webhookRoutes"); app.use("/webhook", rout
 // Benzina XMR
 try { const routes = require("./routes/benzinaXmr"); app.use("/api/benzina-xmr", routes); } catch(e) {}
 
+// Seed Exchange export (CSV + GeoJSON) #109
+try { const routes = require("./routes/seedExchangeExport"); app.use("/api/seed-exchange/export", routes); } catch(e) {}
+
 // Mass Bounty 990-999
 try { const routes = require("./routes/massBounty990"); app.use("/api/bounty-990", routes); } catch(e) {}
 try { const routes = require("./routes/massBounty991"); app.use("/api/bounty-991", routes); } catch(e) {}
