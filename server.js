@@ -100,6 +100,18 @@ try { const routes = require("./routes/sensorRoutes"); app.use("/api/sensors", r
 // Fiat Payments
 try { const routes = require("./routes/fiatRoutes"); app.use("/api/payments/fiat", routes); } catch(e) {}
 
+// Protected administration dashboard (issue #1305)
+try {
+  const { createAdminDashboardRouter } = require('./routes/adminDashboard');
+  app.use('/api/admin/dashboard', createAdminDashboardRouter());
+  app.get('/admin', (_req, res) => {
+    res.sendFile(path.join(__dirname, 'frontend/dist/admin-dashboard.html'));
+  });
+  console.log('[Admin] Dashboard available at /admin');
+} catch (e) {
+  console.warn('[Admin] Dashboard unavailable:', e.message);
+}
+
 // Crypto
 try { const routes = require("./routes/cryptoRoutes"); app.use("/api/crypto", routes); } catch(e) {}
 
@@ -177,7 +189,6 @@ app.get('/alien', (req, res) => {
   res.sendFile('/opt/MyZubster/MyZubsterGateway/public/alien-zorgax.html');
 });
 
-<<<<<<< HEAD
 app.get('/benzina-pagamento', (req, res) => {
   res.sendFile(path.join(__dirname, 'frontend/dist/benzina-pagamento.html'));
 });
@@ -185,11 +196,9 @@ app.get('/benzina-pagamento', (req, res) => {
 // Static frontend
 const frontendPath = path.join(__dirname, 'frontend/dist');
 app.use(express.static(frontendPath));
-=======
 // 👽 Route Connessione ZORGAX-Terra
 const alienConnectionRoutes = require('./routes/alienConnectionRoutes');
 app.use('/api/alien', alienConnectionRoutes);
->>>>>>> main
 
 // 🚀 Route Colonizzazione Spaziale
 const colonizationRoutes = require('./routes/colonizationRoutes');
