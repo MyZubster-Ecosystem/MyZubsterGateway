@@ -1,133 +1,95 @@
-/**
- * GitHub Webhook Route — Bounty B3 / #236
- *
- * Endpoint: POST /webhook/github
- * Listens for pull_request events (merged), verifies HMAC signature,
- * and auto-creates a bounty assigned to the PR contributor.
- */
+'use strict';
 
-const crypto = require('crypto');
-const logger = require('../logger');
-
-const WEBHOOK_SECRET = process.env.GITHUB_WEBHOOK_SECRET || 'myzubster-webhook-secret-change-me';
+// In-memory webhook log for testing
+const webhookLog = [];
 
 /**
- * In-memory bounty store (replace with DB in production).
- * Structure: { contributor: { pr_number, merged_at, bounty_id } }
+ * POST /webhook/receive — Receive an incoming webhook
+ * Logs the payload and returns acknowledgment
  */
-const bountyLedger = new Map();
-
-/**
- * Verify GitHub webhook HMAC signature.
- */
-function verifySignature(payload, signature) {
-  if (!signature) return false;
-  const computed = 'sha256=' + crypto
-    .createHmac('sha256', WEBHOOK_SECRET)
-    .update(payload)
-    .digest('hex');
-  try {
-    return crypto.timingSafeEqual(Buffer.from(computed), Buffer.from(signature));
-  } catch {
-    return false;
-  }
-}
-
-/**
- * Extract relevant fields from a GitHub pull_request event payload.
- */
-function extractPRInfo(body) {
-  const action = body.action;
-  const pr = body.pull_request || {};
-  const merged = body.action === 'closed' && pr.merged === true;
-  return {
-    action,
-    merged,
-    prNumber: pr.number || null,
-    contributor: (pr.user && pr.user.login) || null,
-    title: pr.title || '',
-    htmlUrl: pr.html_url || '',
-    mergedAt: pr.merged_at || null,
-    repoName: (body.repository && body.repository.full_name) || ''
+function receiveWebhook(req, res) {
+  const { headers, body, query } = req;
+  const timestamp = new Date().toISOString();
+  
+  const entry = {
+    id: webhookLog.length + 1,
+    timestamp,
+    headers: req.headers,
+    body: req.body || {},
+    query: req.query || {},
+    method: req.method,
+    path: req.path,
   };
+  
+  webhookLog.push(entry);
+  
+  // Keep only last 100 entries
+  if (webhookLog.length > 100) {
+    webhookLog.shift();
+  }
+  
+  return res.status(200).json({
+    success: true,
+    message: 'Webhook received',
+    webhookId: entry.id,
+    timestamp,
+  });
 }
 
 /**
- * Assign a bounty to the contributor and log it.
+ * GET /webhook/log — Retrieve webhook log
  */
-function assignBounty(info) {
-  const bountyId = `B3-${info.prNumber}-${Date.now()}`;
-  const record = {
-    bountyId,
-    contributor: info.contributor,
-    prNumber: info.prNumber,
-    prTitle: info.title,
-    prUrl: info.htmlUrl,
-    mergedAt: info.mergedAt,
-    assignedAt: new Date().toISOString(),
-    status: 'assigned'
-  };
-  bountyLedger.set(bountyId, record);
-  return record;
+function getWebhookLog(req, res) {
+  const { limit, since } = req.query;
+  let results = [...webhookLog];
+  
+  if (since) {
+    const sinceDate = new Date(since);
+    results = results.filter(e => new Date(e.timestamp) >= sinceDate);
+  }
+  
+  if (limit) {
+    results = results.slice(-parseInt(limit, 10));
+  }
+  
+  return res.status(200).json({
+    total: webhookLog.length,
+    count: results.length,
+    entries: results,
+  });
 }
 
 /**
- * Express router.
+ * GET /webhook/status — Health check
  */
-const router = require('express').Router();
-
-router.post('/github', (req, res) => {
-  const signature = req.headers['x-hub-signature-256'];
-  const eventType = req.headers['x-github-event'];
-  const rawBody = JSON.stringify(req.body);
-
-  // Only handle pull_request events
-  if (eventType !== 'pull_request') {
-    logger.info(`[webhook] Ignored event: ${eventType}`);
-    return res.status(200).json({ ok: true, ignored: true, reason: `event ${eventType} not processed` });
-  }
-
-  // Verify HMAC
-  if (!verifySignature(rawBody, signature)) {
-    logger.warn('[webhook] Invalid signature');
-    return res.status(401).json({ ok: false, error: 'Invalid signature' });
-  }
-
-  // Extract PR info
-  const info = extractPRInfo(req.body);
-
-  logger.info(`[webhook] ${info.action} PR#${info.prNumber} by ${info.contributor} merged=${info.merged}`);
-
-  // Only act on merged PRs
-  if (!info.merged) {
-    logger.info(`[webhook] PR#${info.prNumber} not merged (action=${info.action}), skipping`);
-    return res.status(200).json({ ok: true, action: info.action, merged: false });
-  }
-
-  if (!info.contributor) {
-    logger.warn('[webhook] Missing contributor, cannot assign bounty');
-    return res.status(400).json({ ok: false, error: 'Missing contributor' });
-  }
-
-  // Assign bounty
-  const bounty = assignBounty(info);
-  logger.info(`[webhook] BOUNTY ASSIGNED: ${bounty.bountyId} → ${info.contributor} (PR#${info.prNumber})`);
-
-  res.status(200).json({
-    ok: true,
-    action: 'bounty_assigned',
-    bounty
+function getStatus(req, res) {
+  return res.status(200).json({
+    status: 'ok',
+    uptime: process.uptime(),
+    webhooksReceived: webhookLog.length,
+    timestamp: new Date().toISOString(),
   });
-});
+}
 
-// Health / status endpoint
-router.get('/github/status', (req, res) => {
-  const entries = Array.from(bountyLedger.values());
-  res.json({
-    ok: true,
-    totalAssigned: entries.length,
-    recent: entries.slice(-10).reverse()
+/**
+ * DELETE /webhook/log — Clear webhook log (for testing)
+ */
+function clearWebhookLog(req, res) {
+  webhookLog.length = 0;
+  return res.status(200).json({
+    success: true,
+    message: 'Webhook log cleared',
   });
-});
+}
+
+// Express router setup
+const express = require('express');
+const router = express.Router();
+
+router.post('/receive', receiveWebhook);
+router.get('/log', getWebhookLog);
+router.get('/status', getStatus);
+router.delete('/log', clearWebhookLog);
 
 module.exports = router;
+module.exports._webhookLog = webhookLog; // Expose for testing

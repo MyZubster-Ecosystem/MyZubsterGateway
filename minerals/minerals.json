@@ -1,0 +1,107 @@
+[
+  {
+    "id": "mineral_1786513377430_gpi5",
+    "name": "Oro (Au)",
+    "location": "Miniere dell'Antico Egitto",
+    "year": -3000,
+    "properties": [
+      "prezioso",
+      "conduttore",
+      "simbolo divino"
+    ],
+    "symbol": "Au",
+    "hardness": 2.5,
+    "color": "giallo",
+    "uses": [
+      "gioielli",
+      "monete",
+      "arte sacra"
+    ],
+    "registered": true,
+    "timestamp": "2026-08-12T05:42:57.430Z"
+  },
+  {
+    "id": "mineral_1786513377430_n3pi",
+    "name": "Rame (Cu)",
+    "location": "Miniere dell'Antico Egitto",
+    "year": -3000,
+    "properties": [
+      "conduttore",
+      "malleabile",
+      "antibatterico"
+    ],
+    "symbol": "Cu",
+    "hardness": 3,
+    "color": "rossastro",
+    "uses": [
+      "utensili",
+      "armi",
+      "oggetti sacri"
+    ],
+    "registered": true,
+    "timestamp": "2026-08-12T05:42:57.430Z"
+  },
+  {
+    "id": "mineral_1786513377430_wk5o",
+    "name": "Turchese",
+    "location": "Miniere dell'Antico Egitto",
+    "year": -3000,
+    "properties": [
+      "prezioso",
+      "protettivo",
+      "simbolo regale"
+    ],
+    "symbol": "CuAl6(PO4)4(OH)8·4H2O",
+    "hardness": 5,
+    "color": "blu-verde",
+    "uses": [
+      "gioielli",
+      "amuleti",
+      "arte egizia"
+    ],
+    "registered": true,
+    "timestamp": "2026-08-12T05:42:57.430Z"
+  },
+  {
+    "id": "mineral_1786513377430_vbvg",
+    "name": "Granito",
+    "location": "Miniere dell'Antico Egitto",
+    "year": -3000,
+    "properties": [
+      "duro",
+      "durevole",
+      "monumentale"
+    ],
+    "symbol": "SiO2",
+    "hardness": 7,
+    "color": "grigio-rossastro",
+    "uses": [
+      "costruzione",
+      "statue",
+      "obelichi"
+    ],
+    "registered": true,
+    "timestamp": "2026-08-12T05:42:57.430Z"
+  },
+  {
+    "id": "mineral_1786513377430_34a6",
+    "name": "Alabastro",
+    "location": "Miniere dell'Antico Egitto",
+    "year": -3000,
+    "properties": [
+      "traslucido",
+      "ornamentale",
+      "sacro"
+    ],
+    "symbol": "CaSO4·2H2O",
+    "hardness": 2,
+    "color": "bianco-avorio",
+    "uses": [
+      "vasi",
+      "oggetti sacri",
+      "decorazioni"
+    ],
+    "registered": true,
+    "timestamp": "2026-08-12T05:42:57.430Z"
+  }
+]
