@@ -1,0 +1,17 @@
+{
+  "name": "myzubster-gateway",
+  "version": "1.0.0",
+  "private": true,
+  "scripts": {
+    "start": "node server.js",
+    "test": "node --test tests/adminDashboard*.test.js"
+  },
+  "dependencies": {
+    "body-parser": "^1.20.3",
+    "cors": "^2.8.5",
+    "express": "^4.21.2",
+    "helmet": "^8.1.0",
+    "mongoose": "^8.18.0",
+    "morgan": "^1.10.0"
+  }
+}
