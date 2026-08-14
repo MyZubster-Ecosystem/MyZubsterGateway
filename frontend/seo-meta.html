@@ -1,0 +1,71 @@
+<!--
+  MyZubsterGateway - SEO meta tags reference partial
+  ==================================================
+
+  This partial documents the SEO tags that MUST be present in the <head> of
+  every page. For static pages, paste the block below into the <head> and
+  replace the placeholder values with the page-specific ones.
+
+  For single-page apps (or any page where the head is rendered dynamically),
+  prefer the drop-in script frontend/seo.js, which injects and keeps all of
+  these tags up to date automatically:
+
+      <script src="/frontend/seo.js" defer></script>
+
+  Tags covered:
+    1. <title> and meta description
+    2. canonical URL
+    3. Open Graph (og:*)
+    4. Twitter Card (twitter:*)
+    5. JSON-LD Organization + WebSite structured data (schema.org)
+-->
+
+<!-- 1. Title + description -->
+<title>MyZubster Gateway - Blockchain, AI, IoT and Nature Tokenization gateway</title>
+<meta name="description" content="MyZubster Gateway is the open-source gateway that connects blockchain, artificial intelligence, IoT devices and nature tokenization into a single interoperable platform." />
+
+<!-- 2. Canonical URL -->
+<link rel="canonical" href="https://www.myzubster.com/" />
+
+<!-- 3. Open Graph -->
+<meta property="og:type" content="website" />
+<meta property="og:site_name" content="MyZubster Gateway" />
+<meta property="og:title" content="MyZubster Gateway - Blockchain, AI, IoT and Nature Tokenization gateway" />
+<meta property="og:description" content="MyZubster Gateway is the open-source gateway that connects blockchain, artificial intelligence, IoT devices and nature tokenization into a single interoperable platform." />
+<meta property="og:url" content="https://www.myzubster.com/" />
+<meta property="og:image" content="https://www.myzubster.com/assets/og-image.png" />
+
+<!-- 4. Twitter Card -->
+<meta name="twitter:card" content="summary_large_image" />
+<meta name="twitter:site" content="@myzubster" />
+<meta name="twitter:title" content="MyZubster Gateway - Blockchain, AI, IoT and Nature Tokenization gateway" />
+<meta name="twitter:description" content="MyZubster Gateway is the open-source gateway that connects blockchain, artificial intelligence, IoT devices and nature tokenization into a single interoperable platform." />
+<meta name="twitter:image" content="https://www.myzubster.com/assets/og-image.png" />
+
+<!-- 5. JSON-LD structured data -->
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "Organization",
+  "@id": "https://www.myzubster.com/#organization",
+  "name": "MyZubster Gateway",
+  "url": "https://www.myzubster.com/",
+  "logo": "https://www.myzubster.com/assets/logo.png",
+  "description": "MyZubster Gateway is the open-source gateway that connects blockchain, artificial intelligence, IoT devices and nature tokenization into a single interoperable platform.",
+  "sameAs": [
+    "https://github.com/MyZubster-Ecosystem/MyZubsterGateway"
+  ]
+}
+</script>
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "WebSite",
+  "@id": "https://www.myzubster.com/#website",
+  "name": "MyZubster Gateway",
+  "url": "https://www.myzubster.com/",
+  "publisher": {
+    "@id": "https://www.myzubster.com/#organization"
+  }
+}
+</script>
