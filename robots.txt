@@ -1,0 +1,14 @@
+User-agent: *
+Allow: /
+
+# Crawlers may index all public pages of the gateway.
+
+# Private / authenticated areas must not be indexed.
+Disallow: /admin
+Disallow: /admin/
+Disallow: /dashboard
+Disallow: /dashboard/
+Disallow: /api-docs
+
+# Reference to the sitemap index.
+Sitemap: https://www.myzubster.com/sitemap.xml
