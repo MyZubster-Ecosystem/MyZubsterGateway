@@ -1,0 +1,197 @@
+/* ============================================================================
+   MyZubsterGateway - Dark Mode theme (issue #200)
+   ----------------------------------------------------------------------------
+   Self-contained dark theme. To enable it on a page add to <head>:
+
+     <link rel="stylesheet" href="frontend/css/dark-mode.css">
+     <script src="frontend/js/dark-mode.js" defer></script>
+
+   How it works
+   -------------
+   * Light palette lives in :root (the default).
+   * [data-theme="dark"] overrides it with the dark palette.
+   * @media (prefers-color-scheme: dark) applies the dark palette
+     automatically when the visitor's OS is in dark mode AND they have not
+     chosen a theme yet (i.e. <html> has no data-theme attribute).
+   * The companion script (frontend/js/dark-mode.js) sets/removes the
+     data-theme attribute on <html>, persists the choice in localStorage and
+     injects a floating toggle button (bottom-right).
+   ========================================================================== */
+
+:root {
+  --mz-bg: #ffffff;
+  --mz-bg-soft: #f4f6fb;
+  --mz-surface: #ffffff;
+  --mz-surface-hover: #eef1f7;
+  --mz-text: #1e2430;
+  --mz-text-muted: #5b6577;
+  --mz-border: #e2e6ef;
+  --mz-accent: #4f46e5;
+  --mz-accent-contrast: #ffffff;
+  --mz-accent-hover: #4338ca;
+  --mz-success: #16a34a;
+  --mz-warning: #d97706;
+  --mz-error: #dc2626;
+  --mz-link: #4f46e5;
+  --mz-shadow: 0 1px 3px rgba(16, 24, 40, 0.10);
+  --mz-shadow-lg: 0 12px 32px rgba(16, 24, 40, 0.14);
+  --mz-code-bg: #f1f3f8;
+  color-scheme: light;
+}
+
+[data-theme="dark"] {
+  --mz-bg: #0b1220;
+  --mz-bg-soft: #101a2e;
+  --mz-surface: #141f36;
+  --mz-surface-hover: #1c2a47;
+  --mz-text: #e7ecf6;
+  --mz-text-muted: #9aa6bd;
+  --mz-border: #27334f;
+  --mz-accent: #818cf8;
+  --mz-accent-contrast: #0b1220;
+  --mz-accent-hover: #a5b4fc;
+  --mz-success: #34d399;
+  --mz-warning: #fbbf24;
+  --mz-error: #f87171;
+  --mz-link: #a5b4fc;
+  --mz-shadow: 0 1px 3px rgba(0, 0, 0, 0.55);
+  --mz-shadow-lg: 0 12px 32px rgba(0, 0, 0, 0.65);
+  --mz-code-bg: #1c2a47;
+  color-scheme: dark;
+}
+
+/* Follow the OS dark-mode preference for first-time visitors who have not
+   yet picked a theme. The JS removes data-theme for "light", so this only
+   matches the unset state and never fights an explicit user choice. */
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme]) {
+    --mz-bg: #0b1220;
+    --mz-bg-soft: #101a2e;
+    --mz-surface: #141f36;
+    --mz-surface-hover: #1c2a47;
+    --mz-text: #e7ecf6;
+    --mz-text-muted: #9aa6bd;
+    --mz-border: #27334f;
+    --mz-accent: #818cf8;
+    --mz-accent-contrast: #0b1220;
+    --mz-accent-hover: #a5b4fc;
+    --mz-success: #34d399;
+    --mz-warning: #fbbf24;
+    --mz-error: #f87171;
+    --mz-link: #a5b4fc;
+    --mz-shadow: 0 1px 3px rgba(0, 0, 0, 0.55);
+    --mz-shadow-lg: 0 12px 32px rgba(0, 0, 0, 0.65);
+    --mz-code-bg: #1c2a47;
+    color-scheme: dark;
+  }
+}
+
+/* ---------------------------------------------------------------------------
+   Base page
+   ------------------------------------------------------------------------- */
+body {
+  background-color: var(--mz-bg);
+  color: var(--mz-text);
+  transition: background-color 0.25s ease, color 0.25s ease;
+}
+
+/* Generic surfaces */
+.card, .panel, .box, article, section, aside,
+.modal, .dialog, .popover, .dropdown-menu,
+nav, header, footer, .navbar, .sidebar {
+  background-color: var(--mz-surface);
+  color: var(--mz-text);
+  border-color: var(--mz-border);
+  transition: background-color 0.25s ease, color 0.25s ease,
+              border-color 0.25s ease;
+}
+
+/* Tables */
+table {
+  background-color: var(--mz-surface);
+  color: var(--mz-text);
+}
+th, td {
+  border-color: var(--mz-border);
+}
+thead th,
+tbody tr:nth-child(even) {
+  background-color: var(--mz-surface-hover);
+}
+
+/* Forms */
+input, select, textarea, button {
+  background-color: var(--mz-surface);
+  color: var(--mz-text);
+  border: 1px solid var(--mz-border);
+}
+input::placeholder, textarea::placeholder {
+  color: var(--mz-text-muted);
+}
+input:focus, select:focus, textarea:focus {
+  border-color: var(--mz-accent);
+  outline: 2px solid var(--mz-accent);
+  outline-offset: 1px;
+}
+
+/* Links and text helpers */
+a {
+  color: var(--mz-link);
+}
+.text-muted, .muted, small {
+  color: var(--mz-text-muted);
+}
+code, pre, kbd, samp {
+  background-color: var(--mz-code-bg);
+  color: var(--mz-text);
+}
+
+/* Status colours */
+.success, .text-success { color: var(--mz-success); }
+.warning, .text-warning { color: var(--mz-warning); }
+.error, .text-error   { color: var(--mz-error); }
+
+/* Soften bright media in dark mode */
+[data-theme="dark"] img:not([src*=".svg"]),
+[data-theme="dark"] video {
+  filter: brightness(0.88) contrast(1.05);
+}
+
+/* Themed scrollbars (Firefox) */
+html {
+  scrollbar-color: var(--mz-border) var(--mz-bg-soft);
+}
+
+/* ---------------------------------------------------------------------------
+   Floating theme toggle button (injected by frontend/js/dark-mode.js)
+   ------------------------------------------------------------------------- */
+.mz-theme-toggle {
+  position: fixed;
+  bottom: 24px;
+  right: 24px;
+  z-index: 2147483000;
+  width: 48px;
+  height: 48px;
+  border-radius: 50%;
+  border: 1px solid var(--mz-border);
+  background-color: var(--mz-surface);
+  color: var(--mz-text);
+  font-size: 22px;
+  line-height: 1;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: var(--mz-shadow-lg);
+  transition: transform 0.2s ease, background-color 0.2s ease,
+              color 0.2s ease;
+}
+.mz-theme-toggle:hover {
+  transform: scale(1.1);
+  background-color: var(--mz-accent);
+  color: var(--mz-accent-contrast);
+}
+.mz-theme-toggle:focus-visible {
+  outline: 2px solid var(--mz-accent);
+  outline-offset: 2px;
+}
