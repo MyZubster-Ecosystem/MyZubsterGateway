@@ -11,6 +11,7 @@ env:
 jobs:
   health-check:
     runs-on: ubuntu-latest
+    environment: production
     steps:
       - name: Validate APP_URL secret
         env:
