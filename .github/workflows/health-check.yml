@@ -5,33 +5,64 @@ on:
     - cron: '*/5 * * * *'
   workflow_dispatch:
 
+env:
+  CURL_TIMEOUT: 15
+
 jobs:
   health-check:
     runs-on: ubuntu-latest
     steps:
-      - name: Check API Health
+      - name: Validate APP_URL secret
+        env:
+          APP_URL: ${{ secrets.APP_URL }}
         run: |
-          HTTP_CODE=$(curl -s -o /dev/null -w "%{http_code}" ${{ secrets.APP_URL }}/)
+          if [ -z "$APP_URL" ]; then
+            echo "APP_URL secret is not configured"
+            exit 1
+          fi
+
+      - name: Check API Health
+        env:
+          APP_URL: ${{ secrets.APP_URL }}
+        run: |
+          HEALTH_URL="${APP_URL%/}/api/health"
+          HTTP_CODE=$(curl -sS --max-time "$CURL_TIMEOUT" -o /tmp/health-response -w "%{http_code}" "$HEALTH_URL" || true)
+          echo "Health endpoint: $HEALTH_URL"
+          echo "HTTP status: $HTTP_CODE"
           if [ "$HTTP_CODE" != "200" ]; then
             echo "Health check FAILED with HTTP $HTTP_CODE"
+            cat /tmp/health-response 2>/dev/null || true
             exit 1
           fi
           echo "Health check OK: HTTP $HTTP_CODE"
-      
+
       - name: Check API Endpoints
+        env:
+          APP_URL: ${{ secrets.APP_URL }}
         run: |
+          FAILED=0
           for endpoint in "/api/health" "/api/status"; do
-            CODE=$(curl -s -o /dev/null -w "%{http_code}" ${{ secrets.APP_URL }}$endpoint)
+            CODE=$(curl -sS --max-time "$CURL_TIMEOUT" -o /dev/null -w "%{http_code}" "${APP_URL%/}$endpoint" || true)
             echo "$endpoint: HTTP $CODE"
+            if [ "$CODE" != "200" ]; then
+              FAILED=1
+            fi
           done
-      
+          exit "$FAILED"
+
       - name: Alert on Failure
-        if: failure()
-        uses: slackapi/slack-github-action@v1.24.0
+        if: failure() && env.SLACK_WEBHOOK_URL != ''
+        uses: slackapi/slack-github-action@v2.1.1
         with:
+          webhook: ${{ secrets.SLACK_WEBHOOK }}
+          webhook-type: incoming-webhook
           payload: |
             {
               "text": "🚨 Health Check FAILED for MyZubster Gateway!"
             }
         env:
           SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK }}
+
+      - name: Report missing Slack webhook
+        if: failure() && env.SLACK_WEBHOOK_URL == ''
+        run: echo "Health check failed; Slack notification skipped because SLACK_WEBHOOK is not configured." 
