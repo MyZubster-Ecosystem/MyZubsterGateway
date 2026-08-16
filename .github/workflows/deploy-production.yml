@@ -11,22 +11,41 @@ jobs:
     environment: production
     steps:
       - uses: actions/checkout@v4
-      
+
+      - name: Validate production configuration
+        env:
+          VPS_HOST: ${{ secrets.VPS_HOST }}
+          VPS_USER: ${{ secrets.VPS_USER }}
+          VPS_SSH_KEY: ${{ secrets.VPS_SSH_KEY }}
+          APP_URL: ${{ secrets.APP_URL }}
+        run: |
+          set -euo pipefail
+          missing=0
+          for name in VPS_HOST VPS_USER VPS_SSH_KEY APP_URL; do
+            if [ -z "${!name}" ]; then
+              echo "::error::Missing required production secret: ${name}"
+              missing=1
+            fi
+          done
+          if [ "$missing" -ne 0 ]; then
+            exit 1
+          fi
+
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
           node-version: '20'
           cache: 'npm'
-      
+
       - name: Install dependencies
         run: npm ci
-      
+
       - name: Run tests
         run: npm test
-      
+
       - name: Build
         run: npm run build --if-present
-      
+
       - name: Deploy to VPS
         uses: appleboy/ssh-action@v1.0.3
         with:
@@ -34,32 +53,67 @@ jobs:
           username: ${{ secrets.VPS_USER }}
           key: ${{ secrets.VPS_SSH_KEY }}
           script: |
+            set -e
             cd /opt/myzubster-gateway
             git pull origin main
             npm ci --production
             pm2 restart gateway
-      
+
       - name: Health Check
+        env:
+          APP_URL: ${{ secrets.APP_URL }}
         run: |
+          set -euo pipefail
           sleep 10
-          curl -f -s -o /dev/null -w "%{http_code}" ${{ secrets.APP_URL }}/ || exit 1
-      
+          for endpoint in /api/health /api/status; do
+            echo "Checking ${APP_URL}${endpoint}"
+            curl --fail --silent --show-error --max-time 15 "${APP_URL}${endpoint}" >/dev/null
+          done
+
       - name: Notify on Success
-        if: success()
-        uses: slackapi/slack-github-action@v1.24.0
+        if: success() && env.SLACK_WEBHOOK != ''
+        uses: slackapi/slack-github-action@v2.1.1
+        env:
+          SLACK_WEBHOOK: ${{ secrets.SLACK_WEBHOOK }}
+          SLACK_WEBHOOK_TYPE: INCOMING_WEBHOOK
         with:
+          webhook: ${{ secrets.SLACK_WEBHOOK }}
+          webhook-type: incoming-webhook
           payload: |
             {
               "text": "✅ Deploy successful: MyZubster Gateway production"
             }
+
+      - name: Slack not configured
+        if: success() && env.SLACK_WEBHOOK == ''
         env:
-          SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK }}
+          SLACK_WEBHOOK: ${{ secrets.SLACK_WEBHOOK }}
+        run: echo "Slack notification skipped: SLACK_WEBHOOK is not configured."
 
   rollback:
     needs: deploy
     if: failure()
     runs-on: ubuntu-latest
+    environment: production
     steps:
+      - name: Validate rollback configuration
+        env:
+          VPS_HOST: ${{ secrets.VPS_HOST }}
+          VPS_USER: ${{ secrets.VPS_USER }}
+          VPS_SSH_KEY: ${{ secrets.VPS_SSH_KEY }}
+        run: |
+          set -euo pipefail
+          missing=0
+          for name in VPS_HOST VPS_USER VPS_SSH_KEY; do
+            if [ -z "${!name}" ]; then
+              echo "::error::Missing required rollback secret: ${name}"
+              missing=1
+            fi
+          done
+          if [ "$missing" -ne 0 ]; then
+            exit 1
+          fi
+
       - name: Rollback Deployment
         uses: appleboy/ssh-action@v1.0.3
         with:
@@ -67,16 +121,26 @@ jobs:
           username: ${{ secrets.VPS_USER }}
           key: ${{ secrets.VPS_SSH_KEY }}
           script: |
+            set -e
             cd /opt/myzubster-gateway
             git reset --hard HEAD~1
             pm2 restart gateway
-      
+
       - name: Notify Rollback
-        uses: slackapi/slack-github-action@v1.24.0
+        if: env.SLACK_WEBHOOK != ''
+        uses: slackapi/slack-github-action@v2.1.1
+        env:
+          SLACK_WEBHOOK: ${{ secrets.SLACK_WEBHOOK }}
         with:
+          webhook: ${{ secrets.SLACK_WEBHOOK }}
+          webhook-type: incoming-webhook
           payload: |
             {
               "text": "🚨 Deploy FAILED — Rollback executed on MyZubster Gateway"
             }
+
+      - name: Slack rollback notification skipped
+        if: env.SLACK_WEBHOOK == ''
         env:
-          SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK }}
+          SLACK_WEBHOOK: ${{ secrets.SLACK_WEBHOOK }}
+        run: echo "Slack notification skipped: SLACK_WEBHOOK is not configured."
