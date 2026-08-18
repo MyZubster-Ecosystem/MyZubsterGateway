@@ -1,0 +1,36 @@
+syntax = "proto3";
+
+package tari.rpc;
+
+service Wallet {
+  rpc Transfer (TransferRequest) returns (TransferResponse);
+}
+
+message TransferRequest {
+  repeated PaymentRecipient recipients = 1;
+  bool single_tx = 2;
+}
+
+message PaymentRecipient {
+  string address = 1;
+  uint64 amount = 2;
+  uint64 fee_per_gram = 3;
+  enum PaymentType {
+    STANDARD_MIMBLEWIMBLE = 0;
+    ONE_SIDED = 1;
+    ONE_SIDED_TO_STEALTH_ADDRESS = 2;
+  }
+  PaymentType payment_type = 5;
+  bytes raw_payment_id = 6;
+}
+
+message TransferResponse {
+  repeated TransferResult results = 1;
+}
+
+message TransferResult {
+  string address = 1;
+  uint64 transaction_id = 2;
+  bool is_success = 3;
+  string failure_message = 4;
+}
