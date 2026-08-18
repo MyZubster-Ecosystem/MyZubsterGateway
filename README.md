@@ -1,30 +1,48 @@
 # MyZubster Gateway
 
-Backend API for the MyZubster ecosystem, including payment, order, webhook and registry integrations.
+Backend integration boundary for the MyZubster ecosystem, including API, order, webhook, registry and payment/settlement-related components.
 
 ## Project status
 
-**MVP / active validation.** The repository contains working backend components and automated tests. Payment, settlement and external-provider integrations should be treated as environment-dependent until the corresponding integration checks are green.
+**MVP / active validation.** The repository contains working backend components and automated tests. Payment, settlement and external-provider integrations are environment-dependent until the corresponding integration and independent-verification checks are green.
+
+The Gateway is not the canonical authority for declaring an external payment final.
+
+## Ecosystem role
+
+```text
+MyZubster core
+      |
+      v
+Gateway / adapters
+      |
+      v
+payment/treasury provider
+      |
+      v
+independent verifier
+      |
+      v
+CONFIRMED / PAID
+```
+
+See:
+
+- [Ecosystem Architecture](https://github.com/MyZubster-Ecosystem/myzubster/blob/main/docs/ECOSYSTEM.md)
+- [Canonical Bounty System](https://github.com/MyZubster-Ecosystem/myzubster/blob/main/BOUNTIES.md)
+- [`BOUNTIES.md`](BOUNTIES.md) for Gateway-specific bounty scope.
 
 ## Stack
 
-- Node.js 20
+- Node.js 20+
 - Express
 - MongoDB / Mongoose
-- Monero RPC integration
+- wallet/provider integrations where configured
 - JWT authentication
-- Helmet, CORS and rate limiting
-- Node.js test runner
+- security headers/CORS/rate limiting
+- automated tests
 
 ## Quick start
-
-### Prerequisites
-
-- Node.js 20+
-- MongoDB 6+
-- Monero node (local or remote, when payment integration is enabled)
-
-### Install
 
 ```bash
 git clone https://github.com/MyZubster-Ecosystem/MyZubsterGateway.git
@@ -32,56 +50,45 @@ cd MyZubsterGateway
 npm ci
 ```
 
-Create `.env` from `.env.example` and configure only environment-specific values.
+Create `.env` from the repository template and configure only environment-specific values. Never commit production credentials.
 
-Start the service:
+Start using the current package scripts, typically:
 
 ```bash
 npm start
 ```
 
-## Test
-
-Run the gateway test suite locally:
+## Tests
 
 ```bash
 npm test
 ```
 
-CI runs `npm ci`, the complete test suite and a dependency audit on Node.js 20.
+Payment/settlement work should test negative paths including provider failure, timeout, duplicate/replay, wrong recipient, wrong amount/network and unavailable verification.
 
-## Settlement
+## Settlement contract
 
-Settlement is intentionally separated from the normal application flow and uses an auditable state machine. The current test suite covers:
+Settlement is deliberately separate from normal application flow.
 
-- verified payment reaching `PAID`;
-- unverified transactions remaining `UNSETTLED`;
-- simulation payments being rejected as real settlements;
-- duplicate bounty creation being idempotent;
-- prevention of `PAID` without a transaction id;
-- historical reconciliation requiring verified evidence and a matching network.
+A safe external lifecycle is:
 
-Before production use, add provider-specific integration tests for timeout, retry, duplicate submission and provider failure scenarios.
+```text
+PENDING -> RESERVED/ACCEPTED -> SUBMITTED -> CONFIRMED -> PAID
+```
 
-## Security / production checklist
+Additional states may include `FAILED`, `UNSETTLED`, `DISPUTED` and `CANCELLED`.
 
-Before production deployment, verify:
+Important rules:
 
-- dependency audit is clean at the required severity threshold;
-- secrets are supplied through the deployment environment;
-- HTTPS/TLS is enabled;
-- JWT secrets are rotated and never committed;
-- rate limiting and security headers are active;
-- MongoDB backups and rollback procedures are tested;
-- Monero RPC endpoints require appropriate authentication/network controls;
-- settlement provider failures and retries are observable;
-- health checks and monitoring are connected to the deployment platform.
-
-**Never commit private keys, wallet seeds, passwords or production credentials.**
+- an application/database update is not chain/payment proof;
+- a provider/adapter response alone cannot mark `PAID`;
+- transaction id/hash, recipient, asset, network and canonical amount must match expected settlement data;
+- unavailable verification must fail closed rather than infer success;
+- MYZ in the current core platform is an internal reward/accounting ledger, not automatically an on-chain transaction.
 
 ## API surface
 
-The main API areas include:
+Main areas may include:
 
 | Area | Examples |
 |---|---|
@@ -91,14 +98,35 @@ The main API areas include:
 | Orders | `/api/orders/*` |
 | Payments | `/api/payments/*` |
 | Webhooks | `/api/webhooks/*` |
-| Animals | `/api/animals/*` |
-| Plants | `/api/plants/*` |
+| Registries | animal/plant or related integration routes |
 
-API details should be verified against the deployed environment before external integrations are built.
+Verify the current router/controller source before building an external integration against a historical endpoint list.
+
+## Security / production checklist
+
+Before production deployment verify:
+
+- dependency/security checks;
+- secrets from deployment environment, not Git;
+- HTTPS/TLS and network restrictions;
+- JWT/key rotation;
+- authentication/authorization and rate limiting;
+- database backup/rollback;
+- provider/RPC authentication/network controls;
+- idempotency and duplicate prevention;
+- observable retry/failure behavior;
+- independent settlement verification;
+- health checks and monitoring.
+
+**Never commit private keys, wallet seeds, passwords or production credentials.**
+
+## Bounties
+
+Gateway work can be bountied for API, security, integration, reconciliation, testing and documentation tasks. Issue/PR/merge does not prove external payment. Follow the canonical bounty and settlement contracts linked above.
 
 ## Contributing
 
-Create a feature branch, add or update tests, run `npm test`, and open a pull request.
+Create a feature branch, add/update tests, run the relevant checks and open a PR linked to the issue.
 
 ## License
 
