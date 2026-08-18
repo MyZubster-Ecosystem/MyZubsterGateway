@@ -5,6 +5,7 @@
 
 const express = require('express');
 const axios = require('axios');
+const tariPayout = require('./tari_payout');
 const app = express();
 const PORT = 3002;
 
@@ -55,6 +56,59 @@ app.get('/health', (req, res) => {
   });
 });
 
+
+// ============================================================
+// TARI PAYOUT - MYZ
+// ============================================================
+
+app.post('/api/tari/release', async (req, res) => {
+  try {
+    const { userId, toAddress, address, amount } = req.body;
+    const recipient = toAddress || address;
+
+    if (!recipient || amount === undefined || Number(amount) <= 0) {
+      return res.status(400).json({
+        success: false,
+        error: 'toAddress/address and positive amount are required'
+      });
+    }
+
+    const result = await tariPayout.transferToAddress(
+      userId || 'unknown',
+      recipient,
+      Number(amount)
+    );
+
+    return res.json({
+      success: true,
+      ...result
+    });
+  } catch (error) {
+    console.error('[TariPayout] release error:', error.message);
+
+    return res.status(500).json({
+      success: false,
+      error: error.message
+    });
+  }
+});
+
+app.get('/api/tari/release/:transferId', (req, res) => {
+  const result = tariPayout.getTransferStatus(req.params.transferId);
+
+  if (!result) {
+    return res.status(404).json({
+      success: false,
+      error: 'Transfer not found'
+    });
+  }
+
+  return res.json({
+    success: true,
+    data: result
+  });
+});
+
 app.listen(PORT, () => {
   console.log(`🚪 EVA IONI Gateway avviato su porta ${PORT}`);
   console.log(`📡 Endpoint: http://localhost:${PORT}/api/sensors`);
@@ -65,7 +119,6 @@ app.listen(PORT, () => {
 // PAGAMENTI MONERO - INTEGRAZIONE CON MYZUBSTER
 // ============================================================
 
-const axios = require('axios');
 const MONERO_GATEWAY = process.env.MONERO_GATEWAY || 'http://localhost:3003';
 
 // Crea un pagamento per un ordine
