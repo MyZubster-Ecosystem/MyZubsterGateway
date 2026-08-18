@@ -74,6 +74,17 @@ function createBountyRouter(options = {}) {
         authorize('admin'),
         (req, res) => bountyController.confirmPayment(req, res)
     );
+    router.post(
+    '/:id/payment/fail',
+    authorize('admin'),
+    (req, res) => bountyController.failPayment(req, res)
+);
+
+router.post(
+    '/:id/payment/retry',
+    authorize('admin'),
+    (req, res) => bountyController.retryPayment(req, res)
+);
 
     return router;
 }

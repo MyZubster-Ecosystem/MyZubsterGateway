@@ -375,3 +375,217 @@ test('escrow transaction persists across service instances', () => {
     fs.rmSync(tempDir, { recursive: true, force: true });
   }
 });
+test('duplicate payment request is rejected', () => {
+    const bounty = new Bounty({
+        title: 'Duplicate payment',
+        description: 'Should reject duplicate request',
+        createdBy: 'admin',
+        assignedTo: 'user_1',
+        bountyAmount: 500,
+        currency: 'MYZ',
+    });
+
+    bounty.status = 'completed';
+
+    bounty.requestPayment();
+
+    assert.throws(
+        () => bounty.requestPayment(),
+        /Payment already requested/
+    );
+});
+test('pending payment can transition to failed and increment retry count', () => {
+  const escrow = new EscrowService();
+
+  const tx = escrow.createPayment({
+    bountyId: 'bounty_1',
+    amount: 500,
+    currency: 'MYZ',
+    contributor: 'user_1',
+  });
+
+  const failed = escrow.failPayment(tx.transactionId);
+
+  assert.equal(failed.status, 'failed');
+  assert.equal(failed.retries, 1);
+});
+
+test('failed payment can transition back to pending without changing retry count', () => {
+  const escrow = new EscrowService();
+
+  const tx = escrow.createPayment({
+    bountyId: 'bounty_1',
+    amount: 500,
+    currency: 'MYZ',
+    contributor: 'user_1',
+  });
+
+  escrow.failPayment(tx.transactionId);
+
+  const retried = escrow.retryPayment(tx.transactionId);
+
+  assert.equal(retried.status, 'pending');
+  assert.equal(retried.retries, 1);
+  assert.equal(retried.transactionId, tx.transactionId);
+});
+
+test('confirmed payment cannot be failed', () => {
+  const escrow = new EscrowService();
+
+  const tx = escrow.createPayment({
+    bountyId: 'bounty_1',
+    amount: 500,
+    currency: 'MYZ',
+    contributor: 'user_1',
+  });
+
+  escrow.complete(tx.transactionId);
+
+  assert.throws(
+    () => escrow.failPayment(tx.transactionId),
+    /confirmed payment cannot be failed/i
+  );
+});
+
+test('failed payment cannot be confirmed without retry', () => {
+  const escrow = new EscrowService();
+
+  const tx = escrow.createPayment({
+    bountyId: 'bounty_1',
+    amount: 500,
+    currency: 'MYZ',
+    contributor: 'user_1',
+  });
+
+  escrow.failPayment(tx.transactionId);
+
+  assert.throws(
+    () => escrow.complete(tx.transactionId),
+    /failed.*retried/i
+  );
+});
+test('bounty failure and retry lifecycle is state-aware', () => {
+  const bounty = new Bounty({
+    title: 'Payment lifecycle',
+    description: 'Failure/retry test',
+    createdBy: 'admin',
+    assignedTo: 'user_1',
+    bountyAmount: 500,
+    currency: 'MYZ',
+  });
+
+  bounty.status = 'completed';
+  bounty.requestPayment();
+  bounty.attachTransaction('tx_123');
+
+  bounty.failPayment();
+
+  assert.equal(bounty.paymentStatus, 'failed');
+  assert.equal(bounty.retryCount, 1);
+
+  bounty.retryPayment();
+
+  assert.equal(bounty.paymentStatus, 'pending');
+  assert.equal(bounty.retryCount, 1);
+});
+
+test('confirmed bounty payment cannot be failed', () => {
+  const bounty = new Bounty({
+    title: 'Confirmed payment',
+    description: 'Invalid failure',
+    createdBy: 'admin',
+    assignedTo: 'user_1',
+    bountyAmount: 500,
+    currency: 'MYZ',
+  });
+
+  bounty.status = 'completed';
+  bounty.requestPayment();
+  bounty.attachTransaction('tx_123');
+  bounty.confirmPayment();
+
+  assert.throws(
+    () => bounty.failPayment(),
+    /confirmed/i
+  );
+});test('accepts exactly 8 decimal places', () => {
+  const escrow = new EscrowService();
+
+  const tx = escrow.createPayment({
+    bountyId: 'bounty_precision',
+    amount: 1.12345678,
+    currency: 'MYZ',
+    contributor: 'user_1',
+  });
+
+  assert.equal(tx.amount, 1.12345678);
+});
+
+test('rejects amount precision above 8 decimal places', () => {
+  const escrow = new EscrowService();
+
+  assert.throws(
+    () =>
+      escrow.createPayment({
+        bountyId: 'bounty_precision',
+        amount: 1.123456789,
+        currency: 'MYZ',
+        contributor: 'user_1',
+      }),
+    /precision exceeds/i
+  );
+});
+
+test('rejects string amounts without coercion', () => {
+  const escrow = new EscrowService();
+
+  assert.throws(
+    () =>
+      escrow.createPayment({
+        bountyId: 'bounty_string',
+        amount: '500',
+        currency: 'MYZ',
+        contributor: 'user_1',
+      }),
+    /amount must be a number/i
+  );
+});
+
+test('rejects NaN and Infinity amounts', () => {
+  const escrow = new EscrowService();
+
+  assert.throws(
+    () =>
+      escrow.createPayment({
+        bountyId: 'bounty_nan',
+        amount: NaN,
+        currency: 'MYZ',
+        contributor: 'user_1',
+      }),
+    /finite number/i
+  );
+
+  assert.throws(
+    () =>
+      escrow.createPayment({
+        bountyId: 'bounty_inf',
+        amount: Infinity,
+        currency: 'MYZ',
+        contributor: 'user_1',
+      }),
+    /finite number/i
+  );
+});
+
+test('normalizes currency consistently', () => {
+  const escrow = new EscrowService();
+
+  const tx = escrow.createPayment({
+    bountyId: 'bounty_currency',
+    amount: 500,
+    currency: ' myz ',
+    contributor: 'user_1',
+  });
+
+  assert.equal(tx.currency, 'MYZ');
+});

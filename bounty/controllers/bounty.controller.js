@@ -362,7 +362,112 @@ async confirmPayment(req, res) {
         });
     }
 }
+// Segna il pagamento escrow come fallito
+async failPayment(req, res) {
+    try {
+        const { id } = req.params;
+        const bounty = this.bounties.find(b => b.id === id);
 
+        if (!bounty) {
+            return res.status(404).json({
+                success: false,
+                error: 'Bounty non trovato'
+            });
+        }
+
+        if (!bounty.transactionId) {
+            return res.status(400).json({
+                success: false,
+                error: 'Nessuna transazione associata a questo bounty'
+            });
+        }
+
+        const transaction = this.escrow.get(bounty.transactionId);
+
+        if (!transaction) {
+            return res.status(404).json({
+                success: false,
+                error: 'Transazione escrow non trovata'
+            });
+        }
+
+        this.escrow.validateTransactionOwnership(transaction, {
+            bountyId: bounty.id,
+            amount: bounty.bountyAmount,
+            currency: bounty.currency,
+            contributor: bounty.assignedTo,
+        });
+
+        this.escrow.failPayment(bounty.transactionId);
+        bounty.failPayment();
+
+        this.saveBounties();
+
+        return res.status(200).json({
+            success: true,
+            data: bounty.toJSON()
+        });
+    } catch (error) {
+        console.error('❌ Errore fallimento pagamento bounty:', error);
+        return res.status(400).json({
+            success: false,
+            error: error.message
+        });
+    }
+}
+// Riprova un pagamento escrow fallito
+async retryPayment(req, res) {
+    try {
+        const { id } = req.params;
+        const bounty = this.bounties.find(b => b.id === id);
+
+        if (!bounty) {
+            return res.status(404).json({
+                success: false,
+                error: 'Bounty non trovato'
+            });
+        }
+
+        if (!bounty.transactionId) {
+            return res.status(400).json({
+                success: false,
+                error: 'Nessuna transazione associata a questo bounty'
+            });
+        }
+
+        const transaction = this.escrow.get(bounty.transactionId);
+
+        if (!transaction) {
+            return res.status(404).json({
+                success: false,
+                error: 'Transazione escrow non trovata'
+            });
+        }
+
+        this.escrow.validateTransactionOwnership(transaction, {
+            bountyId: bounty.id,
+            amount: bounty.bountyAmount,
+            currency: bounty.currency,
+            contributor: bounty.assignedTo,
+        });
+
+        this.escrow.retryPayment(bounty.transactionId);
+        bounty.retryPayment();
+
+        this.saveBounties();
+
+        return res.status(200).json({
+            success: true,
+            data: bounty.toJSON()
+        });
+    } catch (error) {
+        console.error('❌ Errore retry pagamento bounty:', error);
+        return res.status(400).json({
+            success: false,
+            error: error.message
+        });
+    }
+}
     // Statistiche bounty
     async getBountyStats(req, res) {
         try {

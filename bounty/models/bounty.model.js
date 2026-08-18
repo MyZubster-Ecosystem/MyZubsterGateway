@@ -146,11 +146,40 @@ confirmPayment() {
 }
 
     // Segna il pagamento come fallito e incrementa i tentativi
-    failPayment() {
-        this.paymentStatus = 'failed';
-        this.retryCount += 1;
-        this.updatedAt = new Date().toISOString();
+failPayment() {
+    if (this.paymentStatus === 'failed') {
+        return;
     }
+
+    if (this.paymentStatus !== 'pending') {
+        throw new Error(
+            `Cannot fail payment from status "${this.paymentStatus}"`
+        );
+    }
+
+    this.paymentStatus = 'failed';
+    this.retryCount += 1;
+    this.updatedAt = new Date().toISOString();
+}
+// Riporta un pagamento fallito allo stato pending
+retryPayment() {
+    if (this.paymentStatus === 'pending') {
+        throw new Error('Payment is already pending');
+    }
+
+    if (this.paymentStatus === 'confirmed') {
+        throw new Error('Confirmed payment cannot be retried');
+    }
+
+    if (this.paymentStatus !== 'failed') {
+        throw new Error(
+            `Cannot retry payment from status "${this.paymentStatus}"`
+        );
+    }
+
+    this.paymentStatus = 'pending';
+    this.updatedAt = new Date().toISOString();
+}
 
     toJSON() {
         return {
