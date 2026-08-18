@@ -241,82 +241,127 @@ class BountyController {
         }
     }
 
-    // Richiede il pagamento escrow per un bounty completato
-    async requestPayment(req, res) {
-        try {
-            const { id } = req.params;
-            const bounty = this.bounties.find(b => b.id === id);
+ // Richiede il pagamento escrow per un bounty completato
+async requestPayment(req, res) {
+    try {
+        const { id } = req.params;
+        const bounty = this.bounties.find(b => b.id === id);
 
-            if (!bounty) {
-                return res.status(404).json({
-                    success: false,
-                    error: 'Bounty non trovato'
-                });
-            }
-
-            bounty.requestPayment();
-
-            const tx = this.escrow.createPayment({
-                bountyId: bounty.id,
-                amount: bounty.bountyAmount,
-                contributor: bounty.assignedTo,
-            });
-
-            bounty.attachTransaction(tx.transactionId);
-
-            this.saveBounties();
-
-            res.status(200).json({
-                success: true,
-                transaction: tx,
-                data: bounty.toJSON()
-            });
-        } catch (error) {
-            console.error('❌ Errore richiesta pagamento bounty:', error);
-            res.status(400).json({
+        if (!bounty) {
+            return res.status(404).json({
                 success: false,
-                error: error.message
+                error: 'Bounty non trovato'
             });
         }
-    }
 
-    // Conferma il pagamento escrow di un bounty
-    async confirmPayment(req, res) {
-        try {
-            const { id } = req.params;
-            const bounty = this.bounties.find(b => b.id === id);
-
-            if (!bounty) {
-                return res.status(404).json({
-                    success: false,
-                    error: 'Bounty non trovato'
-                });
-            }
-
-            if (!bounty.transactionId) {
-                return res.status(400).json({
-                    success: false,
-                    error: 'Nessuna transazione associata a questo bounty'
-                });
-            }
-
-            this.escrow.complete(bounty.transactionId);
-            bounty.confirmPayment();
-
-            this.saveBounties();
-
-            res.status(200).json({
-                success: true,
-                data: bounty.toJSON()
-            });
-        } catch (error) {
-            console.error('❌ Errore conferma pagamento bounty:', error);
-            res.status(400).json({
+        // Validate before creating any escrow transaction.
+        if (bounty.status !== 'completed') {
+            return res.status(400).json({
                 success: false,
-                error: error.message
+                error: 'Payment can only be requested for completed bounties'
             });
         }
+
+        if (bounty.paymentRequested) {
+            return res.status(400).json({
+                success: false,
+                error: 'Payment already requested'
+            });
+        }
+
+        // Create the escrow transaction only after bounty validation.
+        const tx = this.escrow.createPayment({
+            bountyId: bounty.id,
+            amount: bounty.bountyAmount,
+            currency: bounty.currency,
+            contributor: bounty.assignedTo,
+        });
+
+        // Update bounty lifecycle after escrow transaction succeeds.
+        bounty.requestPayment();
+        bounty.attachTransaction(tx.transactionId);
+
+        this.saveBounties();
+
+        return res.status(200).json({
+            success: true,
+            transaction: tx,
+            data: bounty.toJSON()
+        });
+    } catch (error) {
+        console.error('❌ Errore richiesta pagamento bounty:', error);
+        return res.status(400).json({
+            success: false,
+            error: error.message
+        });
     }
+}
+
+// Conferma il pagamento escrow di un bounty
+async confirmPayment(req, res) {
+    try {
+        const { id } = req.params;
+        const bounty = this.bounties.find(b => b.id === id);
+
+        if (!bounty) {
+            return res.status(404).json({
+                success: false,
+                error: 'Bounty non trovato'
+            });
+        }
+
+        if (!bounty.transactionId) {
+            return res.status(400).json({
+                success: false,
+                error: 'Nessuna transazione associata a questo bounty'
+            });
+        }
+
+        if (!bounty.paymentRequested) {
+            return res.status(400).json({
+                success: false,
+                error: 'Payment was not requested for this bounty'
+            });
+        }
+
+        const transaction = this.escrow.get(bounty.transactionId);
+
+        if (!transaction) {
+            return res.status(404).json({
+                success: false,
+                error: 'Transazione escrow non trovata'
+            });
+        }
+
+        // Verify the persisted transaction genuinely belongs
+        // to this bounty before confirming it.
+        this.escrow.validateTransactionOwnership(transaction, {
+            bountyId: bounty.id,
+            amount: bounty.bountyAmount,
+            currency: bounty.currency,
+            contributor: bounty.assignedTo,
+        });
+
+        // EscrowService handles confirmed -> confirmed idempotently.
+        this.escrow.complete(bounty.transactionId);
+
+        // Bounty model should also handle confirmed -> confirmed idempotently.
+        bounty.confirmPayment();
+
+        this.saveBounties();
+
+        return res.status(200).json({
+            success: true,
+            data: bounty.toJSON()
+        });
+    } catch (error) {
+        console.error('❌ Errore conferma pagamento bounty:', error);
+        return res.status(400).json({
+            success: false,
+            error: error.message
+        });
+    }
+}
 
     // Statistiche bounty
     async getBountyStats(req, res) {

@@ -13,6 +13,7 @@ test('escrow payment lifecycle completes successfully', () => {
     createdBy: 'admin',
     assignedTo: 'user_001',
     bountyAmount: 500,
+    currency: 'MYZ',
   });
 
   // Reviewer approved bounty
@@ -28,6 +29,7 @@ test('escrow payment lifecycle completes successfully', () => {
   const tx = escrow.createPayment({
     bountyId: bounty.id,
     amount: bounty.bountyAmount,
+    currency: bounty.currency,
     contributor: 'user_001',
   });
 
@@ -71,4 +73,305 @@ test('cannot confirm payment without transaction', () => {
   bounty.requestPayment();
 
   assert.throws(() => bounty.confirmPayment(), /transaction/i);
+});
+test('confirming an already confirmed transaction is idempotent', () => {
+  const escrow = new EscrowService();
+
+  const tx = escrow.createPayment({
+    bountyId: 'bounty_1',
+    amount: 500,
+    currency: 'MYZ',
+    contributor: 'user_1',
+  });
+
+  const first = escrow.complete(tx.transactionId);
+  const second = escrow.complete(tx.transactionId);
+
+  assert.equal(second.status, 'confirmed');
+  assert.equal(second.transactionId, first.transactionId);
+  assert.equal(second.confirmedAt, first.confirmedAt);
+});
+
+test('pending transaction can fail and increments retries', () => {
+  const escrow = new EscrowService();
+
+  const tx = escrow.createPayment({
+    bountyId: 'bounty_1',
+    amount: 500,
+    currency: 'MYZ',
+    contributor: 'user_1',
+  });
+
+  const failed = escrow.failPayment(tx.transactionId);
+
+  assert.equal(failed.status, 'failed');
+  assert.equal(failed.retries, 1);
+});
+
+test('failed transaction can be retried without changing transactionId', () => {
+  const escrow = new EscrowService();
+
+  const tx = escrow.createPayment({
+    bountyId: 'bounty_1',
+    amount: 500,
+    currency: 'MYZ',
+    contributor: 'user_1',
+  });
+
+  escrow.failPayment(tx.transactionId);
+
+  const retried = escrow.retryPayment(tx.transactionId);
+
+  assert.equal(retried.status, 'pending');
+  assert.equal(retried.transactionId, tx.transactionId);
+  assert.equal(retried.retries, 1);
+});
+
+test('failed transaction cannot be confirmed before retry', () => {
+  const escrow = new EscrowService();
+
+  const tx = escrow.createPayment({
+    bountyId: 'bounty_1',
+    amount: 500,
+    currency: 'MYZ',
+    contributor: 'user_1',
+  });
+
+  escrow.failPayment(tx.transactionId);
+
+  assert.throws(
+    () => escrow.complete(tx.transactionId),
+    /failed.*retried/i
+  );
+});
+
+test('confirmed transaction cannot be retried', () => {
+  const escrow = new EscrowService();
+
+  const tx = escrow.createPayment({
+    bountyId: 'bounty_1',
+    amount: 500,
+    currency: 'MYZ',
+    contributor: 'user_1',
+  });
+
+  escrow.complete(tx.transactionId);
+
+  assert.throws(
+    () => escrow.retryPayment(tx.transactionId),
+    /confirmed.*retried/i
+  );
+});
+test('complete throws for a nonexistent transaction', () => {
+  const escrow = new EscrowService();
+
+  assert.throws(
+    () => escrow.complete('does-not-exist'),
+    /Transaction not found/
+  );
+});
+
+test('failPayment throws for a nonexistent transaction', () => {
+  const escrow = new EscrowService();
+
+  assert.throws(
+    () => escrow.failPayment('does-not-exist'),
+    /Transaction not found/
+  );
+});
+
+test('retryPayment throws for a nonexistent transaction', () => {
+  const escrow = new EscrowService();
+
+  assert.throws(
+    () => escrow.retryPayment('does-not-exist'),
+    /Transaction not found/
+  );
+});
+
+test('invalid payment amount is rejected', () => {
+  const escrow = new EscrowService();
+
+  assert.throws(
+    () =>
+      escrow.createPayment({
+        bountyId: 'bounty_1',
+        amount: 0,
+        currency: 'MYZ',
+        contributor: 'user_1',
+      }),
+    /greater than zero/
+  );
+
+  assert.throws(
+    () =>
+      escrow.createPayment({
+        bountyId: 'bounty_1',
+        amount: -100,
+        currency: 'MYZ',
+        contributor: 'user_1',
+      }),
+    /greater than zero/
+  );
+});
+
+test('invalid currency is rejected', () => {
+  const escrow = new EscrowService();
+
+  assert.throws(
+    () =>
+      escrow.createPayment({
+        bountyId: 'bounty_1',
+        amount: 100,
+        currency: '',
+        contributor: 'user_1',
+      }),
+    /currency must be a non-empty string/
+  );
+});
+test('transaction ownership accepts matching bounty data', () => {
+  const escrow = new EscrowService();
+
+  const tx = escrow.createPayment({
+    bountyId: 'bounty_1',
+    amount: 500,
+    currency: 'MYZ',
+    contributor: 'user_1',
+  });
+
+  assert.equal(
+    escrow.validateTransactionOwnership(tx, {
+      bountyId: 'bounty_1',
+      amount: 500,
+      currency: 'MYZ',
+      contributor: 'user_1',
+    }),
+    true
+  );
+});
+
+test('transaction ownership rejects bountyId mismatch', () => {
+  const escrow = new EscrowService();
+
+  const tx = escrow.createPayment({
+    bountyId: 'bounty_1',
+    amount: 500,
+    currency: 'MYZ',
+    contributor: 'user_1',
+  });
+
+  assert.throws(
+    () =>
+      escrow.validateTransactionOwnership(tx, {
+        bountyId: 'bounty_2',
+        amount: 500,
+        currency: 'MYZ',
+        contributor: 'user_1',
+      }),
+    /bountyId/
+  );
+});
+
+test('transaction ownership rejects amount mismatch', () => {
+  const escrow = new EscrowService();
+
+  const tx = escrow.createPayment({
+    bountyId: 'bounty_1',
+    amount: 500,
+    currency: 'MYZ',
+    contributor: 'user_1',
+  });
+
+  assert.throws(
+    () =>
+      escrow.validateTransactionOwnership(tx, {
+        bountyId: 'bounty_1',
+        amount: 700,
+        currency: 'MYZ',
+        contributor: 'user_1',
+      }),
+    /amount/
+  );
+});
+
+test('transaction ownership rejects currency mismatch', () => {
+  const escrow = new EscrowService();
+
+  const tx = escrow.createPayment({
+    bountyId: 'bounty_1',
+    amount: 500,
+    currency: 'MYZ',
+    contributor: 'user_1',
+  });
+
+  assert.throws(
+    () =>
+      escrow.validateTransactionOwnership(tx, {
+        bountyId: 'bounty_1',
+        amount: 500,
+        currency: 'USD',
+        contributor: 'user_1',
+      }),
+    /currency/
+  );
+});
+
+test('transaction ownership rejects contributor mismatch', () => {
+  const escrow = new EscrowService();
+
+  const tx = escrow.createPayment({
+    bountyId: 'bounty_1',
+    amount: 500,
+    currency: 'MYZ',
+    contributor: 'user_1',
+  });
+
+  assert.throws(
+    () =>
+      escrow.validateTransactionOwnership(tx, {
+        bountyId: 'bounty_1',
+        amount: 500,
+        currency: 'MYZ',
+        contributor: 'user_2',
+      }),
+    /contributor/
+  );
+});
+test('escrow transaction persists across service instances', () => {
+  const fs = require('node:fs');
+  const os = require('node:os');
+  const path = require('node:path');
+  const { JsonEscrowRepository } = require('../services/payment/json-escrow.repository');
+
+  const tempDir = fs.mkdtempSync(path.join(os.tmpdir(), 'myz-escrow-test-'));
+  const filePath = path.join(tempDir, 'escrow-transactions.json');
+
+  try {
+    const escrowA = new EscrowService({
+      repository: new JsonEscrowRepository(filePath),
+    });
+
+    const created = escrowA.createPayment({
+      bountyId: 'bounty_persist',
+      amount: 500,
+      currency: 'MYZ',
+      contributor: 'user_1',
+    });
+
+    const escrowB = new EscrowService({
+      repository: new JsonEscrowRepository(filePath),
+    });
+
+    const restored = escrowB.get(created.transactionId);
+
+    assert.ok(restored);
+    assert.equal(restored.transactionId, created.transactionId);
+    assert.equal(restored.bountyId, 'bounty_persist');
+    assert.equal(restored.amount, 500);
+    assert.equal(restored.currency, 'MYZ');
+    assert.equal(restored.contributor, 'user_1');
+    assert.equal(restored.status, 'pending');
+  } finally {
+    fs.rmSync(tempDir, { recursive: true, force: true });
+  }
 });

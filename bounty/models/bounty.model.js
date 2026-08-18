@@ -123,15 +123,27 @@ requestPayment() {
         this.updatedAt = new Date().toISOString();
     }
 
-    // Conferma il pagamento escrow
-    confirmPayment() {
-        if (!this.transactionId) {
-            throw new Error('No transaction attached to this bounty');
-        }
-        this.paymentStatus = 'confirmed';
-        this.reconciledAt = new Date().toISOString();
-        this.updatedAt = new Date().toISOString();
+   // Conferma il pagamento escrow
+confirmPayment() {
+    if (!this.transactionId) {
+        throw new Error('No transaction attached to this bounty');
     }
+
+    // Idempotent: confirming an already confirmed payment is a no-op.
+    if (this.paymentStatus === 'confirmed') {
+        return;
+    }
+
+    if (this.paymentStatus !== 'pending') {
+        throw new Error(
+            `Cannot confirm payment from status "${this.paymentStatus}"`
+        );
+    }
+
+    this.paymentStatus = 'confirmed';
+    this.reconciledAt = new Date().toISOString();
+    this.updatedAt = new Date().toISOString();
+}
 
     // Segna il pagamento come fallito e incrementa i tentativi
     failPayment() {
