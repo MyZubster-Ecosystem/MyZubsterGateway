@@ -1,0 +1,25 @@
+name: Tor gateway checks
+
+on:
+  pull_request:
+    paths:
+      - "deploy/tor/**"
+      - "docs/TOR_*.md"
+      - "services/torInstanceRegistry.js"
+      - "tor/**"
+      - "tests/tor*.test.js"
+      - ".github/workflows/tor-gateway.yml"
+
+permissions:
+  contents: read
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+      - run: node --test tests/tor*.test.js
+      - run: touch .env && docker compose -f docker-compose.yml -f deploy/tor/docker-compose.tor.yml config --quiet
