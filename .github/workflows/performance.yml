@@ -18,7 +18,7 @@ on:
       - 'routes/**'
       - 'services/**'
   schedule:
-    - cron: '0 8 * * *'  # Daily at 08:00 UTC
+    - cron: '0 8 * * *'
   workflow_dispatch:
     inputs:
       profile:
@@ -41,29 +41,28 @@ jobs:
         profile: [smoke, load]
     steps:
       - uses: actions/checkout@v4
-      
+
       - name: Setup k6
         uses: grafana/setup-k6-action@v1
         with:
           k6-version: '0.49.0'
-      
+
       - name: Install Node.js
         uses: actions/setup-node@v4
         with:
           node-version: '20'
-      
+
       - name: Install dependencies
         run: |
           if [ -f package.json ]; then
-            npm ci --production
+            npm ci --omit=dev
           fi
-      
+
       - name: Start server
         run: |
           node server.js &
           SERVER_PID=$!
-          echo "SERVER_PID=$SERVER_PID" >> $GITHUB_ENV
-          # Wait for server
+          echo "SERVER_PID=$SERVER_PID" >> "$GITHUB_ENV"
           for i in $(seq 1 30); do
             if curl -s http://localhost:3000/api/health > /dev/null 2>&1; then
               echo "Server ready after ${i}s"
@@ -71,7 +70,7 @@ jobs:
             fi
             sleep 1
           done
-      
+
       - name: Run ${{ matrix.profile }} tests
         run: |
           mkdir -p results
@@ -80,39 +79,36 @@ jobs:
             --summary-export=results/summary-${{ matrix.profile }}.json \
             --out json=results/metrics-${{ matrix.profile }}.json
         continue-on-error: true
-      
+
       - name: Upload results
         uses: actions/upload-artifact@v4
         with:
           name: perf-results-${{ matrix.profile }}
           path: results/
           retention-days: 30
-      
+
       - name: Performance check
         run: |
-          echo "## Performance Results (${{ matrix.profile }})" >> $GITHUB_STEP_SUMMARY
-          if [ -f results/summary-${{ matrix.profile }}.json ]; then
-            python3 -c "
-import json, sys
-with open('results/summary-${{ matrix.profile }}.json') as f:
-    data = json.load(f)
-metrics = data.get('metrics', {})
-print(f"| Metric | Value |")
-print(f"|--------|-------|")
-if 'http_req_duration' in metrics:
-    d = metrics['http_req_duration']
-    print(f"| Avg | {d.get('avg', 'N/A'):.1f}ms |")
-    print(f"| P95 | {d.get('p(95)', 'N/A'):.1f}ms |")
-    print(f"| P99 | {d.get('p(99)', 'N/A'):.1f}ms |")
-    print(f"| Max | {d.get('max', 'N/A'):.1f}ms |")
-if 'errors' in metrics:
-    print(f"| Error Rate | {metrics['errors'].get('rate', 'N/A'):.2%} |")
-" >> $GITHUB_STEP_SUMMARY
+          echo "## Performance Results (${{ matrix.profile }})" >> "$GITHUB_STEP_SUMMARY"
+          summary="results/summary-${{ matrix.profile }}.json"
+          if [ -f "$summary" ]; then
+            echo '| Metric | Value |' >> "$GITHUB_STEP_SUMMARY"
+            echo '|--------|-------|' >> "$GITHUB_STEP_SUMMARY"
+            jq -r '
+              .metrics.http_req_duration as $d |
+              if $d then
+                "| Avg | \($d.avg // "N/A")ms |\n| P95 | \($d["p(95)"] // "N/A")ms |\n| P99 | \($d["p(99)"] // "N/A")ms |\n| Max | \($d.max // "N/A")ms |"
+              else empty end
+            ' "$summary" >> "$GITHUB_STEP_SUMMARY"
+            jq -r '
+              .metrics.errors as $e |
+              if $e and ($e.rate != null) then "| Error Rate | \(($e.rate * 100))% |" else empty end
+            ' "$summary" >> "$GITHUB_STEP_SUMMARY"
           fi
-      
+
       - name: Stop server
         if: always()
-        run: kill $SERVER_PID 2>/dev/null || true
+        run: kill "$SERVER_PID" 2>/dev/null || true
 
   stress:
     name: Stress Testing
@@ -120,25 +116,25 @@ if 'errors' in metrics:
     if: github.event_name == 'workflow_dispatch' || github.event_name == 'schedule'
     steps:
       - uses: actions/checkout@v4
-      
+
       - name: Setup k6
         uses: grafana/setup-k6-action@v1
         with:
           k6-version: '0.49.0'
-      
+
       - uses: actions/setup-node@v4
         with:
           node-version: '20'
-      
+
       - name: Install and start
         run: |
-          [ -f package.json ] && npm ci --production || true
+          [ -f package.json ] && npm ci --omit=dev || true
           node server.js &
           for i in $(seq 1 30); do
             curl -s http://localhost:3000/api/health > /dev/null 2>&1 && break
             sleep 1
           done
-      
+
       - name: Run stress tests
         run: |
           mkdir -p results
@@ -146,7 +142,7 @@ if 'errors' in metrics:
             --env TEST_PROFILE=stress \
             --summary-export=results/summary-stress.json
         continue-on-error: true
-      
+
       - name: Upload stress results
         uses: actions/upload-artifact@v4
         with:
