@@ -1,0 +1,75 @@
+{
+  "schemaVersion": "1.0.0",
+  "policyVersion": "2026-08-19.1",
+  "regulatedCapabilities": [
+    "payments",
+    "crypto",
+    "custody",
+    "exchange",
+    "settlement",
+    "token_rwa"
+  ],
+  "defaultPolicy": {
+    "regulated": "BLOCKED",
+    "nonRegulated": "REVIEW_REQUIRED"
+  },
+  "aliases": {
+    "CN_MAINLAND": "CN"
+  },
+  "jurisdictions": {
+    "CN": {
+      "name": "China (Mainland)",
+      "capabilities": {
+        "gardens": { "state": "PILOT_ONLY", "approval": "CN-GARDENS-PILOT", "evidence": ["issue:1369"] },
+        "sensors": { "state": "PILOT_ONLY", "approval": "CN-SENSORS-PILOT", "evidence": ["issue:1369"] },
+        "payments": { "state": "BLOCKED", "approval": null, "evidence": ["issue:1358", "issue:1369"] },
+        "crypto": { "state": "BLOCKED", "approval": null, "evidence": ["issue:1358", "issue:1369"] },
+        "custody": { "state": "BLOCKED", "approval": null, "evidence": ["issue:1358"] },
+        "exchange": { "state": "BLOCKED", "approval": null, "evidence": ["issue:1358"] },
+        "settlement": { "state": "BLOCKED", "approval": null, "evidence": ["issue:1358"] },
+        "token_rwa": { "state": "REVIEW_REQUIRED", "approval": null, "evidence": ["issue:1369"] }
+      }
+    },
+    "SG": {
+      "name": "Singapore",
+      "capabilities": {
+        "gardens": { "state": "PILOT_ONLY", "approval": "SG-GARDENS-PILOT", "evidence": ["issue:1370"] },
+        "sensors": { "state": "PILOT_ONLY", "approval": "SG-SENSORS-PILOT", "evidence": ["issue:1370"] },
+        "payments": { "state": "REVIEW_REQUIRED", "approval": null, "evidence": ["issue:1358", "issue:1370"] },
+        "crypto": { "state": "REVIEW_REQUIRED", "approval": null, "evidence": ["issue:1358", "issue:1370"] },
+        "custody": { "state": "BLOCKED", "approval": null, "evidence": ["issue:1358"] },
+        "exchange": { "state": "BLOCKED", "approval": null, "evidence": ["issue:1358"] },
+        "settlement": { "state": "REVIEW_REQUIRED", "approval": null, "evidence": ["issue:1358"] },
+        "token_rwa": { "state": "REVIEW_REQUIRED", "approval": null, "evidence": ["issue:1370"] }
+      }
+    },
+    "US": {
+      "name": "United States",
+      "capabilities": {
+        "gardens": { "state": "PILOT_ONLY", "approval": "US-GARDENS-PILOT", "evidence": ["issue:1371"] },
+        "sensors": { "state": "PILOT_ONLY", "approval": "US-SENSORS-PILOT", "evidence": ["issue:1371"] },
+        "payments": { "state": "REVIEW_REQUIRED", "approval": null, "evidence": ["issue:1358", "issue:1371"] },
+        "crypto": { "state": "REVIEW_REQUIRED", "approval": null, "evidence": ["issue:1358", "issue:1371"] },
+        "custody": { "state": "BLOCKED", "approval": null, "evidence": ["issue:1358"] },
+        "exchange": { "state": "BLOCKED", "approval": null, "evidence": ["issue:1358"] },
+        "settlement": { "state": "REVIEW_REQUIRED", "approval": null, "evidence": ["issue:1358"] },
+        "token_rwa": { "state": "REVIEW_REQUIRED", "approval": null, "evidence": ["issue:1371"] }
+      },
+      "subdivisions": {
+        "US-CA": {
+          "name": "California",
+          "capabilities": {
+            "token_rwa": { "state": "BLOCKED", "approval": null, "evidence": ["issue:1371", "state-review:pending"] }
+          }
+        },
+        "US-NY": {
+          "name": "New York",
+          "capabilities": {
+            "crypto": { "state": "RESTRICTED", "approval": null, "evidence": ["issue:1371", "state-review:pending"] },
+            "exchange": { "state": "BLOCKED", "approval": null, "evidence": ["issue:1371"] }
+          }
+        }
+      }
+    }
+  }
+}
