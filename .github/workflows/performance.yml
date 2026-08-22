@@ -57,7 +57,7 @@ jobs:
 
       - name: Start server
         run: |
-          node server.js &
+          PORT=3000 node server.js &
           SERVER_PID=$!
           echo "SERVER_PID=$SERVER_PID" >> "$GITHUB_ENV"
           for i in $(seq 1 30); do
@@ -142,7 +142,7 @@ jobs:
       - name: Install and start
         run: |
           npm ci --omit=dev
-          node server.js &
+          PORT=3000 node server.js &
           SERVER_PID=$!
           echo "SERVER_PID=$SERVER_PID" >> "$GITHUB_ENV"
           for i in $(seq 1 30); do
