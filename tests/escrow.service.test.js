@@ -589,3 +589,30 @@ test('normalizes currency consistently', () => {
 
   assert.equal(tx.currency, 'MYZ');
 });
+test('accepts an amount of 1e-8 with exactly 8 decimal places', () => {
+  const escrow = new EscrowService();
+
+  const tx = escrow.createPayment({
+    bountyId: 'bounty_scientific_8',
+    amount: 1e-8,
+    currency: 'MYZ',
+    contributor: 'user_1',
+  });
+
+  assert.equal(tx.amount, 1e-8);
+});
+
+test('rejects an amount of 1e-9 with more than 8 decimal places', () => {
+  const escrow = new EscrowService();
+
+  assert.throws(
+    () =>
+      escrow.createPayment({
+        bountyId: 'bounty_scientific_9',
+        amount: 1e-9,
+        currency: 'MYZ',
+        contributor: 'user_1',
+      }),
+    /precision exceeds/i
+  );
+});

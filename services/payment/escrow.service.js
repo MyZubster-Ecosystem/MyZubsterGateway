@@ -13,10 +13,30 @@ const MAX_AMOUNT_DECIMALS = 8;
  * @returns {number}
  */
 function countDecimals(value) {
-  const str = value.toString();
-  if (str.includes('e-') || str.includes('E-')) {
+  if (!Number.isFinite(value)) {
     return Infinity;
   }
+
+  const str = value.toString();
+
+  // Handle scientific notation such as 1e-8 correctly.
+  const match = str.match(/^(\d+)(?:\.(\d+))?e([+-]?\d+)$/i);
+
+  if (match) {
+    const fractionalDigits = match[2] ? match[2].length : 0;
+    const exponent = Number(match[3]);
+
+    // For positive exponents, the decimal places become zero
+    // once the decimal point is shifted right.
+    if (exponent >= 0) {
+      return Math.max(0, fractionalDigits - exponent);
+    }
+
+    // For negative exponents, the decimal point shifts left,
+    // adding leading decimal places.
+    return -exponent + fractionalDigits;
+  }
+
   const parts = str.split('.');
   return parts.length === 2 ? parts[1].length : 0;
 }
