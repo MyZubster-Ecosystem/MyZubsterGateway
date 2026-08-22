@@ -1,6 +1,9 @@
 name: Production Health Check
 
 on:
+  push:
+    branches:
+      - main
   schedule:
     - cron: '*/5 * * * *'
   workflow_dispatch:
@@ -14,32 +17,36 @@ jobs:
     runs-on: ubuntu-latest
     environment: production
     steps:
-      - name: Check API Health
+      - name: Check Zargox API health
         run: |
           set -euo pipefail
-          HEALTH_URL="${APP_URL%/}/api/health"
+          HEALTH_URL="${APP_URL%/}/api/zargox"
           HTTP_CODE=$(curl -L -sS --max-time "$CURL_TIMEOUT" -o /tmp/health-response -w "%{http_code}" "$HEALTH_URL" || true)
           echo "Health endpoint: $HEALTH_URL"
           echo "HTTP status: $HTTP_CODE"
+
           if [ "$HTTP_CODE" != "200" ]; then
             echo "Health check FAILED with HTTP $HTTP_CODE"
             head -c 1000 /tmp/health-response 2>/dev/null || true
             echo
             exit 1
           fi
-          echo "Health check OK: HTTP $HTTP_CODE"
 
-      - name: Check API Endpoints
-        run: |
-          FAILED=0
-          for endpoint in "/api/health" "/api/status"; do
-            CODE=$(curl -L -sS --max-time "$CURL_TIMEOUT" -o /dev/null -w "%{http_code}" "${APP_URL%/}$endpoint" || true)
-            echo "$endpoint: HTTP $CODE"
-            if [ "$CODE" != "200" ]; then
-              FAILED=1
-            fi
-          done
-          exit "$FAILED"
+          if ! grep -Eq '"ok"[[:space:]]*:[[:space:]]*true' /tmp/health-response; then
+            echo "Health check FAILED: response does not report ok=true"
+            head -c 1000 /tmp/health-response 2>/dev/null || true
+            echo
+            exit 1
+          fi
+
+          if ! grep -Eq '"configured"[[:space:]]*:[[:space:]]*true' /tmp/health-response; then
+            echo "Health check FAILED: Zargox provider is not configured"
+            head -c 1000 /tmp/health-response 2>/dev/null || true
+            echo
+            exit 1
+          fi
+
+          echo "Health check OK: Zargox API is reachable and configured"
 
       - name: Alert on Failure
         if: failure() && env.SLACK_WEBHOOK_URL != ''
