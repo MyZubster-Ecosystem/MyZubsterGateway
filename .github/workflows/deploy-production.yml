@@ -1,99 +1,45 @@
-name: Deploy to Production
+name: Production Validation
 
 on:
   push:
     branches: [main]
   workflow_dispatch:
+    inputs:
+      deploy_vps:
+        description: 'Also deploy to the optional VPS target'
+        required: true
+        default: false
+        type: boolean
 
 jobs:
-  deploy:
+  validate-hosted-production:
+    name: Validate hosted production
     runs-on: ubuntu-latest
-    environment: production
-    env:
-      SLACK_WEBHOOK: ${{ secrets.SLACK_WEBHOOK }}
     steps:
       - uses: actions/checkout@v4
 
-      - name: Detect production configuration
-        id: config
-        env:
-          VPS_HOST: ${{ secrets.VPS_HOST }}
-          VPS_USER: ${{ secrets.VPS_USER }}
-          VPS_SSH_KEY: ${{ secrets.VPS_SSH_KEY }}
-          APP_URL: ${{ secrets.APP_URL }}
-        run: |
-          set -euo pipefail
-          missing=()
-          for name in VPS_HOST VPS_USER VPS_SSH_KEY APP_URL; do
-            if [ -z "${!name}" ]; then
-              missing+=("$name")
-            fi
-          done
-          if [ "${#missing[@]}" -gt 0 ]; then
-            echo "configured=false" >> "$GITHUB_OUTPUT"
-            echo "::warning::VPS production deploy skipped; missing configuration: ${missing[*]}"
-          else
-            echo "configured=true" >> "$GITHUB_OUTPUT"
-          fi
-
-      - name: VPS deployment skipped
-        if: ${{ steps.config.outputs.configured != 'true' }}
-        run: echo "No VPS deployment executed because production VPS secrets are not configured."
-
       - name: Setup Node.js
-        if: ${{ steps.config.outputs.configured == 'true' }}
         uses: actions/setup-node@v4
         with:
           node-version: '20'
           cache: npm
 
       - name: Install dependencies
-        if: ${{ steps.config.outputs.configured == 'true' }}
         run: npm ci
 
       - name: Run tests
-        if: ${{ steps.config.outputs.configured == 'true' }}
         run: npm test
 
       - name: Build
-        if: ${{ steps.config.outputs.configured == 'true' }}
         run: npm run build --if-present
 
-      - name: Deploy to VPS
-        if: ${{ steps.config.outputs.configured == 'true' }}
-        uses: appleboy/ssh-action@v1.0.3
-        with:
-          host: ${{ secrets.VPS_HOST }}
-          username: ${{ secrets.VPS_USER }}
-          key: ${{ secrets.VPS_SSH_KEY }}
-          script: |
-            set -e
-            cd /opt/myzubster-gateway
-            git fetch origin main
-            git reset --hard origin/main
-            npm ci --omit=dev
-            pm2 restart gateway
-
-      - name: Check deployed Gateway service
-        if: ${{ steps.config.outputs.configured == 'true' }}
-        env:
-          APP_URL: ${{ secrets.APP_URL }}
-        run: |
-          set -euo pipefail
-          sleep 10
-          for endpoint in /api/health /api/status; do
-            echo "Checking ${APP_URL%/}${endpoint}"
-            curl --fail --silent --show-error --max-time 15 "${APP_URL%/}${endpoint}" >/dev/null
-          done
-
       - name: Check public Zargox API
-        if: ${{ steps.config.outputs.configured == 'true' }}
         env:
           ZARGOX_URL: https://myzubster-gateway.vercel.app/api/zargox
         run: |
           set -euo pipefail
           response_file=$(mktemp)
-          http_code=$(curl -L -sS --max-time 15 -o "$response_file" -w '%{http_code}' "$ZARGOX_URL" || true)
+          http_code=$(curl -L -sS --max-time 20 -o "$response_file" -w '%{http_code}' "$ZARGOX_URL" || true)
           echo "Zargox endpoint: $ZARGOX_URL"
           echo "HTTP status: $http_code"
           if [ "$http_code" != "200" ]; then
@@ -112,67 +58,104 @@ jobs:
             exit 1
           }
 
-      - name: Notify on success
-        if: ${{ steps.config.outputs.configured == 'true' && success() && env.SLACK_WEBHOOK != '' }}
-        uses: slackapi/slack-github-action@v2.1.1
-        with:
-          webhook: ${{ env.SLACK_WEBHOOK }}
-          webhook-type: incoming-webhook
-          payload: |
-            {
-              "text": "✅ Deploy successful: MyZubster Gateway production"
-            }
+      - name: Check optional hosted Gateway URL
+        if: ${{ env.APP_URL != '' }}
+        env:
+          APP_URL: ${{ secrets.APP_URL }}
+        run: |
+          set -euo pipefail
+          for endpoint in /api/health /api/status; do
+            url="${APP_URL%/}${endpoint}"
+            echo "Checking $url"
+            curl --fail --silent --show-error --max-time 20 "$url" >/dev/null
+          done
 
-      - name: Slack not configured
-        if: ${{ steps.config.outputs.configured == 'true' && success() && env.SLACK_WEBHOOK == '' }}
-        run: echo "Slack notification skipped because SLACK_WEBHOOK is not configured."
+      - name: Hosted Gateway URL not configured
+        if: ${{ env.APP_URL == '' }}
+        env:
+          APP_URL: ${{ secrets.APP_URL }}
+        run: echo "APP_URL is not configured; skipping the optional hosted Gateway health check."
 
-  rollback:
-    needs: deploy
-    if: ${{ failure() }}
+  deploy-vps:
+    name: Deploy optional VPS
+    if: ${{ github.event_name == 'workflow_dispatch' && inputs.deploy_vps == true }}
+    needs: validate-hosted-production
     runs-on: ubuntu-latest
     environment: production
     env:
-      SLACK_WEBHOOK: ${{ secrets.SLACK_WEBHOOK }}
+      VPS_HOST: ${{ secrets.VPS_HOST }}
+      VPS_USER: ${{ secrets.VPS_USER }}
+      VPS_SSH_KEY: ${{ secrets.VPS_SSH_KEY }}
+      APP_URL: ${{ secrets.APP_URL }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Validate VPS configuration
+        run: |
+          set -euo pipefail
+          missing=0
+          for name in VPS_HOST VPS_USER VPS_SSH_KEY APP_URL; do
+            if [ -z "${!name}" ]; then
+              echo "::error::Missing required VPS secret: ${name}"
+              missing=1
+            fi
+          done
+          test "$missing" -eq 0
+
+      - name: Deploy to VPS
+        uses: appleboy/ssh-action@v1.0.3
+        with:
+          host: ${{ env.VPS_HOST }}
+          username: ${{ env.VPS_USER }}
+          key: ${{ env.VPS_SSH_KEY }}
+          script: |
+            set -euo pipefail
+            cd /opt/myzubster-gateway
+            git fetch origin main
+            git reset --hard origin/main
+            npm ci --omit=dev
+            pm2 restart gateway
+
+      - name: Verify VPS deployment
+        run: |
+          set -euo pipefail
+          sleep 10
+          for endpoint in /api/health /api/status; do
+            url="${APP_URL%/}${endpoint}"
+            echo "Checking $url"
+            curl --fail --silent --show-error --max-time 20 "$url" >/dev/null
+          done
+
+  rollback-vps:
+    name: Roll back optional VPS
+    if: ${{ always() && github.event_name == 'workflow_dispatch' && inputs.deploy_vps == true && needs.deploy-vps.result == 'failure' }}
+    needs: deploy-vps
+    runs-on: ubuntu-latest
+    environment: production
+    env:
+      VPS_HOST: ${{ secrets.VPS_HOST }}
+      VPS_USER: ${{ secrets.VPS_USER }}
+      VPS_SSH_KEY: ${{ secrets.VPS_SSH_KEY }}
     steps:
       - name: Validate rollback configuration
-        env:
-          VPS_HOST: ${{ secrets.VPS_HOST }}
-          VPS_USER: ${{ secrets.VPS_USER }}
-          VPS_SSH_KEY: ${{ secrets.VPS_SSH_KEY }}
         run: |
           set -euo pipefail
           for name in VPS_HOST VPS_USER VPS_SSH_KEY; do
             if [ -z "${!name}" ]; then
-              echo "::error::Missing required rollback secret: ${name}"
+              echo "::error::Missing required VPS rollback secret: ${name}"
               exit 1
             fi
           done
 
-      - name: Rollback deployment
+      - name: Roll back VPS
         uses: appleboy/ssh-action@v1.0.3
         with:
-          host: ${{ secrets.VPS_HOST }}
-          username: ${{ secrets.VPS_USER }}
-          key: ${{ secrets.VPS_SSH_KEY }}
+          host: ${{ env.VPS_HOST }}
+          username: ${{ env.VPS_USER }}
+          key: ${{ env.VPS_SSH_KEY }}
           script: |
-            set -e
+            set -euo pipefail
             cd /opt/myzubster-gateway
             git reset --hard HEAD~1
             npm ci --omit=dev
             pm2 restart gateway
-
-      - name: Notify rollback
-        if: ${{ env.SLACK_WEBHOOK != '' }}
-        uses: slackapi/slack-github-action@v2.1.1
-        with:
-          webhook: ${{ env.SLACK_WEBHOOK }}
-          webhook-type: incoming-webhook
-          payload: |
-            {
-              "text": "🚨 Deploy FAILED — rollback executed on MyZubster Gateway"
-            }
-
-      - name: Slack rollback notification skipped
-        if: ${{ env.SLACK_WEBHOOK == '' }}
-        run: echo "Slack rollback notification skipped because SLACK_WEBHOOK is not configured."
