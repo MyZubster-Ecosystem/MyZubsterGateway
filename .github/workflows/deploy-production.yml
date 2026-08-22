@@ -9,6 +9,8 @@ jobs:
   deploy:
     runs-on: ubuntu-latest
     environment: production
+    env:
+      SLACK_WEBHOOK: ${{ secrets.SLACK_WEBHOOK }}
     steps:
       - uses: actions/checkout@v4
 
@@ -35,7 +37,7 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: '20'
-          cache: 'npm'
+          cache: npm
 
       - name: Install dependencies
         run: npm ci
@@ -55,8 +57,9 @@ jobs:
           script: |
             set -e
             cd /opt/myzubster-gateway
-            git pull origin main
-            npm ci --production
+            git fetch origin main
+            git reset --hard origin/main
+            npm ci --omit=dev
             pm2 restart gateway
 
       - name: Check deployed Gateway service
@@ -75,34 +78,31 @@ jobs:
           ZARGOX_URL: https://myzubster-gateway.vercel.app/api/zargox
         run: |
           set -euo pipefail
-          HTTP_CODE=$(curl -L -sS --max-time 15 -o /tmp/zargox-response -w "%{http_code}" "$ZARGOX_URL" || true)
+          response_file=$(mktemp)
+          http_code=$(curl -L -sS --max-time 15 -o "$response_file" -w '%{http_code}' "$ZARGOX_URL" || true)
           echo "Zargox endpoint: $ZARGOX_URL"
-          echo "HTTP status: $HTTP_CODE"
-          if [ "$HTTP_CODE" != "200" ]; then
-            echo "::error::Zargox public API returned HTTP $HTTP_CODE"
-            head -c 1000 /tmp/zargox-response 2>/dev/null || true
+          echo "HTTP status: $http_code"
+          if [ "$http_code" != "200" ]; then
+            echo "::error::Zargox public API returned HTTP $http_code"
+            head -c 1000 "$response_file" || true
             exit 1
           fi
-          grep -Eq '"ok"[[:space:]]*:[[:space:]]*true' /tmp/zargox-response || {
+          grep -Eq '"ok"[[:space:]]*:[[:space:]]*true' "$response_file" || {
             echo "::error::Zargox response does not report ok=true"
-            head -c 1000 /tmp/zargox-response 2>/dev/null || true
+            head -c 1000 "$response_file" || true
             exit 1
           }
-          grep -Eq '"configured"[[:space:]]*:[[:space:]]*true' /tmp/zargox-response || {
+          grep -Eq '"configured"[[:space:]]*:[[:space:]]*true' "$response_file" || {
             echo "::error::Zargox provider is not configured"
-            head -c 1000 /tmp/zargox-response 2>/dev/null || true
+            head -c 1000 "$response_file" || true
             exit 1
           }
-          echo "Public Zargox API is healthy and configured"
 
-      - name: Notify on Success
-        if: success() && env.SLACK_WEBHOOK != ''
+      - name: Notify on success
+        if: ${{ success() && env.SLACK_WEBHOOK != '' }}
         uses: slackapi/slack-github-action@v2.1.1
-        env:
-          SLACK_WEBHOOK: ${{ secrets.SLACK_WEBHOOK }}
-          SLACK_WEBHOOK_TYPE: INCOMING_WEBHOOK
         with:
-          webhook: ${{ secrets.SLACK_WEBHOOK }}
+          webhook: ${{ env.SLACK_WEBHOOK }}
           webhook-type: incoming-webhook
           payload: |
             {
@@ -110,16 +110,16 @@ jobs:
             }
 
       - name: Slack not configured
-        if: success() && env.SLACK_WEBHOOK == ''
-        env:
-          SLACK_WEBHOOK: ${{ secrets.SLACK_WEBHOOK }}
-        run: echo "Slack notification skipped: SLACK_WEBHOOK is not configured."
+        if: ${{ success() && env.SLACK_WEBHOOK == '' }}
+        run: echo "Slack notification skipped because SLACK_WEBHOOK is not configured."
 
   rollback:
     needs: deploy
-    if: failure()
+    if: ${{ failure() }}
     runs-on: ubuntu-latest
     environment: production
+    env:
+      SLACK_WEBHOOK: ${{ secrets.SLACK_WEBHOOK }}
     steps:
       - name: Validate rollback configuration
         env:
@@ -139,7 +139,7 @@ jobs:
             exit 1
           fi
 
-      - name: Rollback Deployment
+      - name: Rollback deployment
         uses: appleboy/ssh-action@v1.0.3
         with:
           host: ${{ secrets.VPS_HOST }}
@@ -149,23 +149,20 @@ jobs:
             set -e
             cd /opt/myzubster-gateway
             git reset --hard HEAD~1
+            npm ci --omit=dev
             pm2 restart gateway
 
-      - name: Notify Rollback
-        if: env.SLACK_WEBHOOK != ''
+      - name: Notify rollback
+        if: ${{ env.SLACK_WEBHOOK != '' }}
         uses: slackapi/slack-github-action@v2.1.1
-        env:
-          SLACK_WEBHOOK: ${{ secrets.SLACK_WEBHOOK }}
         with:
-          webhook: ${{ secrets.SLACK_WEBHOOK }}
+          webhook: ${{ env.SLACK_WEBHOOK }}
           webhook-type: incoming-webhook
           payload: |
             {
-              "text": "🚨 Deploy FAILED — Rollback executed on MyZubster Gateway"
+              "text": "🚨 Deploy FAILED — rollback executed on MyZubster Gateway"
             }
 
       - name: Slack rollback notification skipped
-        if: env.SLACK_WEBHOOK == ''
-        env:
-          SLACK_WEBHOOK: ${{ secrets.SLACK_WEBHOOK }}
-        run: echo "Slack notification skipped: SLACK_WEBHOOK is not configured."
+        if: ${{ env.SLACK_WEBHOOK == '' }}
+        run: echo "Slack rollback notification skipped because SLACK_WEBHOOK is not configured."
