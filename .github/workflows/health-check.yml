@@ -7,38 +7,17 @@ on:
 
 env:
   CURL_TIMEOUT: 15
-  FALLBACK_APP_URL: https://myzubster-gateway.vercel.app
+  APP_URL: https://myzubster-gateway.vercel.app
 
 jobs:
   health-check:
     runs-on: ubuntu-latest
     environment: production
     steps:
-      - name: Resolve production base URL
-        env:
-          APP_URL: ${{ secrets.APP_URL }}
-        run: |
-          set -euo pipefail
-          PRIMARY_URL="${APP_URL:-}"
-          BASE_URL="$PRIMARY_URL"
-
-          if [ -n "$PRIMARY_URL" ]; then
-            HOST=$(printf '%s' "$PRIMARY_URL" | sed -E 's#^https?://##; s#/.*$##')
-            if ! getent hosts "$HOST" >/dev/null 2>&1; then
-              echo "Primary APP_URL host does not resolve: $HOST"
-              BASE_URL="$FALLBACK_APP_URL"
-            fi
-          else
-            echo "APP_URL secret is not configured; using maintained Vercel fallback."
-            BASE_URL="$FALLBACK_APP_URL"
-          fi
-
-          echo "BASE_URL=${BASE_URL%/}" >> "$GITHUB_ENV"
-
       - name: Check API Health
         run: |
           set -euo pipefail
-          HEALTH_URL="${BASE_URL%/}/api/health"
+          HEALTH_URL="${APP_URL%/}/api/health"
           HTTP_CODE=$(curl -L -sS --max-time "$CURL_TIMEOUT" -o /tmp/health-response -w "%{http_code}" "$HEALTH_URL" || true)
           echo "Health endpoint: $HEALTH_URL"
           echo "HTTP status: $HTTP_CODE"
@@ -54,7 +33,7 @@ jobs:
         run: |
           FAILED=0
           for endpoint in "/api/health" "/api/status"; do
-            CODE=$(curl -L -sS --max-time "$CURL_TIMEOUT" -o /dev/null -w "%{http_code}" "${BASE_URL%/}$endpoint" || true)
+            CODE=$(curl -L -sS --max-time "$CURL_TIMEOUT" -o /dev/null -w "%{http_code}" "${APP_URL%/}$endpoint" || true)
             echo "$endpoint: HTTP $CODE"
             if [ "$CODE" != "200" ]; then
               FAILED=1
