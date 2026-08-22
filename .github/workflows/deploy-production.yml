@@ -9,6 +9,8 @@ jobs:
   deploy:
     runs-on: ubuntu-latest
     environment: production
+    env:
+      SLACK_WEBHOOK: ${{ secrets.SLACK_WEBHOOK }}
     steps:
       - uses: actions/checkout@v4
 
@@ -56,7 +58,7 @@ jobs:
             set -e
             cd /opt/myzubster-gateway
             git pull origin main
-            npm ci --production
+            npm ci --omit=dev
             pm2 restart gateway
 
       - name: Health Check
@@ -71,13 +73,10 @@ jobs:
           done
 
       - name: Notify on Success
-        if: success() && env.SLACK_WEBHOOK != ''
+        if: ${{ success() && env.SLACK_WEBHOOK != '' }}
         uses: slackapi/slack-github-action@v2.1.1
-        env:
-          SLACK_WEBHOOK: ${{ secrets.SLACK_WEBHOOK }}
-          SLACK_WEBHOOK_TYPE: INCOMING_WEBHOOK
         with:
-          webhook: ${{ secrets.SLACK_WEBHOOK }}
+          webhook: ${{ env.SLACK_WEBHOOK }}
           webhook-type: incoming-webhook
           payload: |
             {
@@ -85,16 +84,16 @@ jobs:
             }
 
       - name: Slack not configured
-        if: success() && env.SLACK_WEBHOOK == ''
-        env:
-          SLACK_WEBHOOK: ${{ secrets.SLACK_WEBHOOK }}
+        if: ${{ success() && env.SLACK_WEBHOOK == '' }}
         run: echo "Slack notification skipped: SLACK_WEBHOOK is not configured."
 
   rollback:
     needs: deploy
-    if: failure()
+    if: ${{ failure() }}
     runs-on: ubuntu-latest
     environment: production
+    env:
+      SLACK_WEBHOOK: ${{ secrets.SLACK_WEBHOOK }}
     steps:
       - name: Validate rollback configuration
         env:
@@ -127,12 +126,10 @@ jobs:
             pm2 restart gateway
 
       - name: Notify Rollback
-        if: env.SLACK_WEBHOOK != ''
+        if: ${{ env.SLACK_WEBHOOK != '' }}
         uses: slackapi/slack-github-action@v2.1.1
-        env:
-          SLACK_WEBHOOK: ${{ secrets.SLACK_WEBHOOK }}
         with:
-          webhook: ${{ secrets.SLACK_WEBHOOK }}
+          webhook: ${{ env.SLACK_WEBHOOK }}
           webhook-type: incoming-webhook
           payload: |
             {
@@ -140,7 +137,5 @@ jobs:
             }
 
       - name: Slack rollback notification skipped
-        if: env.SLACK_WEBHOOK == ''
-        env:
-          SLACK_WEBHOOK: ${{ secrets.SLACK_WEBHOOK }}
+        if: ${{ env.SLACK_WEBHOOK == '' }}
         run: echo "Slack notification skipped: SLACK_WEBHOOK is not configured."
