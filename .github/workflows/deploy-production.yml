@@ -59,16 +59,41 @@ jobs:
             npm ci --production
             pm2 restart gateway
 
-      - name: Health Check
+      - name: Check deployed Gateway service
         env:
           APP_URL: ${{ secrets.APP_URL }}
         run: |
           set -euo pipefail
           sleep 10
           for endpoint in /api/health /api/status; do
-            echo "Checking ${APP_URL}${endpoint}"
-            curl --fail --silent --show-error --max-time 15 "${APP_URL}${endpoint}" >/dev/null
+            echo "Checking ${APP_URL%/}${endpoint}"
+            curl --fail --silent --show-error --max-time 15 "${APP_URL%/}${endpoint}" >/dev/null
           done
+
+      - name: Check public Zargox API
+        env:
+          ZARGOX_URL: https://myzubster-gateway.vercel.app/api/zargox
+        run: |
+          set -euo pipefail
+          HTTP_CODE=$(curl -L -sS --max-time 15 -o /tmp/zargox-response -w "%{http_code}" "$ZARGOX_URL" || true)
+          echo "Zargox endpoint: $ZARGOX_URL"
+          echo "HTTP status: $HTTP_CODE"
+          if [ "$HTTP_CODE" != "200" ]; then
+            echo "::error::Zargox public API returned HTTP $HTTP_CODE"
+            head -c 1000 /tmp/zargox-response 2>/dev/null || true
+            exit 1
+          fi
+          grep -Eq '"ok"[[:space:]]*:[[:space:]]*true' /tmp/zargox-response || {
+            echo "::error::Zargox response does not report ok=true"
+            head -c 1000 /tmp/zargox-response 2>/dev/null || true
+            exit 1
+          }
+          grep -Eq '"configured"[[:space:]]*:[[:space:]]*true' /tmp/zargox-response || {
+            echo "::error::Zargox provider is not configured"
+            head -c 1000 /tmp/zargox-response 2>/dev/null || true
+            exit 1
+          }
+          echo "Public Zargox API is healthy and configured"
 
       - name: Notify on Success
         if: success() && env.SLACK_WEBHOOK != ''
