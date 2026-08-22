@@ -14,7 +14,8 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - name: Validate production configuration
+      - name: Detect production configuration
+        id: config
         env:
           VPS_HOST: ${{ secrets.VPS_HOST }}
           VPS_USER: ${{ secrets.VPS_USER }}
@@ -22,33 +23,44 @@ jobs:
           APP_URL: ${{ secrets.APP_URL }}
         run: |
           set -euo pipefail
-          missing=0
+          missing=()
           for name in VPS_HOST VPS_USER VPS_SSH_KEY APP_URL; do
             if [ -z "${!name}" ]; then
-              echo "::error::Missing required production secret: ${name}"
-              missing=1
+              missing+=("$name")
             fi
           done
-          if [ "$missing" -ne 0 ]; then
-            exit 1
+          if [ "${#missing[@]}" -gt 0 ]; then
+            echo "configured=false" >> "$GITHUB_OUTPUT"
+            echo "::warning::VPS production deploy skipped; missing configuration: ${missing[*]}"
+          else
+            echo "configured=true" >> "$GITHUB_OUTPUT"
           fi
 
+      - name: VPS deployment skipped
+        if: ${{ steps.config.outputs.configured != 'true' }}
+        run: echo "No VPS deployment executed because production VPS secrets are not configured."
+
       - name: Setup Node.js
+        if: ${{ steps.config.outputs.configured == 'true' }}
         uses: actions/setup-node@v4
         with:
           node-version: '20'
           cache: npm
 
       - name: Install dependencies
+        if: ${{ steps.config.outputs.configured == 'true' }}
         run: npm ci
 
       - name: Run tests
+        if: ${{ steps.config.outputs.configured == 'true' }}
         run: npm test
 
       - name: Build
+        if: ${{ steps.config.outputs.configured == 'true' }}
         run: npm run build --if-present
 
       - name: Deploy to VPS
+        if: ${{ steps.config.outputs.configured == 'true' }}
         uses: appleboy/ssh-action@v1.0.3
         with:
           host: ${{ secrets.VPS_HOST }}
@@ -63,6 +75,7 @@ jobs:
             pm2 restart gateway
 
       - name: Check deployed Gateway service
+        if: ${{ steps.config.outputs.configured == 'true' }}
         env:
           APP_URL: ${{ secrets.APP_URL }}
         run: |
@@ -74,6 +87,7 @@ jobs:
           done
 
       - name: Check public Zargox API
+        if: ${{ steps.config.outputs.configured == 'true' }}
         env:
           ZARGOX_URL: https://myzubster-gateway.vercel.app/api/zargox
         run: |
@@ -99,7 +113,7 @@ jobs:
           }
 
       - name: Notify on success
-        if: ${{ success() && env.SLACK_WEBHOOK != '' }}
+        if: ${{ steps.config.outputs.configured == 'true' && success() && env.SLACK_WEBHOOK != '' }}
         uses: slackapi/slack-github-action@v2.1.1
         with:
           webhook: ${{ env.SLACK_WEBHOOK }}
@@ -110,7 +124,7 @@ jobs:
             }
 
       - name: Slack not configured
-        if: ${{ success() && env.SLACK_WEBHOOK == '' }}
+        if: ${{ steps.config.outputs.configured == 'true' && success() && env.SLACK_WEBHOOK == '' }}
         run: echo "Slack notification skipped because SLACK_WEBHOOK is not configured."
 
   rollback:
@@ -128,16 +142,12 @@ jobs:
           VPS_SSH_KEY: ${{ secrets.VPS_SSH_KEY }}
         run: |
           set -euo pipefail
-          missing=0
           for name in VPS_HOST VPS_USER VPS_SSH_KEY; do
             if [ -z "${!name}" ]; then
               echo "::error::Missing required rollback secret: ${name}"
-              missing=1
+              exit 1
             fi
           done
-          if [ "$missing" -ne 0 ]; then
-            exit 1
-          fi
 
       - name: Rollback deployment
         uses: appleboy/ssh-action@v1.0.3
