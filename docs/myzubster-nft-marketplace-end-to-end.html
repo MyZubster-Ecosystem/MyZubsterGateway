@@ -1,0 +1,38 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>MyZubster NFT Marketplace — End-to-End</title>
+<style>
+body{margin:0;background:#080b12;color:#f5f7fb;font-family:Inter,ui-sans-serif,system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif}.wrap{padding:clamp(20px,4vw,52px);min-height:100vh}.hero{max-width:1180px;margin:auto}.eyebrow{font-size:12px;letter-spacing:.18em;text-transform:uppercase;opacity:.6;font-weight:800}h1{font-size:clamp(34px,6vw,72px);line-height:.98;margin:14px 0 18px;max-width:900px;letter-spacing:-.045em}.lead{font-size:clamp(16px,2vw,21px);line-height:1.55;max-width:800px;opacity:.72}.badge{display:inline-flex;align-items:center;gap:9px;margin-top:22px;padding:10px 14px;border:1px solid #303848;border-radius:999px;font-weight:750;font-size:13px;background:#111722}.dot{width:9px;height:9px;border-radius:50%;background:#21c77a;box-shadow:0 0 0 5px rgba(33,199,122,.12)}.flow{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:12px;margin-top:48px;align-items:stretch}.step{position:relative;padding:20px;border-radius:20px;border:1px solid #293140;background:#10151e;min-width:0}.num{font-size:11px;opacity:.5;font-weight:900;letter-spacing:.12em}.step h2{font-size:18px;margin:22px 0 8px}.step p{font-size:13px;line-height:1.5;opacity:.65;margin:0}.icon{font-size:27px;margin-top:15px}.arrow{position:absolute;right:-11px;top:50%;transform:translateY(-50%);z-index:3;width:20px;height:20px;border-radius:50%;display:grid;place-items:center;background:#eef2f8;color:#11151c;font-size:11px}.step:last-child .arrow{display:none}.details{display:grid;grid-template-columns:1.2fr .8fr;gap:16px;margin-top:16px}.panel{padding:24px;border-radius:22px;border:1px solid #293140;background:#10151e}.panel h3{margin:0 0 18px;font-size:14px;letter-spacing:.06em;text-transform:uppercase;opacity:.55}.row{display:flex;justify-content:space-between;gap:20px;padding:11px 0;border-bottom:1px solid #202734;font-size:14px}.row:last-child{border-bottom:0}.row span:first-child{opacity:.58}.row strong{text-align:right;overflow-wrap:anywhere}.success{display:flex;flex-direction:column;justify-content:center;align-items:flex-start;background:linear-gradient(145deg,rgba(33,199,122,.13),rgba(33,199,122,.02))}.check{font-size:42px;margin-bottom:16px}.success b{font-size:25px;letter-spacing:-.02em}.success p{opacity:.65;line-height:1.55;margin-bottom:0}.hash{font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:11px}.footer{display:flex;flex-wrap:wrap;gap:8px;margin-top:16px}.chip{padding:7px 10px;border-radius:9px;font-size:11px;font-weight:750;background:#171e29}@media(max-width:850px){.flow{grid-template-columns:1fr 1fr}.arrow{display:none}.details{grid-template-columns:1fr}}@media(max-width:500px){.flow{grid-template-columns:1fr}.row{flex-direction:column;gap:4px}.row strong{text-align:left}}
+</style>
+</head>
+<body>
+<div class="wrap"><div class="hero">
+<div class="eyebrow">MyZubster Ecosystem · Ethereum Sepolia</div>
+<h1>NFT marketplace.<br>Verified end-to-end.</h1>
+<div class="lead">A Character NFT was minted, listed for MYZ, purchased by a second verified user, transferred on-chain, and reconciled back into the MyZubster backend.</div>
+<div class="badge"><span class="dot"></span> End-to-end test passed · verifiedOnChain = true</div>
+<div class="flow">
+<div class="step"><div class="num">01</div><div class="icon">👽</div><h2>Mint</h2><p>Genesis Character #1 minted as ERC-721 on Sepolia.</p><span class="arrow">→</span></div>
+<div class="step"><div class="num">02</div><div class="icon">🏷️</div><h2>List</h2><p>Seller publishes the Character NFT for 10 MYZ.</p><span class="arrow">→</span></div>
+<div class="step"><div class="num">03</div><div class="icon">🪙</div><h2>Pay</h2><p>Verified buyer transfers 10 MYZ to the seller.</p><span class="arrow">→</span></div>
+<div class="step"><div class="num">04</div><div class="icon">↗️</div><h2>Transfer</h2><p>ERC-721 token #1 moves from seller wallet to buyer wallet.</p><span class="arrow">→</span></div>
+<div class="step"><div class="num">05</div><div class="icon">✓</div><h2>Verify</h2><p>Backend validates both transactions and closes the sale.</p></div>
+</div>
+<div class="details">
+<div class="panel"><h3>Validated transaction</h3>
+<div class="row"><span>Network</span><strong>Ethereum Sepolia · 11155111</strong></div>
+<div class="row"><span>Asset</span><strong>MyZubster Genesis Character #1</strong></div>
+<div class="row"><span>Token ID</span><strong>#1</strong></div>
+<div class="row"><span>Sale price</span><strong>10 MYZ</strong></div>
+<div class="row"><span>Payment</span><strong class="hash">0x9cdfe2…a52c2</strong></div>
+<div class="row"><span>NFT transfer</span><strong class="hash">0x8d4a26…b1cdd</strong></div>
+<div class="row"><span>New owner</span><strong class="hash">0x91b7e4…D536C</strong></div>
+</div>
+<div class="panel success"><div class="check">✅</div><b>SALE COMPLETED</b><p>Payment verified. NFT ownership verified. Marketplace listing marked sold. Backend asset ownership synchronized with the blockchain.</p><div class="footer"><span class="chip">ERC-721</span><span class="chip">MYZ ERC-20</span><span class="chip">Wallet signatures</span><span class="chip">On-chain verification</span></div></div>
+</div>
+</div></div>
+</body>
+</html>
