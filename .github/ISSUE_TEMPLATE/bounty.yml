@@ -1,80 +1,99 @@
-name: 🏆 Bounty Issue
-description: Proponi un nuovo bounty pagato in MYZ o XMR
-title: "[BOUNTY] "
+name: Bounty Issue
+description: Propose verifiable work under the MyZubster bounty policy
+title: "Bounty - "
 labels: ["bounty", "help wanted"]
 body:
   - type: markdown
     attributes:
       value: |
-        ## 🏆 Nuova Bounty Issue
-        
-        Scegli la valuta per la ricompensa:
-        - **MYZ** (token Tari) → **illimitato**, puoi aprirne quante vuoi
-        - **XMR** (Monero) → **massimo 1 al giorno** per utente
+        ## Bounty proposal
+
+        A reward amount is not proof of funding or settlement. MYZ is an
+        internal reward/accounting unit unless a separately verified external
+        rail is documented.
 
   - type: dropdown
     id: currency
     attributes:
-      label: "💱 Valuta della ricompensa"
-      description: "Seleziona la valuta in cui verrà pagato il bounty"
+      label: "Reward asset or accounting unit"
+      description: "Select the proposed reward unit"
       options:
-        - "MYZ (illimitato)"
-        - "XMR (1 al giorno)"
+        - "MYZ (internal accounting)"
+        - "XMR"
+        - "Other / none"
     validations:
       required: true
 
   - type: input
     id: title
     attributes:
-      label: "📌 Titolo"
-      placeholder: "es. Aggiungere supporto per wallet X"
+      label: "Objective"
+      placeholder: "Describe the verifiable outcome"
     validations:
       required: true
 
   - type: textarea
     id: description
     attributes:
-      label: "📋 Descrizione"
-      placeholder: "Spiega cosa deve essere fatto..."
+      label: "Scope and deliverable"
+      placeholder: "Describe what must be delivered and what is out of scope"
     validations:
       required: true
 
   - type: input
     id: reward
     attributes:
-      label: "💰 Ricompensa"
-      placeholder: "es. 80 (MYZ) o 0.1 (XMR)"
+      label: "Proposed reward amount"
+      placeholder: "For example: 80 MYZ or 0.1 XMR"
     validations:
       required: true
 
   - type: textarea
     id: acceptance
     attributes:
-      label: "✅ Criteri di accettazione"
-      placeholder: "- [ ] Criterio 1\n- [ ] Criterio 2"
+      label: "Acceptance criteria"
+      placeholder: "- [ ] Criterion 1\n- [ ] Criterion 2"
+    validations:
+      required: true
+
+  - type: dropdown
+    id: funding
+    attributes:
+      label: "Funding state"
+      options:
+        - "PROPOSED"
+        - "VALIDATED"
+        - "APPROVED"
+        - "FUNDED"
     validations:
       required: true
 
   - type: textarea
-    id: technical
+    id: evidence
     attributes:
-      label: "🛠️ Dettagli tecnici"
-      placeholder: "Informazioni utili per chi lavora sul bounty"
+      label: "Verification evidence"
+      description: "Specify tests, reports, screenshots, hashes, or transaction evidence required"
+    validations:
+      required: true
+
+  - type: textarea
+    id: settlement
+    attributes:
+      label: "Settlement conditions"
+      description: "Define the rail, verifier, and evidence required before PAID may be recorded"
+    validations:
+      required: true
 
   - type: markdown
     attributes:
       value: |
         ---
-        📌 **Regole**
-        - **MYZ**: illimitato
-        - **XMR**: max 1 al giorno per utente
-        - **Un bounty alla volta** per contributor
-        - **PR entro 48h**, altrimenti l'issue viene riaperta
-        - Pagamento via gateway dopo il merge
+        **Settlement rule**
 
-  - type: markdown
-    attributes:
-      value: |
-        ---
-        💡 **Nota:** Le issue free hanno un reward minimo di 1 MYZ.  
-        Se vuoi una ricompensa più alta, usa questo template **Bounty Issue** (senza limiti).
+        Issue closure, assignment, PR approval, merge, a gateway response,
+        screenshot, simulation, or internal ledger entry is not external
+        payment proof. `PAID` requires independently verifiable settlement
+        evidence.
+
+        Canonical policy: https://github.com/MyZubster-Ecosystem/myzubster/blob/main/BOUNTIES.md
+        Canonical ledger: https://github.com/MyZubster-Ecosystem/myzubster/blob/main/REWARDS_LEDGER.md
