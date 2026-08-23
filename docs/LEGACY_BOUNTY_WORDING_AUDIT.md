@@ -14,7 +14,9 @@ Historical amounts are retained only as the amounts originally advertised.
 - No issue in this audit may be treated as `PAID` without independently
   verifiable settlement evidence.
 
-The canonical rules are [BOUNTIES.md](../BOUNTIES.md) and the ecosystem
+The canonical rules are the ecosystem
+[BOUNTIES.md](https://github.com/MyZubster-Ecosystem/myzubster/blob/main/BOUNTIES.md)
+and
 [rewards ledger](https://github.com/MyZubster-Ecosystem/myzubster/blob/main/REWARDS_LEDGER.md).
 An issue, PR, merge, closure, gateway response, screenshot, simulated
 transaction, or internal ledger entry is not external payment proof.

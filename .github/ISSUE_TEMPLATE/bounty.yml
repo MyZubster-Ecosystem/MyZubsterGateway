@@ -1,7 +1,7 @@
 name: Bounty Issue
 description: Propose verifiable work under the MyZubster bounty policy
 title: "Bounty - "
-labels: ["type:bounty", "status:proposed", "evidence:required", "review:manual"]
+labels: ["bounty", "help wanted"]
 body:
   - type: markdown
     attributes:
