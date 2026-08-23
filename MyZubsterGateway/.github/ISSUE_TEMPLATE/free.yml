@@ -44,5 +44,6 @@ body:
         ✅ **Regole**
         - Ricompensa minima: **1 MYZ**
         - Nessun limite di issue al giorno
-        - Pagamento dopo il merge della PR (se risolta)
+        - ⚠️ Il merge della PR **non è mai prova di pagamento**: dopo la review verificata la ricompensa viene registrata come `REWARD_RECORDED`; il regolamento esterno richiede evidenza indipendente
         - Per ricompense più alte → usa [Bounty Issue](https://github.com/MyZubster-Ecosystem/MyZubsterGateway/issues/new?template=bounty.yml)
+        - 📖 Regole: [BOUNTIES.md](https://github.com/MyZubster-Ecosystem/MyZubsterGateway/blob/main/BOUNTIES.md) · Ledger: [REWARDS_LEDGER.md](https://github.com/MyZubster-Ecosystem/myzubster/blob/main/REWARDS_LEDGER.md)

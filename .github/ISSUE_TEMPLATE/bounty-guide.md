@@ -34,16 +34,21 @@ Ogni bounty ha una lista di requisiti da soddisfare. In generale:
 
 ---
 
-## 💰 Pagamento
+## 💰 Ricompensa e regolamento
 
-Le ricompense sono pagate in **$MYZ** via gateway:
+Il merge o la chiusura dell'issue **non è mai prova di pagamento**. Il ciclo di vita di un bounty segue il modello canonico:
 
-- **Dopo il merge** della PR nel branch `main`
-- **Entro 48 ore** dal merge
-- **All'indirizzo** Tari wallet specificato nella PR
+```
+issue/claim → implementazione → review → VERIFIED / REJECTED
+→ REWARD_RECORDED (se applicabile)
+→ SETTLEMENT_PENDING / SETTLED (solo con evidenza indipendente)
+```
 
-**Esempio di pagamento:**
-```bash
-curl -X POST http://localhost:3001/api/rewards/trigger \
-  -H "Content-Type: application/json" \
-  -d '{"userId":"GITHUB_USERNAME","amount":80,"reason":"Completed bounty #234 - Dashboard Rewards","source":"github_pr"}'
+- Dopo la review verificata, la ricompensa viene **registrata come reward record** sul ledger interno MYZ (`REWARD_RECORDED`).
+- Il **regolamento esterno** (`SETTLED`) richiede un'evidenza di transazione indipendentemente verificabile (tx hash su explorer). Senza evidenza lo stato resta `SETTLEMENT_PENDING` o viene classificato `UNSETTLED`.
+- Attualmente è in vigore un **freeze temporaneo dei payout (P0)**: nessun payout è dovuto finché non sono soddisfatti sia l'accettazione tecnica sia la verifica del regolamento.
+
+**Riferimenti:**
+- Regole bounty: [BOUNTIES.md](https://github.com/MyZubster-Ecosystem/MyZubsterGateway/blob/main/BOUNTIES.md)
+- Policy pagamenti: [docs/BOUNTY_PAYMENT_POLICY.md](https://github.com/MyZubster-Ecosystem/MyZubsterGateway/blob/main/docs/BOUNTY_PAYMENT_POLICY.md)
+- Ledger canonico: [REWARDS_LEDGER.md](https://github.com/MyZubster-Ecosystem/myzubster/blob/main/REWARDS_LEDGER.md)

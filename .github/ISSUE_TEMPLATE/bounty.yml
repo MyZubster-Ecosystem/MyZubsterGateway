@@ -47,6 +47,28 @@ body:
     validations:
       required: true
 
+  - type: input
+    id: rail
+    attributes:
+      label: "🛤️ Rail di regolamento"
+      description: "Canale con cui l'eventuale regolamento esterno sarà tracciato e verificato"
+      placeholder: "es. XMR mainnet / MYZ ledger interno / N/A"
+    validations:
+      required: true
+
+  - type: dropdown
+    id: funding
+    attributes:
+      label: "🏦 Stato di finanziamento"
+      description: "Stato attuale del fondo destinato a questo bounty"
+      options:
+        - "PROPOSED"
+        - "VALIDATED"
+        - "APPROVED"
+        - "FUNDED"
+    validations:
+      required: true
+
   - type: textarea
     id: acceptance
     attributes:
@@ -54,6 +76,22 @@ body:
       placeholder: "- [ ] Criterio 1\n- [ ] Criterio 2"
     validations:
       required: true
+
+  - type: textarea
+    id: verification
+    attributes:
+      label: "🔍 Verifica"
+      description: "Come il lavoro completato verrà verificato in modo riproducibile"
+      placeholder: "es. test automatizzati, benchmark, evidenze SHA-256/IPFS"
+    validations:
+      required: true
+
+  - type: textarea
+    id: settlement
+    attributes:
+      label: "⚖️ Condizioni di regolamento"
+      description: "Cosa serve perché il regolamento sia considerato completato (il merge da solo non è mai prova di pagamento)"
+      placeholder: "es. tx hash verificabile su explorer; senza evidenza lo stato resta SETTLEMENT_PENDING/UNSETTLED"
 
   - type: textarea
     id: technical
@@ -70,7 +108,8 @@ body:
         - **XMR**: max 1 al giorno per utente
         - **Un bounty alla volta** per contributor
         - **PR entro 48h**, altrimenti l'issue viene riaperta
-        - Pagamento via gateway dopo il merge
+        - ⚠️ Il merge o la chiusura dell'issue **non è mai prova di pagamento**. Flusso canonico: revisione → VERIFIED → REWARD_RECORDED → SETTLEMENT_PENDING → SETTLED (solo con evidenza indipendente)
+        - 📖 Regole: [BOUNTIES.md](https://github.com/MyZubster-Ecosystem/MyZubsterGateway/blob/main/BOUNTIES.md) · Ledger: [REWARDS_LEDGER.md](https://github.com/MyZubster-Ecosystem/myzubster/blob/main/REWARDS_LEDGER.md)
 
   - type: markdown
     attributes:
