@@ -66,6 +66,22 @@ Start using the current package scripts, typically:
 npm start
 ```
 
+## Onion multi-host discovery
+
+The optional Onion discovery profile runs a dedicated Tor client probe, checks every public node in `config/onion-nodes.json`, and writes a health snapshot to a Docker volume shared read-only with the Gateway. The Gateway exposes the resulting priority/health selection at:
+
+```text
+GET /api/onion/nodes
+```
+
+Start the probe together with the Gateway using:
+
+```bash
+docker compose --profile onion-discovery up -d onion-discovery-probe gateway
+```
+
+The probe uses SOCKS hostname resolution through Tor and writes only public health metadata. Hidden-service private keys are not copied or shared between hosts. Missing or stale health data fails closed, so an unverified node is never selected automatically.
+
 ## Tests
 
 ```bash
@@ -101,6 +117,7 @@ Main areas may include:
 | Area | Examples |
 |---|---|
 | Health | `/api/health` |
+| Onion discovery | `/api/onion/nodes` |
 | Authentication | `/api/auth/*` |
 | Users | `/api/users/*` |
 | Orders | `/api/orders/*` |
