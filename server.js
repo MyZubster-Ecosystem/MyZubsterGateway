@@ -72,6 +72,7 @@ safeMount('/webhook', './routes/webhookRoutes', 'Webhook');
 safeMount('/api/benzina-xmr', './routes/benzinaXmr', 'Benzina XMR');
 safeMount('/api/tari', './routes/tari', 'Tari');
 safeMount('/api/alien', './routes/alienConnectionRoutes', 'Zorgax connection');
+safeMount('/api/onion', './routes/onionDiscoveryRoutes', 'Onion discovery');
 safeMount('/api/colonization', './routes/colonizationRoutes', 'Colonization');
 safeMount('/api/universe', './routes/universeRoutes', 'Universe');
 safeMount('/api/tv', './routes/tvRoutes', 'TV');
