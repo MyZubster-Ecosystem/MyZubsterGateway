@@ -1,0 +1,61 @@
+services:
+  tor-primary:
+    profiles: ["tor"]
+    build: ./deploy/tor
+    restart: unless-stopped
+    depends_on:
+      gateway:
+        condition: service_healthy
+    environment:
+      TOR_INSTANCE_ID: primary
+    volumes:
+      - tor_primary_data:/var/lib/tor
+      - tor_status:/run/myzubster-tor/status
+    networks: [myzubster-network]
+    healthcheck:
+      test: ["CMD", "/usr/local/bin/tor-healthcheck"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  tor-secondary:
+    profiles: ["tor"]
+    build: ./deploy/tor
+    restart: unless-stopped
+    depends_on:
+      gateway:
+        condition: service_healthy
+    environment:
+      TOR_INSTANCE_ID: secondary
+    volumes:
+      - tor_secondary_data:/var/lib/tor
+      - tor_status:/run/myzubster-tor/status
+    networks: [myzubster-network]
+    healthcheck:
+      test: ["CMD", "/usr/local/bin/tor-healthcheck"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  tor-metadata:
+    profiles: ["tor"]
+    image: node:20-bookworm-slim
+    restart: unless-stopped
+    working_dir: /app
+    command: ["node", "tor/metadataServer.js"]
+    environment:
+      TOR_METADATA_HOST: 0.0.0.0
+      TOR_METADATA_PORT: 9080
+      TOR_INSTANCES_CONFIG: /run/myzubster-tor/instances.json
+    volumes:
+      - ./:/app:ro
+      - ./deploy/tor/instances.json:/run/myzubster-tor/instances.json:ro
+      - tor_status:/run/myzubster-tor/status:ro
+    ports:
+      - "127.0.0.1:${TOR_METADATA_PORT:-9080}:9080"
+    networks: [myzubster-network]
+
+volumes:
+  tor_primary_data:
+  tor_secondary_data:
+  tor_status:

@@ -1,0 +1,20 @@
+{
+  "enabled": false,
+  "directHttpsUrl": "https://gateway.example.invalid",
+  "instances": [
+    {
+      "id": "primary",
+      "publicUrl": "http://primaryexampleaddress.onion",
+      "region": "operator-zone-a",
+      "priority": 10,
+      "statusFile": "/run/myzubster-tor/status/primary.json"
+    },
+    {
+      "id": "secondary",
+      "publicUrl": "http://secondaryexampleaddress.onion",
+      "region": "operator-zone-b",
+      "priority": 20,
+      "statusFile": "/run/myzubster-tor/status/secondary.json"
+    }
+  ]
+}
