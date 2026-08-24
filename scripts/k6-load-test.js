@@ -33,13 +33,16 @@ const profiles = {
 const selectedProfile = profiles[PROFILE] || profiles.load;
 
 export const options = {
-  ...selectedProfile,
   thresholds: {
     http_req_failed: ['rate<0.01'],
     http_req_duration: ['p(95)<1000'],
     checks: ['rate>0.99'],
   },
 };
+
+if (selectedProfile.vus !== undefined) options.vus = selectedProfile.vus;
+if (selectedProfile.duration !== undefined) options.duration = selectedProfile.duration;
+if (selectedProfile.stages !== undefined) options.stages = selectedProfile.stages;
 
 export default function () {
   const response = http.get(`${BASE_URL}/api/health`, {
