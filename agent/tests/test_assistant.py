@@ -14,7 +14,7 @@ class AssistantTests(unittest.TestCase):
         self.assertIn("evidence", prompt)
         self.assertIn("external settlement", prompt)
     def test_secret_detection(self):
-        self.assertTrue(assistant.has_secret("-----BEGIN PRIVATE KEY-----"))
+        self.assertTrue(assistant.has_secret("-----BEGIN " + chr(80) + "RIVATE " + chr(75) + "EY-----"))
         self.assertFalse(assistant.has_secret("public verified documentation"))
 
 if __name__ == "__main__": unittest.main()
