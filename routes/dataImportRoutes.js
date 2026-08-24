@@ -231,30 +231,23 @@ router.post('/commit', requireImportKey, async (req, res, next) => {
       importedBy,
     }));
 
-    const session = await mongoose.startSession();
     try {
-      await session.withTransaction(async () => {
-        await EnvironmentalDataRecord.insertMany(documents, { session });
-        await DataImportAudit.create(
-          [
-            {
-              importBatchId,
-              digest: normalized.digest,
-              datasetType: normalized.datasetType,
-              source: normalized.source,
-              format: normalized.format,
-              rowCount: normalized.records.length,
-              schemaFields: normalized.schemaFields,
-              warnings: normalized.warnings,
-              importedBy,
-              status: 'committed',
-            },
-          ],
-          { session }
-        );
+      await EnvironmentalDataRecord.insertMany(documents, { ordered: true });
+      await DataImportAudit.create({
+        importBatchId,
+        digest: normalized.digest,
+        datasetType: normalized.datasetType,
+        source: normalized.source,
+        format: normalized.format,
+        rowCount: normalized.records.length,
+        schemaFields: normalized.schemaFields,
+        warnings: normalized.warnings,
+        importedBy,
+        status: 'committed',
       });
-    } finally {
-      await session.endSession();
+    } catch (writeError) {
+      await EnvironmentalDataRecord.deleteMany({ importBatchId }).catch(() => {});
+      throw writeError;
     }
 
     return res.status(201).json({
