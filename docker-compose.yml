@@ -42,6 +42,10 @@ services:
       CORS_ORIGIN: ${CORS_ORIGIN:-http://localhost:3000}
       TARI_WALLET_URL: ${TARI_WALLET_URL:-http://tari-wallet:12000}
       MONERO_WALLET_URL: ${MONERO_WALLET_URL:-http://monero-wallet:18082}
+      ONION_DISCOVERY_HEALTH_FILE: /run/myzubster/onion-health.json
+      ONION_DISCOVERY_MAX_STATUS_AGE_MS: ${ONION_DISCOVERY_MAX_STATUS_AGE_MS:-120000}
+    volumes:
+      - onion_health_data:/run/myzubster:ro
     networks:
       - myzubster-network
     healthcheck:
@@ -52,6 +56,22 @@ services:
       start_period: 10s
     env_file:
       - .env
+
+  onion-discovery-probe:
+    build:
+      context: .
+      dockerfile: Dockerfile.onion-probe
+    container_name: myzubster-onion-discovery-probe
+    restart: unless-stopped
+    environment:
+      ONION_DISCOVERY_PROBE_INTERVAL_MS: ${ONION_DISCOVERY_PROBE_INTERVAL_MS:-30000}
+      ONION_DISCOVERY_PROBE_TIMEOUT_SECONDS: ${ONION_DISCOVERY_PROBE_TIMEOUT_SECONDS:-45}
+    volumes:
+      - onion_health_data:/health
+    networks:
+      - myzubster-network
+    profiles:
+      - onion-discovery
 
   tari-wallet:
     image: tariproject/wallet:latest
@@ -85,6 +105,8 @@ services:
 
 volumes:
   mongodb_data:
+    driver: local
+  onion_health_data:
     driver: local
   tari_wallet_data:
     driver: local

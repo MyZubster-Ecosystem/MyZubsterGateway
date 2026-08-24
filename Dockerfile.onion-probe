@@ -1,0 +1,16 @@
+FROM alpine:3.21
+
+RUN apk add --no-cache nodejs tor curl
+
+WORKDIR /app
+COPY config/onion-nodes.json /app/config/onion-nodes.json
+COPY scripts/onion-health-probe.js /app/scripts/onion-health-probe.js
+
+RUN mkdir -p /health /var/lib/tor-probe
+
+ENV ONION_DISCOVERY_CONFIG=/app/config/onion-nodes.json \
+    ONION_DISCOVERY_HEALTH_FILE=/health/onion-health.json \
+    ONION_DISCOVERY_SOCKS_PROXY=127.0.0.1:9050 \
+    ONION_DISCOVERY_PROBE_INTERVAL_MS=30000
+
+CMD ["sh", "-c", "tor --SocksPort 127.0.0.1:9050 --DataDirectory /var/lib/tor-probe & TOR_PID=$!; trap 'kill $TOR_PID 2>/dev/null || true' INT TERM EXIT; for i in $(seq 1 30); do nc -z 127.0.0.1 9050 && break; sleep 1; done; exec node /app/scripts/onion-health-probe.js --watch"]

@@ -1,0 +1,16 @@
+{
+  "nodes": [
+    {
+      "id": "windows-ha",
+      "publicUrl": "http://wujmjt5u3iiuyutt7hf5rap6ibzxwuo5d45sroqnmbxvlv4bntj75uad.onion",
+      "region": "windows-local-ha",
+      "priority": 10
+    },
+    {
+      "id": "aruba-vps",
+      "publicUrl": "http://r34e7wmvekdsonvq2uxi4yhtwbb553lahikajjdiphxpnm24fzfm3syd.onion",
+      "region": "aruba-italy",
+      "priority": 20
+    }
+  ]
+}
