@@ -61,6 +61,7 @@ function safeMount(routePath, modulePath, label = modulePath) {
 safeMount('/api/robots', './robot-integration/api/routes', 'Robot Universal Integration');
 safeMount('/api/nft', './routes/nftRoutes', 'NFT');
 safeMount('/api/deepseek', './routes/deepseekRoutes', 'DeepSeek');
+safeMount('/api/data-import', './routes/dataImportRoutes', 'Zorgax data import');
 safeMount('/api/notifications', './routes/notificationRoutes', 'Notifications');
 safeMount('/api/messages', './routes/messageRoutes', 'Messages');
 safeMount('/api/sensors', './routes/sensorRoutes', 'IoT Sensors');
@@ -145,6 +146,7 @@ app.use((err, _req, res, _next) => {
   res.status(err.status || 500).json({
     error: err.message || 'Internal Server Error',
     status: err.status || 500,
+    ...(err.code ? { code: err.code } : {}),
   });
 });
 
