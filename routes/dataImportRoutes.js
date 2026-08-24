@@ -8,6 +8,7 @@ const DataImportAudit = require('../models/DataImportAudit');
 const router = express.Router();
 const MAX_ROWS = Number(process.env.DATA_IMPORT_MAX_ROWS || 2000);
 const MAX_SOURCE_LENGTH = 240;
+const IMPORT_ACTOR = 'zorgax-data-import-key';
 
 function timingSafeEqual(a, b) {
   const left = Buffer.from(String(a || ''));
@@ -221,7 +222,7 @@ router.post('/commit', requireImportKey, async (req, res, next) => {
     await ensureDatabase();
 
     const importBatchId = crypto.randomUUID();
-    const importedBy = String(req.body.importedBy || 'zorgax').trim().slice(0, 120) || 'zorgax';
+    const importedBy = IMPORT_ACTOR;
     const documents = normalized.records.map((data, index) => ({
       importBatchId,
       datasetType: normalized.datasetType,
