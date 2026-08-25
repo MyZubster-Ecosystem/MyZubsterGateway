@@ -4,7 +4,7 @@
   "private": true,
   "scripts": {
     "start": "node server.js",
-    "test": "node --test tests/adminDashboard*.test.js tests/tariNft*.test.js tests/settlementLedger.test.js tests/dataImport.test.js"
+    "test": "node --test tests/adminDashboard*.test.js tests/tariNft*.test.js tests/settlementLedger.test.js tests/dataImport.test.js tests/skillExchangeState.test.js"
   },
   "dependencies": {
     "body-parser": "^1.20.3",
