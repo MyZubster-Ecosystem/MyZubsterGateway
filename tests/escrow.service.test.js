@@ -616,3 +616,85 @@ test('rejects an amount of 1e-9 with more than 8 decimal places', () => {
     /precision exceeds/i
   );
 });
+test('payment request creates only internal escrow state and does not settle externally', () => {
+  let settlementCalls = 0;
+
+  const settlementAdapter = {
+    enabled: false,
+    async settle() {
+      settlementCalls += 1;
+    },
+  };
+
+  const escrow = new EscrowService({
+    settlementAdapter,
+  });
+
+  const tx = escrow.createPayment({
+    bountyId: 'bounty_internal_only',
+    amount: 500,
+    currency: 'MYZ',
+    contributor: 'user_1',
+  });
+
+  assert.equal(tx.status, 'pending');
+  assert.equal(settlementCalls, 0);
+});
+
+test('default settlement adapter rejects external settlement', async () => {
+  const escrow = new EscrowService();
+
+  const tx = escrow.createPayment({
+    bountyId: 'bounty_no_external',
+    amount: 500,
+    currency: 'MYZ',
+    contributor: 'user_1',
+  });
+
+  await assert.rejects(
+    () => escrow.settle(tx.transactionId, { humanApproved: true }),
+    /External settlement is disabled by default/
+  );
+});
+
+test('settlement requires explicit human authorization even with an enabled adapter', async () => {
+  let settlementCalls = 0;
+
+  const settlementAdapter = {
+    enabled: true,
+    async settle(transaction) {
+      settlementCalls += 1;
+      return {
+        transactionId: transaction.transactionId,
+        settled: true,
+      };
+    },
+  };
+
+  const escrow = new EscrowService({
+    settlementAdapter,
+  });
+
+  const tx = escrow.createPayment({
+    bountyId: 'bounty_human_auth',
+    amount: 500,
+    currency: 'MYZ',
+    contributor: 'user_1',
+  });
+
+  await assert.rejects(
+    () => escrow.settle(tx.transactionId),
+    /Human authorization is required/
+  );
+
+  assert.equal(settlementCalls, 0);
+
+  const result = await escrow.settle(
+    tx.transactionId,
+    { humanApproved: true }
+  );
+
+  assert.equal(settlementCalls, 1);
+  assert.equal(result.transactionId, tx.transactionId);
+  assert.equal(result.settled, true);
+});

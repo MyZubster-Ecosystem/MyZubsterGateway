@@ -270,6 +270,9 @@ async requestPayment(req, res) {
         }
 
         // Create the escrow transaction only after bounty validation.
+        // SECURITY BOUNDARY:
+// This creates internal escrow/accounting state only.
+// It must never initiate or imply an external funds transfer.
         const tx = this.escrow.createPayment({
             bountyId: bounty.id,
             amount: bounty.bountyAmount,
@@ -284,10 +287,15 @@ async requestPayment(req, res) {
         this.saveBounties();
 
         return res.status(200).json({
-            success: true,
-            transaction: tx,
-            data: bounty.toJSON()
-        });
+    success: true,
+    transaction: tx,
+    settlement: {
+        status: 'pending',
+        mode: 'internal',
+        externalTransfer: false
+    },
+    data: bounty.toJSON()
+});
     } catch (error) {
         console.error('❌ Errore richiesta pagamento bounty:', error);
         return res.status(400).json({

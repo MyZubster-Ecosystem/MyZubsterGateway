@@ -2,6 +2,7 @@
 
 const crypto = require('crypto');
 const { JsonEscrowRepository } = require('./json-escrow.repository');
+const { DisabledSettlementAdapter } = require('./disabled-settlement.adapter');
 
 /** Max decimal places allowed for a transaction amount (deterministic, no float drift). */
 const MAX_AMOUNT_DECIMALS = 8;
@@ -101,9 +102,14 @@ const STATUS = Object.freeze({
  */
 class EscrowService {
   /** @param {{ repository?: import('./escrow.repository').EscrowRepository }} [opts] */
-  constructor({ repository } = {}) {
+ constructor({ repository, settlementAdapter } = {}) {
     this.repository = repository || new JsonEscrowRepository();
-  }
+
+    // External settlement is intentionally disabled unless an explicit
+    // verified adapter is injected.
+    this.settlementAdapter =
+        settlementAdapter || new DisabledSettlementAdapter();
+}
 
   /**
    * @param {{ bountyId: string, amount: number, currency: string, contributor: string }} params
@@ -243,6 +249,38 @@ class EscrowService {
       retries: (transaction.retries || 0) + 1,
     });
   }
+    /**
+   * Attempt external settlement.
+   *
+   * SECURITY BOUNDARY:
+   * This operation is intentionally separate from createPayment()/complete().
+   * Real value movement requires:
+   *   1. an explicitly injected, verified settlement adapter
+   *   2. explicit human authorization
+   *
+   * The default adapter is disabled and will always reject settlement.
+   *
+   * @param {string} transactionId
+   * @param {{ humanApproved?: boolean }} authorization
+   * @returns {Promise<object>}
+   */
+  async settle(transactionId, authorization = {}) {
+    const transaction = this.repository.get(transactionId);
+
+    if (!transaction) {
+      throw new Error('Transaction not found');
+    }
+
+    if (authorization.humanApproved !== true) {
+      throw new Error('Human authorization is required for settlement');
+    }
+
+    if (!this.settlementAdapter?.enabled) {
+      throw new Error('External settlement is disabled by default');
+    }
+
+    return this.settlementAdapter.settle(transaction, authorization);
+  }
 
   /**
    * Retry a failed transaction, transitioning it back to pending so it can
@@ -299,6 +337,7 @@ class EscrowService {
     };
   }
 }
+
 
 EscrowService.STATUS = STATUS;
 
