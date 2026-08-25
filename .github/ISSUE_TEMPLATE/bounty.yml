@@ -1,86 +1,81 @@
-name: Bounty Issue
-description: Propose verifiable work under the MyZubster bounty policy
-title: "Bounty - "
-labels: ["bounty", "help wanted"]
+name: Bounty
+about: Proponi o reclama un bounty per una ricompensa in $MYZ
+title: '[BOUNTY] <titolo breve>'
+labels: ['bounty']
+assignees: ''
 body:
   - type: markdown
     attributes:
       value: |
-        ## Bounty proposal
-
-        A reward amount is not proof of funding or settlement. MYZ is an
-        internal reward/accounting unit unless a separately verified external
-        rail is documented.
-
-  - type: dropdown
-    id: currency
-    attributes:
-      label: "Reward asset or accounting unit"
-      description: "Select the proposed reward unit"
-      options:
-        - "MYZ (internal accounting)"
-        - "XMR"
-        - "Other / none"
-    validations:
-      required: true
-
-  - type: input
-    id: title
-    attributes:
-      label: "Objective"
-      placeholder: "Describe the verifiable outcome"
-    validations:
-      required: true
+        ## 📋 Descrizione
+        <!-- Descrizione chiara del lavoro richiesto -->
 
   - type: textarea
     id: description
     attributes:
-      label: "Scope and deliverable"
-      placeholder: "Describe what must be delivered and what is out of scope"
-    validations:
-      required: true
-
-  - type: input
-    id: reward
-    attributes:
-      label: "Proposed reward amount"
-      placeholder: "For example: 80 MYZ or 0.1 XMR"
+      label: Descrizione dettagliata
+      description: Spiega cosa deve essere fatto
+      placeholder: Implementare feature X...
     validations:
       required: true
 
   - type: textarea
     id: acceptance
     attributes:
-      label: "Acceptance criteria"
-      placeholder: "- [ ] Criterion 1\n- [ ] Criterion 2"
+      label: Criteri di accettazione
+      description: Lista verificabile di requisiti
+      placeholder: |
+        - [ ] Criterio 1
+        - [ ] Criterio 2
+        - [ ] Criterio 3
+    validations:
+      required: true
+
+  - type: input
+    id: reward
+    attributes:
+      label: Importo ricompensa (MYZ)
+      placeholder: '80'
     validations:
       required: true
 
   - type: dropdown
-    id: funding
+    id: rail
     attributes:
-      label: "Funding state"
+      label: Rail di pagamento
       options:
-        - "PROPOSED"
-        - "VALIDATED"
-        - "APPROVED"
-        - "FUNDED"
+        - Tari
+        - Altro (specificare)
+    validations:
+      required: true
+
+  - type: dropdown
+    id: funding_state
+    attributes:
+      label: Stato finanziamento
+      description: Indica se i fondi sono già disponibili
+      options:
+        - funded
+        - unfunded
+        - proposed
     validations:
       required: true
 
   - type: textarea
-    id: evidence
+    id: verification
     attributes:
-      label: "Verification evidence"
-      description: "Specify tests, reports, screenshots, hashes, or transaction evidence required"
+      label: Metodo di verifica
+      description: Come viene verificato il completamento
+      placeholder: Review del codice + test passanti
     validations:
       required: true
 
   - type: textarea
     id: settlement
     attributes:
-      label: "Settlement conditions"
-      description: "Define the rail, verifier, and evidence required before PAID may be recorded"
+      label: Condizioni di settlement
+      description: Condizioni per il settlement esterno (richiede evidenza indipendente)
+      placeholder: Fondi disponibili su wallet gateway + conferma on-chain
     validations:
       required: true
 
@@ -88,12 +83,8 @@ body:
     attributes:
       value: |
         ---
-        **Settlement rule**
+        ## 📚 Riferimenti
+        - Regole complete: [BOUNTIES.md](https://github.com/MyZubster-Ecosystem/myzubster/blob/main/BOUNTIES.md)
+        - Registro ricompense: [REWARDS_LEDGER.md](https://github.com/MyZubster-Ecosystem/myzubster/blob/main/REWARDS_LEDGER.md)
 
-        Issue closure, assignment, PR approval, merge, a gateway response,
-        screenshot, simulation, or internal ledger entry is not external
-        payment proof. `PAID` requires independently verifiable settlement
-        evidence.
-
-        Canonical policy: https://github.com/MyZubster-Ecosystem/myzubster/blob/main/BOUNTIES.md
-        Canonical ledger: https://github.com/MyZubster-Ecosystem/myzubster/blob/main/REWARDS_LEDGER.md
+        > **Nota:** Il merge della PR o la chiusura dell'issue non costituiscono prova di pagamento. La ricompensa segue il flusso: VERIFIED → REWARD_RECORDED → SETTLEMENT_PENDING/SETTLED (con evidenza indipendente).

@@ -34,16 +34,33 @@ Ogni bounty ha una lista di requisiti da soddisfare. In generale:
 
 ---
 
-## 💰 Pagamento
+## 💰 Ricompensa e Settlement
 
-Le ricompense sono pagate in **$MYZ** via gateway:
+Le ricompense sono denominate in **$MYZ** e seguono il modello canonico:
 
-- **Dopo il merge** della PR nel branch `main`
-- **Entro 48 ore** dal merge
-- **All'indirizzo** Tari wallet specificato nella PR
+```text
+issue/claim
+→ implementation
+→ review
+→ VERIFIED / REJECTED
+→ REWARD_RECORDED (se applicabile)
+→ SETTLEMENT_PENDING / SETTLED (solo se applicabile e indipendentemente evidenziato)
+```
 
-**Esempio di pagamento:**
-```bash
-curl -X POST http://localhost:3001/api/rewards/trigger \
-  -H "Content-Type: application/json" \
-  -d '{"userId":"GITHUB_USERNAME","amount":80,"reason":"Completed bounty #234 - Dashboard Rewards","source":"github_pr"}'
+**Importante:** Il merge della PR o la chiusura dell'issue **non** costituiscono prova di finanziamento o pagamento. La ricompensa viene registrata (`REWARD_RECORDED`) solo dopo verifica (`VERIFIED`). Il settlement esterno (`SETTLEMENT_PENDING`/`SETTLED`) richiede evidenza indipendente di finanziamento.
+
+- **Stato finanziamento:** indicato nell'issue (es. `funded`, `unfunded`, `proposed`)
+- **Registro ricompense:** vedi [REWARDS_LEDGER.md](https://github.com/MyZubster-Ecosystem/myzubster/blob/main/REWARDS_LEDGER.md)
+- **Regole complete:** vedi [BOUNTIES.md](https://github.com/MyZubster-Ecosystem/myzubster/blob/main/BOUNTIES.md)
+
+---
+
+## 📋 Template per nuovi bounty
+
+I nuovi bounty devono includere:
+- `reward`: importo in MYZ
+- `rail`: canale di pagamento (es. Tari)
+- `funding_state`: `funded` | `unfunded` | `proposed`
+- `acceptance_criteria`: lista verificabile
+- `verification`: come viene verificato il completamento
+- `settlement_conditions`: condizioni per il settlement esterno

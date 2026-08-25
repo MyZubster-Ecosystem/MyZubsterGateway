@@ -1,53 +1,39 @@
 ---
 name: Bounty
-about: Propose verifiable work under the MyZubster bounty policy
-title: "Bounty — "
-labels: "type:bounty,status:proposed,evidence:required,review:manual"
-assignees: ""
+about: Proponi o reclama un bounty per una ricompensa in $MYZ
+title: '[BOUNTY] <titolo breve>'
+labels: ['bounty']
+assignees: ''
 ---
 
-## Objective
+## 📋 Descrizione
 
-## Scope / deliverable
+<!-- Descrizione chiara del lavoro richiesto -->
 
-- 
+## ✅ Criteri di accettazione
 
-## Acceptance criteria
+- [ ] Criterio 1
+- [ ] Criterio 2
+- [ ] Criterio 3
 
-- [ ] Deliverable is complete and reproducible/verifiable.
-- [ ] Tests or equivalent evidence are provided when applicable.
-- [ ] No secrets, private keys, seed phrases or credentials are committed.
+## 💰 Ricompensa
 
-## Evidence
+- **Importo:** <!-- es. 80 MYZ -->
+- **Rail:** <!-- es. Tari -->
+- **Stato finanziamento:** <!-- funded | unfunded | proposed -->
 
-PR, tests, screenshots, benchmark, report, SHA-256/IPFS CID, transaction evidence where applicable, etc.
+## 🔍 Verifica e Settlement
 
-## Reward
+- **Verifica:** <!-- Come viene verificato il completamento -->
+- **Condizioni settlement:** <!-- Condizioni per il settlement esterno -->
 
-- **Asset/accounting unit:** MYZ / XMR / TOKEN / none
-- **Amount:**
-- **Funding state:** PROPOSED / VALIDATED / APPROVED / FUNDED
+---
 
-> MYZ is currently an internal MyZubster reward/ledger component unless a separately verified external rail is explicitly documented.
+## 📚 Riferimenti
 
-## Review
+- Regole complete: [BOUNTIES.md](https://github.com/MyZubster-Ecosystem/myzubster/blob/main/BOUNTIES.md)
+- Registro ricompense: [REWARDS_LEDGER.md](https://github.com/MyZubster-Ecosystem/myzubster/blob/main/REWARDS_LEDGER.md)
 
-- **Mode:** normal / manual / multi-review
-- **Required reviewers:**
+---
 
-## Safety & privacy
-
-- [ ] No unauthorized access or restricted-area activity is required.
-- [ ] No sensitive infrastructure/security details are requested.
-- [ ] No unnecessary personal/confidential data is collected or published.
-- [ ] Security testing, if any, is explicitly authorized and non-destructive.
-
-## Settlement
-
-Issue closure, assignment, PR approval or merge is not external payment proof. External settlement requires independent verification.
-
-## References
-
-- Local bounty notes: `BOUNTIES.md`
-- Canonical policy: https://github.com/MyZubster-Ecosystem/myzubster/blob/main/BOUNTIES.md
-- Canonical labels: https://github.com/MyZubster-Ecosystem/myzubster/blob/main/docs/LABELS.md
+> **Nota:** Il merge della PR o la chiusura dell'issue non costituiscono prova di pagamento. La ricompensa segue il flusso: VERIFIED → REWARD_RECORDED → SETTLEMENT_PENDING/SETTLED (con evidenza indipendente).
