@@ -1,6 +1,7 @@
 const express = require('express');
 const SkillExchange = require('../models/SkillExchange');
 const { authenticate } = require('../middleware/auth.middleware');
+const { publicOfferProjection } = require('../utils/skillExchangePublicProjection');
 const {
   actorId,
   isParticipant,
@@ -44,11 +45,10 @@ router.get('/offers', async (req, res, next) => {
     if (location) filter.location = location;
 
     const offers = await SkillExchange.find(filter)
-      .select('-applications -startConfirmedBy -completionConfirmedBy')
       .sort({ createdAt: -1 })
       .limit(100)
       .lean();
-    return res.json({ success: true, offers });
+    return res.json({ success: true, offers: offers.map(publicOfferProjection) });
   } catch (error) {
     return next(error);
   }
@@ -56,11 +56,9 @@ router.get('/offers', async (req, res, next) => {
 
 router.get('/offers/:id', async (req, res, next) => {
   try {
-    const offer = await SkillExchange.findById(req.params.id)
-      .select('-applications -startConfirmedBy -completionConfirmedBy')
-      .lean();
+    const offer = await SkillExchange.findById(req.params.id).lean();
     if (!offer) return res.status(404).json({ success: false, error: 'Exchange offer not found' });
-    return res.json({ success: true, offer });
+    return res.json({ success: true, offer: publicOfferProjection(offer) });
   } catch (error) {
     return next(error);
   }
