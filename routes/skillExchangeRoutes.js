@@ -15,6 +15,15 @@ function cleanText(value, max) {
   return value.trim().slice(0, max);
 }
 
+function escapeRegex(value) {
+  return value.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+}
+
+function safeRegex(value, max) {
+  const cleaned = cleanText(value, max);
+  return cleaned ? new RegExp(escapeRegex(cleaned), 'i') : null;
+}
+
 function requireActor(req, res) {
   const id = actorId(req.user);
   if (!id) {
@@ -26,29 +35,47 @@ function requireActor(req, res) {
 
 router.get('/offers', async (req, res, next) => {
   try {
-    const filter = {};
-    if (req.query.status) filter.status = cleanText(req.query.status, 20);
-    else filter.status = 'open';
-    if (req.query.offeredSkill) filter.offeredSkill = new RegExp(cleanText(req.query.offeredSkill, 120), 'i');
-    if (req.query.requestedSkill) filter.requestedSkill = new RegExp(cleanText(req.query.requestedSkill, 120), 'i');
-    if (req.query.location) filter.location = new RegExp(cleanText(req.query.location, 160), 'i');
+    const filter = { status: req.query.status ? cleanText(req.query.status, 20) : 'open' };
+    const offeredSkill = safeRegex(req.query.offeredSkill, 120);
+    const requestedSkill = safeRegex(req.query.requestedSkill, 120);
+    const location = safeRegex(req.query.location, 160);
+    if (offeredSkill) filter.offeredSkill = offeredSkill;
+    if (requestedSkill) filter.requestedSkill = requestedSkill;
+    if (location) filter.location = location;
 
     const offers = await SkillExchange.find(filter)
-      .select('-applications.message')
+      .select('-applications -startConfirmedBy -completionConfirmedBy')
       .sort({ createdAt: -1 })
       .limit(100)
       .lean();
-    res.json({ success: true, offers });
+    return res.json({ success: true, offers });
   } catch (error) {
-    next(error);
+    return next(error);
   }
 });
 
 router.get('/offers/:id', async (req, res, next) => {
   try {
-    const offer = await SkillExchange.findById(req.params.id).lean();
+    const offer = await SkillExchange.findById(req.params.id)
+      .select('-applications -startConfirmedBy -completionConfirmedBy')
+      .lean();
     if (!offer) return res.status(404).json({ success: false, error: 'Exchange offer not found' });
     return res.json({ success: true, offer });
+  } catch (error) {
+    return next(error);
+  }
+});
+
+router.get('/offers/:id/applications', authenticate, async (req, res, next) => {
+  try {
+    const ownerId = requireActor(req, res);
+    if (!ownerId) return;
+    const offer = await SkillExchange.findById(req.params.id).select('ownerId applications status');
+    if (!offer) return res.status(404).json({ success: false, error: 'Exchange offer not found' });
+    if (String(offer.ownerId) !== ownerId) {
+      return res.status(403).json({ success: false, error: 'Only the owner can view applications' });
+    }
+    return res.json({ success: true, applications: offer.applications, status: offer.status });
   } catch (error) {
     return next(error);
   }
