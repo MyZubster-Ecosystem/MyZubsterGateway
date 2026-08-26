@@ -23,6 +23,15 @@ class Bounty {
         this.reviewers = data.reviewers || [];
         this.comments = data.comments || [];
         this.attachments = data.attachments || [];
+
+        // Payment / escrow lifecycle (Issue #1335)
+        this.paymentRequested = data.paymentRequested || false;
+        this.paymentStatus = data.paymentStatus || 'not_requested';
+        // allowed values: not_requested | pending | confirmed | failed
+        this.transactionId = data.transactionId || null;
+        this.retryCount = data.retryCount || 0;
+        this.reconciledAt = data.reconciledAt || null;
+        this.paymentRequestedAt = data.paymentRequestedAt || null;
     }
 
     // Assegna bounty a un contributor
@@ -89,6 +98,89 @@ class Bounty {
         this.updatedAt = new Date().toISOString();
     }
 
+   // Richiede il pagamento escrow per un bounty completato
+requestPayment() {
+    if (this.status !== 'completed') {
+        throw new Error('Payment can only be requested for completed bounties');
+    }
+
+    if (this.paymentRequested) {
+        throw new Error('Payment already requested');
+    }
+
+    this.paymentRequested = true;
+    this.paymentStatus = 'pending';
+    this.paymentRequestedAt = new Date().toISOString();
+    this.updatedAt = new Date().toISOString();
+}
+
+    // Collega la transazione escrow al bounty
+    attachTransaction(transactionId) {
+        if (!this.paymentRequested) {
+            throw new Error('Payment was never requested for this bounty');
+        }
+        this.transactionId = transactionId;
+        this.updatedAt = new Date().toISOString();
+    }
+
+   // Conferma il pagamento escrow
+confirmPayment() {
+    if (!this.transactionId) {
+        throw new Error('No transaction attached to this bounty');
+    }
+
+    // Idempotent: confirming an already confirmed payment is a no-op.
+    if (this.paymentStatus === 'confirmed') {
+        return;
+    }
+
+    if (this.paymentStatus !== 'pending') {
+        throw new Error(
+            `Cannot confirm payment from status "${this.paymentStatus}"`
+        );
+    }
+
+    this.paymentStatus = 'confirmed';
+    this.reconciledAt = new Date().toISOString();
+    this.updatedAt = new Date().toISOString();
+}
+
+    // Segna il pagamento come fallito e incrementa i tentativi
+failPayment() {
+    if (this.paymentStatus === 'failed') {
+        return;
+    }
+
+    if (this.paymentStatus !== 'pending') {
+        throw new Error(
+            `Cannot fail payment from status "${this.paymentStatus}"`
+        );
+    }
+
+    this.paymentStatus = 'failed';
+    this.retryCount += 1;
+    this.updatedAt = new Date().toISOString();
+}
+// Riporta un pagamento fallito allo stato pending
+retryPayment() {
+    if (this.paymentStatus === 'pending') {
+        throw new Error('Payment is already pending');
+    }
+
+    if (this.paymentStatus === 'confirmed') {
+        throw new Error('Confirmed payment cannot be retried');
+    }
+
+    if (this.paymentStatus !== 'failed') {
+        throw new Error(
+            `Cannot retry payment from status "${this.paymentStatus}"`
+        );
+    }
+
+    this.paymentStatus = 'pending';
+    this.updatedAt = new Date().toISOString();
+}
+
     toJSON() {
         return {
             id: this.id,
@@ -109,7 +201,13 @@ class Bounty {
             completedAt: this.completedAt,
             reviewers: this.reviewers,
             comments: this.comments,
-            attachments: this.attachments
+            attachments: this.attachments,
+            paymentRequested: this.paymentRequested,
+            paymentStatus: this.paymentStatus,
+            transactionId: this.transactionId,
+            retryCount: this.retryCount,
+            reconciledAt: this.reconciledAt,
+            paymentRequestedAt: this.paymentRequestedAt
         };
     }
 }
