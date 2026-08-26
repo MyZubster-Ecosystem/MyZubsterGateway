@@ -11,6 +11,8 @@
 const express = require('express');
 const router = express.Router();
 const myzWallet = require('../gateway/myz_wallet');
+const jurisdictionGate = require('../middleware/jurisdictionGate');
+const { Capability } = require('../services/jurisdiction.constants');
 
 // Health
 router.get('/health', async (req, res) => {
@@ -23,7 +25,7 @@ router.get('/health', async (req, res) => {
 });
 
 // Lock MYZ
-router.post('/lock', async (req, res) => {
+router.post('/lock', jurisdictionGate(Capability.WALLET_TRANSFER), async (req, res) => {
   try {
     const { amount, wallet, memo = '' } = req.body;
     if (!amount) return res.status(400).json({ error: 'amount required' });
@@ -36,7 +38,7 @@ router.post('/lock', async (req, res) => {
 });
 
 // Release MYZ
-router.post('/release', async (req, res) => {
+router.post('/release', jurisdictionGate(Capability.EXTERNAL_SETTLEMENT), async (req, res) => {
   try {
     const { fromAddress, toAddress, amount } = req.body;
     if (!fromAddress || !toAddress) return res.status(400).json({ error: 'fromAddress and toAddress required' });
@@ -49,7 +51,7 @@ router.post('/release', async (req, res) => {
 });
 
 // Refund MYZ
-router.post('/refund', async (req, res) => {
+router.post('/refund', jurisdictionGate(Capability.EXTERNAL_SETTLEMENT), async (req, res) => {
   try {
     const { fromAddress, toAddress, amount } = req.body;
     if (!fromAddress || !toAddress || !amount) return res.status(400).json({ error: 'fromAddress, toAddress, and amount required' });
