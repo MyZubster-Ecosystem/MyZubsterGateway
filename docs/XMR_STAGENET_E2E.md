@@ -61,7 +61,9 @@ Rules:
 - `amountAtomic` is a decimal string to avoid floating-point ambiguity;
 - the configured network must equal `stagenet`;
 - recipient validation must reject addresses incompatible with the configured network;
+- the application-side recipient guard checks Monero base58 alphabet, address length, and stagenet address family (`5` standard/integrated, `7` subaddress); final economic verification still belongs to the independent Monero verifier;
 - `settlementId` is stable across retries;
+- a retry using an existing submission must match the original asset, network, recipient and atomic amount exactly;
 - no wallet seed, private spend key, RPC password or other secret belongs in the intent or logs.
 
 ## Submission result
@@ -129,6 +131,7 @@ Verification must fail and settlement must remain not-paid when any of these occ
 - recipient/destination evidence mismatch;
 - transaction not yet confirmed to the configured threshold;
 - replay or duplicate settlement attempt;
+- an idempotent retry reuses the same `settlementId` with a different recipient, amount, asset or network;
 - verifier result cannot establish all required facts;
 - submission succeeds but verification fails.
 
@@ -138,11 +141,11 @@ The same `settlementId` must not create multiple economic settlements.
 
 A retry may:
 
-- return the already recorded transaction reference;
+- return the already recorded transaction reference only when the economic intent is identical;
 - resume verification;
-- return a deterministic already-submitted/already-paid result.
+- return a deterministic already-submitted/already-paid result from a higher-level persisted lifecycle.
 
-It must not silently submit another transfer.
+It must not silently submit another transfer or reinterpret the same `settlementId` for a different recipient or amount.
 
 ## Evidence package
 
@@ -170,8 +173,10 @@ Never publish wallet seeds, private keys, RPC credentials, unnecessary wallet me
 4. Unknown TXID -> not paid.
 5. Unconfirmed transaction -> not paid.
 6. Verifier timeout -> not paid.
-7. Duplicate `settlementId` -> no second transfer.
-8. Submit success + verifier failure -> not paid.
+7. Duplicate `settlementId` with identical intent -> no second transfer.
+8. Duplicate `settlementId` with changed recipient/amount/network -> rejected.
+9. Mainnet/malformed recipient address -> rejected before submission.
+10. Submit success + verifier failure -> not paid.
 
 ## Mainnet gate
 
