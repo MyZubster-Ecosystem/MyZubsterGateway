@@ -18,6 +18,10 @@ The Gateway is not the canonical authority for declaring an external payment fin
 
 ## Ecosystem role
 
+![MyZubster Gateway flow separating core state, Gateway adapters, external provider, independent verification and final confirmed state](assets/visual/MYZ-VIS-011-gateway-settlement-flow.svg)
+
+The visual above is `DOCUMENTATION_VISUAL`, not evidence of a real payment or production deployment. Its provenance is recorded in [`assets/visual/README.md`](assets/visual/README.md).
+
 ```text
 MyZubster core
       |
