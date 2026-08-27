@@ -32,13 +32,14 @@ const profiles = {
 
 const selectedProfile = profiles[PROFILE] || profiles.load;
 
-export const options = {
-  ...selectedProfile,
-  thresholds: {
-    http_req_failed: ['rate<0.01'],
-    http_req_duration: ['p(95)<1000'],
-    checks: ['rate>0.99'],
-  },
+// Keep the options object compatible with the k6 runtime used in CI.
+// Mutating the selected local profile avoids object-spread syntax, which the
+// pinned runner currently fails to parse before the load test can start.
+export const options = selectedProfile;
+options.thresholds = {
+  http_req_failed: ['rate<0.01'],
+  http_req_duration: ['p(95)<1000'],
+  checks: ['rate>0.99'],
 };
 
 export default function () {
