@@ -11,6 +11,8 @@
 const express = require('express');
 const router = express.Router();
 const xmrWallet = require('../gateway/xmr_wallet');
+const jurisdictionGate = require('../middleware/jurisdictionGate');
+const { Capability } = require('../services/jurisdiction.constants');
 
 // Health
 router.get('/health', async (req, res) => {
@@ -23,7 +25,7 @@ router.get('/health', async (req, res) => {
 });
 
 // Lock XMR
-router.post('/lock', async (req, res) => {
+router.post('/lock', jurisdictionGate(Capability.WALLET_TRANSFER), async (req, res) => {
   try {
     const { amount, account = 0, memo = '' } = req.body;
     if (!amount) return res.status(400).json({ error: 'amount required' });
@@ -36,7 +38,7 @@ router.post('/lock', async (req, res) => {
 });
 
 // Release XMR
-router.post('/release', async (req, res) => {
+router.post('/release', jurisdictionGate(Capability.EXTERNAL_SETTLEMENT), async (req, res) => {
   try {
     const { fromAddress, toAddress, amount } = req.body;
     if (!fromAddress || !toAddress) return res.status(400).json({ error: 'fromAddress and toAddress required' });
@@ -49,7 +51,7 @@ router.post('/release', async (req, res) => {
 });
 
 // Refund XMR
-router.post('/refund', async (req, res) => {
+router.post('/refund', jurisdictionGate(Capability.EXTERNAL_SETTLEMENT), async (req, res) => {
   try {
     const { fromAddress, toAddress, amount } = req.body;
     if (!fromAddress || !toAddress || !amount) return res.status(400).json({ error: 'fromAddress, toAddress, and amount required' });
