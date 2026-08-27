@@ -32,14 +32,15 @@ const profiles = {
 
 const selectedProfile = profiles[PROFILE] || profiles.load;
 
-export const options = {
-  ...selectedProfile,
+// Keep this compatible with the k6 0.49 runtime pinned by the CI workflow.
+// Its embedded JavaScript parser rejects object spread syntax here.
+export const options = Object.assign({}, selectedProfile, {
   thresholds: {
     http_req_failed: ['rate<0.01'],
     http_req_duration: ['p(95)<1000'],
     checks: ['rate>0.99'],
   },
-};
+});
 
 export default function () {
   const response = http.get(`${BASE_URL}/api/health`, {
