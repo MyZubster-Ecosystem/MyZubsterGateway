@@ -3,13 +3,16 @@
 const test = require('node:test');
 const assert = require('node:assert/strict');
 const {
+  assertStagenetRecipient,
   assertStagenetIntent,
   submitXmrStagenet,
   verifyXmrStagenet
 } = require('../services/settlement/xmrStagenetSettlement');
 
 const TXID = 'a'.repeat(64);
-const RECIPIENT = 'stagenet-recipient-fixture';
+const RECIPIENT = '5' + 'A'.repeat(94);
+const SUBADDRESS = '7' + 'A'.repeat(94);
+const MAINNET_RECIPIENT = '4' + 'A'.repeat(94);
 
 function intent(overrides = {}) {
   return {
@@ -38,6 +41,17 @@ function validVerification(overrides = {}) {
   };
 }
 
+test('accepts stagenet standard and subaddress formats', () => {
+  assert.equal(assertStagenetRecipient(RECIPIENT), RECIPIENT);
+  assert.equal(assertStagenetRecipient(SUBADDRESS), SUBADDRESS);
+});
+
+test('rejects mainnet, malformed base58, and invalid Monero lengths', () => {
+  assert.throws(() => assertStagenetRecipient(MAINNET_RECIPIENT), /stagenet/);
+  assert.throws(() => assertStagenetRecipient('5' + '0'.repeat(94)), /base58/);
+  assert.throws(() => assertStagenetRecipient('5ABC'), /length/);
+});
+
 test('rejects any network other than stagenet', () => {
   assert.throws(() => assertStagenetIntent(intent({ network: 'mainnet' })), /stagenet-only/);
 });
@@ -57,13 +71,59 @@ test('submit response can only become SUBMITTED, never PAID', async () => {
   assert.equal(submission.txId, TXID);
 });
 
-test('idempotent retry returns the existing submission without submitting twice', async () => {
+test('idempotent retry returns the exact existing submission without submitting twice', async () => {
   let calls = 0;
   const submitTransaction = async () => { calls += 1; return { txId: TXID }; };
   const first = await submitXmrStagenet({ intent: intent(), submitTransaction });
-  const second = await submitXmrStagenet({ intent: intent(), submitTransaction, existingSubmission: first });
+  const second = await submitXmrStagenet({ intent: intent(), existingSubmission: first });
   assert.equal(calls, 1);
   assert.deepEqual(second, first);
+});
+
+test('idempotent retry rejects recipient or amount mutation for the same settlementId', async () => {
+  const first = await submitXmrStagenet({
+    intent: intent(),
+    submitTransaction: async () => ({ txId: TXID })
+  });
+
+  await assert.rejects(
+    () => submitXmrStagenet({
+      intent: intent({ recipient: SUBADDRESS }),
+      existingSubmission: first
+    }),
+    /recipient mismatch/
+  );
+
+  await assert.rejects(
+    () => submitXmrStagenet({
+      intent: intent({ amountAtomic: '200000000' }),
+      existingSubmission: first
+    }),
+    /amount mismatch/
+  );
+});
+
+test('idempotent retry rejects non-stagenet or non-submitted stored records', async () => {
+  const first = await submitXmrStagenet({
+    intent: intent(),
+    submitTransaction: async () => ({ txId: TXID })
+  });
+
+  await assert.rejects(
+    () => submitXmrStagenet({
+      intent: intent(),
+      existingSubmission: { ...first, network: 'mainnet' }
+    }),
+    /asset\/network mismatch/
+  );
+
+  await assert.rejects(
+    () => submitXmrStagenet({
+      intent: intent(),
+      existingSubmission: { ...first, status: 'PAID' }
+    }),
+    /must be SUBMITTED/
+  );
 });
 
 test('independent verifier is required', async () => {
