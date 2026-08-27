@@ -4,6 +4,9 @@ const STAGENET = 'stagenet';
 const XMR = 'XMR';
 const ATOMIC_RE = /^[1-9][0-9]*$/;
 const TXID_RE = /^[0-9a-fA-F]{64}$/;
+const MONERO_BASE58_RE = /^[123456789ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz]+$/;
+const STANDARD_ADDRESS_LENGTH = 95;
+const INTEGRATED_ADDRESS_LENGTH = 106;
 
 function normalizeAtomic(value) {
   const atomic = String(value ?? '');
@@ -11,15 +14,41 @@ function normalizeAtomic(value) {
   return atomic;
 }
 
+function assertStagenetRecipient(recipient) {
+  if (typeof recipient !== 'string') throw new Error('recipient is required');
+  const address = recipient.trim();
+  if (!address) throw new Error('recipient is required');
+  if (!MONERO_BASE58_RE.test(address)) throw new Error('recipient must be a Monero base58 address');
+
+  const validLength = address.length === STANDARD_ADDRESS_LENGTH || address.length === INTEGRATED_ADDRESS_LENGTH;
+  if (!validLength) throw new Error('recipient must have a valid Monero address length');
+
+  // Monero stagenet standard/integrated addresses begin with 5; stagenet
+  // subaddresses begin with 7. This is a network/format guard. Final economic
+  // verification must still use the independently configured Monero verifier.
+  const expectedPrefix = address.length === INTEGRATED_ADDRESS_LENGTH ? '5' : null;
+  if (expectedPrefix && address[0] !== expectedPrefix) {
+    throw new Error('recipient is not a Monero stagenet address');
+  }
+  if (!expectedPrefix && address[0] !== '5' && address[0] !== '7') {
+    throw new Error('recipient is not a Monero stagenet address');
+  }
+
+  return address;
+}
+
 function assertStagenetIntent(intent = {}) {
-  if (!intent.settlementId) throw new Error('settlementId is required');
+  if (!intent.settlementId || typeof intent.settlementId !== 'string' || !intent.settlementId.trim()) {
+    throw new Error('settlementId is required');
+  }
   if (intent.asset !== XMR) throw new Error('asset must be XMR');
   if (intent.network !== STAGENET) throw new Error('XMR settlement is stagenet-only');
-  if (!intent.recipient || typeof intent.recipient !== 'string') throw new Error('recipient is required');
   return {
     ...intent,
+    settlementId: intent.settlementId.trim(),
     asset: XMR,
     network: STAGENET,
+    recipient: assertStagenetRecipient(intent.recipient),
     amountAtomic: normalizeAtomic(intent.amountAtomic),
     status: intent.status || 'PENDING'
   };
@@ -30,6 +59,29 @@ function assertTxId(txId) {
   return String(txId).toLowerCase();
 }
 
+function assertExistingSubmissionMatches(existingSubmission, normalizedIntent) {
+  if (!existingSubmission || typeof existingSubmission !== 'object') {
+    throw new Error('existing submission must be an object');
+  }
+  if (existingSubmission.settlementId !== normalizedIntent.settlementId) {
+    throw new Error('existing submission belongs to a different settlementId');
+  }
+  if (existingSubmission.asset !== XMR || existingSubmission.network !== STAGENET) {
+    throw new Error('existing submission asset/network mismatch');
+  }
+  if (assertStagenetRecipient(existingSubmission.recipient) !== normalizedIntent.recipient) {
+    throw new Error('existing submission recipient mismatch');
+  }
+  if (normalizeAtomic(existingSubmission.amountAtomic) !== normalizedIntent.amountAtomic) {
+    throw new Error('existing submission amount mismatch');
+  }
+  if (existingSubmission.status !== 'SUBMITTED') {
+    throw new Error('existing submission must be SUBMITTED');
+  }
+  assertTxId(existingSubmission.txId);
+  return existingSubmission;
+}
+
 /**
  * Submission boundary. The injected submitTransaction function is expected to
  * talk to an explicitly configured monero-wallet-rpc STAGENET instance.
@@ -37,14 +89,12 @@ function assertTxId(txId) {
  */
 async function submitXmrStagenet({ intent, submitTransaction, existingSubmission = null }) {
   const normalized = assertStagenetIntent(intent);
-  if (typeof submitTransaction !== 'function') throw new TypeError('submitTransaction is required');
 
   if (existingSubmission) {
-    if (existingSubmission.settlementId !== normalized.settlementId) {
-      throw new Error('existing submission belongs to a different settlementId');
-    }
-    return existingSubmission;
+    return assertExistingSubmissionMatches(existingSubmission, normalized);
   }
+
+  if (typeof submitTransaction !== 'function') throw new TypeError('submitTransaction is required');
 
   const result = await submitTransaction({
     settlementId: normalized.settlementId,
@@ -92,7 +142,7 @@ async function verifyXmrStagenet({ submission, verifyTransaction, minConfirmatio
     txId: assertTxId(submission.txId),
     asset: XMR,
     network: STAGENET,
-    recipient: submission.recipient,
+    recipient: assertStagenetRecipient(submission.recipient),
     amountAtomic: normalizeAtomic(submission.amountAtomic)
   };
 
@@ -135,6 +185,7 @@ async function verifyXmrStagenet({ submission, verifyTransaction, minConfirmatio
 module.exports = {
   STAGENET,
   XMR,
+  assertStagenetRecipient,
   assertStagenetIntent,
   submitXmrStagenet,
   verifyXmrStagenet
