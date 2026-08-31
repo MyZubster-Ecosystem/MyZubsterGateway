@@ -62,6 +62,7 @@ safeMount('/api/robots', './robot-integration/api/routes', 'Robot Universal Inte
 safeMount('/api/nft', './routes/nftRoutes', 'NFT');
 safeMount('/api/deepseek', './routes/deepseekRoutes', 'DeepSeek');
 safeMount('/api/data-import', './routes/dataImportRoutes', 'Zorgax data import');
+safeMount('/api/skill-exchange', './routes/skillExchangeRoutes', 'Lavori skill exchange');
 safeMount('/api/notifications', './routes/notificationRoutes', 'Notifications');
 safeMount('/api/messages', './routes/messageRoutes', 'Messages');
 safeMount('/api/sensors', './routes/sensorRoutes', 'IoT Sensors');
