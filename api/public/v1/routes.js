@@ -8,11 +8,13 @@ const { apiLimiter, strictLimiter, validateApiKey, apiLogger } = require('../mid
 const { Product } = require('../../../marketplace/models/marketplace.model');
 const { Bounty } = require('../../../bounty/models/bounty.model');
 const { SocketManager } = require('../../../notifications/websocket/socket.manager');
+const { createJurisdictionCapabilitiesRouter } = require('../../../routes/jurisdictionCapabilities');
 
 // Applica middleware a tutte le route
 router.use(apiLogger);
 router.use(validateApiKey);
 router.use(apiLimiter);
+router.use('/jurisdictions', createJurisdictionCapabilitiesRouter());
 
 // ============================================
 // 🌿 API PIANTE
