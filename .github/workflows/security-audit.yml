@@ -2,7 +2,7 @@ name: Security Audit
 
 on:
   schedule:
-    - cron: '0 0 * * *'  # Daily at midnight
+    - cron: '0 0 * * *'
   workflow_dispatch:
 
 jobs:
@@ -11,38 +11,65 @@ jobs:
     permissions:
       contents: read
       issues: write
-      pull-requests: write
-      
+
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
 
+      - name: Detect Node project
+        id: node-project
+        shell: bash
+        run: |
+          if [[ -f package.json ]]; then
+            echo "present=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "present=false" >> "$GITHUB_OUTPUT"
+            echo "No package.json found; skipping npm audit."
+          fi
+
       - name: Setup Node.js
+        if: steps.node-project.outputs.present == 'true'
         uses: actions/setup-node@v4
         with:
           node-version: '22'
 
       - name: Install dependencies
-        run: npm ci --legacy-peer-deps || npm install
+        if: steps.node-project.outputs.present == 'true'
+        shell: bash
+        run: |
+          if [[ -f package-lock.json ]]; then
+            npm ci --legacy-peer-deps --ignore-scripts
+          else
+            npm install --legacy-peer-deps --ignore-scripts --package-lock=false
+          fi
 
       - name: Run npm audit
-        run: npm audit --audit-level=moderate || echo "⚠️ Vulnerabilities found but not blocking"
-
-      - name: Run security scan
-        run: |
-          echo "🔒 Security audit completed at $(date)"
+        if: steps.node-project.outputs.present == 'true'
+        run: npm audit --audit-level=moderate
         continue-on-error: true
 
-      - name: Create issue on failure
+      - name: Record completion
+        run: echo "Security audit completed at $(date -u)"
+
+      - name: Create issue on workflow failure
         if: failure()
         uses: actions/github-script@v7
         with:
           github-token: ${{ secrets.GITHUB_TOKEN }}
           script: |
-            const date = new Date().toISOString();
-            await github.rest.issues.create({
+            const title = 'Security Audit Failed';
+            const { data } = await github.rest.issues.listForRepo({
               owner: context.repo.owner,
               repo: context.repo.repo,
-              title: `🔒 Security Audit Failed - ${date}`,
-              body: 'The security audit workflow has failed. Please check the logs for details.\n\nRun: https://github.com/${context.repo.owner}/${context.repo.repo}/actions/runs/${context.runId}'
+              state: 'open',
+              per_page: 100,
             });
+
+            if (!data.some(issue => issue.title.startsWith(title))) {
+              await github.rest.issues.create({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                title: `${title} - ${new Date().toISOString()}`,
+                body: `The security audit workflow failed.\n\nRun: ${context.serverUrl}/${context.repo.owner}/${context.repo.repo}/actions/runs/${context.runId}`,
+              });
+            }
