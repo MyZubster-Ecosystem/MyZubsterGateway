@@ -1,8 +1,17 @@
 name: Security Audit
 
 on:
+  pull_request:
+    branches:
+      - main
+
+  push:
+    branches:
+      - main
+
   schedule:
-    - cron: '0 0 * * *'  # Daily at midnight
+    - cron: '0 0 * * *' # Daily at midnight
+
   workflow_dispatch:
 
 jobs:
@@ -26,12 +35,36 @@ jobs:
         run: npm ci --legacy-peer-deps || npm install
 
       - name: Run npm audit
-        run: npm audit --audit-level=moderate || echo "⚠️ Vulnerabilities found but not blocking"
+        run: npm audit --audit-level=high
 
-      - name: Run security scan
-        run: |
-          echo "🔒 Security audit completed at $(date)"
-        continue-on-error: true
+      - name: Run Trivy vulnerability scanner
+        uses: aquasecurity/trivy-action@0.28.0
+        with:
+          scan-type: fs
+          scan-ref: '.'
+          format: sarif
+          output: trivy-results.sarif
+          severity: HIGH,CRITICAL
+          exit-code: 1
+
+      - name: Upload Trivy scan results
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: trivy-results
+          path: trivy-results.sarif
+
+      - name: Generate SBOM
+        uses: CycloneDX/gh-node-module-generatebom@v1
+        with:
+          path: .
+          output: bom.xml
+
+      - name: Upload SBOM
+        uses: actions/upload-artifact@v4
+        with:
+          name: sbom
+          path: bom.xml
 
       - name: Create issue on failure
         if: failure()
