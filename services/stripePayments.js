@@ -34,13 +34,17 @@ async function stripePost(path, params) {
     body.append(key, String(value));
   }
 
+  const headers = {
+    Authorization: `Bearer ${secretKey}`,
+    'Content-Type': 'application/x-www-form-urlencoded',
+  };
+  if (process.env.STRIPE_API_VERSION) {
+    headers['Stripe-Version'] = process.env.STRIPE_API_VERSION;
+  }
+
   const response = await fetch(`${STRIPE_API_BASE}${path}`, {
     method: 'POST',
-    headers: {
-      Authorization: `Bearer ${secretKey}`,
-      'Content-Type': 'application/x-www-form-urlencoded',
-      'Stripe-Version': process.env.STRIPE_API_VERSION || '2026-08-27.basil',
-    },
+    headers,
     body,
   });
 
