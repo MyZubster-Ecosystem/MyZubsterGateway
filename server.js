@@ -26,6 +26,17 @@ if (Sentry?.Handlers?.requestHandler) {
 app.use(helmet({ crossOriginResourcePolicy: { policy: 'cross-origin' } }));
 app.use(cors({ origin: '*', credentials: true }));
 app.use(morgan('combined'));
+
+// Stripe signature verification requires the exact raw request body.
+// Keep this route before JSON/urlencoded body parsing.
+try {
+  const stripeWebhook = require('./routes/stripeWebhook');
+  app.post('/webhook/stripe', express.raw({ type: 'application/json', limit: '1mb' }), stripeWebhook);
+  console.log('[Route] Stripe webhook mounted at /webhook/stripe');
+} catch (error) {
+  console.warn(`[Route] Stripe webhook unavailable: ${error.message}`);
+}
+
 app.use(bodyParser.json({ limit: '10mb' }));
 app.use(bodyParser.urlencoded({ extended: true, limit: '10mb' }));
 
@@ -66,6 +77,7 @@ safeMount('/api/notifications', './routes/notificationRoutes', 'Notifications');
 safeMount('/api/messages', './routes/messageRoutes', 'Messages');
 safeMount('/api/sensors', './routes/sensorRoutes', 'IoT Sensors');
 safeMount('/api/payments/fiat', './routes/fiatRoutes', 'Fiat Payments');
+safeMount('/api/payments/stripe', './routes/stripeRoutes', 'Stripe Payments');
 safeMount('/api/crypto', './routes/cryptoRoutes', 'Crypto');
 safeMount('/api/arm', './routes/armRoutes', 'EVA IONI Arm');
 safeMount('/api/mobile', './routes/mobileRoutes', 'Mobile');
