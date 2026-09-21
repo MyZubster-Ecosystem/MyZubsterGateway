@@ -5,9 +5,12 @@ must ask the capability service for a decision and must not add country-specific
 
 ## API
 
-- `GET /api/jurisdictions/:countryCode/capabilities?subdivision=US-CA` returns the effective
+Paths below are relative to the jurisdiction router's mount point. The route tests mount
+it at `/api/jurisdictions`; deployment prefixes depend on the enclosing application.
+
+- `GET /:countryCode?subdivision=US-CA` returns the effective
   country and subdivision profile.
-- `POST /api/jurisdictions/decision` evaluates one capability. The request accepts
+- `POST /decision` evaluates one capability. The request accepts
   `countryCode`, optional `subdivisionCode`, `capability`, and `environment`.
 
 Only `SUPPORTED` is allowed in production. `PILOT_ONLY` is allowed in `pilot`, `sandbox`, or
