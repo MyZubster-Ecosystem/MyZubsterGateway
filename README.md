@@ -144,6 +144,30 @@ The Gateway is part of the wider MyZubster contributor and Knowledge workflow. P
 
 Canonical contributor status and Knowledge/Passport links live in the [main MyZubster repository](https://github.com/MyZubster-Ecosystem/myzubster).
 
+### Contributor interoperability / controlled VPS bridge
+
+Independent contributor projects may optionally connect to MyZubster through a controlled Gateway/VPS interoperability pilot:
+
+```text
+CONTRIBUTOR PROJECT / LOCAL NODE / API
+        ↓
+PUBLIC GITHUB EVIDENCE
+        ↓
+MYZUBSTER PROFILE / KNOWLEDGE / PASSPORT
+        ↓
+CONTROLLED GATEWAY / VPS BRIDGE
+        ↓
+HARMLESS READ-ONLY TEST
+        ↓
+SANITIZED VERIFICATION EVIDENCE
+```
+
+This is **not shared server administration**. Participation does not provide SSH access, root access or unrestricted credentials. Private endpoints, access tokens, JWT secrets, SSH keys, wallet seeds, private keys and passwords must never be committed or posted publicly.
+
+The first test should be minimal, reversible and read-only where possible. Passing a connectivity test proves only that the tested bridge path worked; it does not prove production readiness, payout, settlement, wallet ownership, certification or partnership.
+
+Contributors can propose a bridge pilot through [MyZubster contributor workflow #1474](https://github.com/MyZubster-Ecosystem/myzubster/issues/1474) with their repo/branch, component, environment, public evidence and a harmless first-test proposal.
+
 ## Contributing
 
 Create a feature branch, add/update tests, run the relevant checks and open a PR linked to the issue.
