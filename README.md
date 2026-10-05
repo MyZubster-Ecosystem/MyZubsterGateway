@@ -132,6 +132,18 @@ Before production deployment verify:
 
 Gateway work can be bountied for API, security, integration, reconciliation, testing and documentation tasks. Issue/PR/merge does not prove external payment. Follow the canonical bounty and settlement contracts linked above.
 
+## Contributor network
+
+The Gateway is part of the wider MyZubster contributor and Knowledge workflow. Public contributor links are kept evidence-first and do not imply payment, professional certification or production settlement.
+
+| Contributor | Public evidence | Linked competence / role | Status |
+|---|---|---|---|
+| **Nicola / N4K48** | [Independent pilot](https://github.com/nicolaususnicola-lgtm/myzubster-mvp) · [MyZubster pilot documentation](https://github.com/MyZubster-Ecosystem/myzubster/blob/main/docs/learning/NICOLA-INDEPENDENT-LOCAL-NODE-PILOT.md) | Independent local node, Docker, Node Bridge, reproducible testing | **Pilot reference · evidence-rich** |
+| **khongten124** | [PR #1451](https://github.com/MyZubster-Ecosystem/myzubster/pull/1451) · [public contributor profile](https://github.com/khongten124/myzubster/blob/feat/open-period-care-research-1450/docs/contributions/khongten124-medical-research-profile.md) | Research documentation, evidence organization, technical/data analysis | **APPROVED_BY_CONTRIBUTOR + EVIDENCE_VERIFIED** |
+| **hoicailon94** | [Issue #1463](https://github.com/MyZubster-Ecosystem/myzubster/issues/1463) · [workflow #1474](https://github.com/MyZubster-Ecosystem/myzubster/issues/1474) | Revenue split, deterministic allocation, reconciliation architecture | **IN VERIFICATION** |
+
+Canonical contributor status and Knowledge/Passport links live in the [main MyZubster repository](https://github.com/MyZubster-Ecosystem/myzubster).
+
 ## Contributing
 
 Create a feature branch, add/update tests, run the relevant checks and open a PR linked to the issue.
