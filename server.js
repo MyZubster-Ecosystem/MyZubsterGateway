@@ -92,6 +92,7 @@ safeMount('/api/history', './routes/historyRoutes', 'History');
 safeMount('/api/anthea/payroll', './core-backend/routes/antheaPayroll', 'Anthea payroll');
 safeMount('/api/anthea/compliance', './core-backend/routes/antheaCompliance', 'Anthea compliance');
 safeMount('/api/anthea/welfare', './core-backend/routes/antheaWelfare', 'Anthea welfare');
+safeMount('/api/bounty-settlement', './routes/bountySettlement', 'Bounty Settlement');
 
 for (let id = 990; id <= 999; id += 1) {
   safeMount(`/api/bounty-${id}`, `./routes/massBounty${id}`, `Mass bounty ${id}`);
